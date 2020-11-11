@@ -1,0 +1,28 @@
+Package: HM450.QCView
+Title: Visualize quality control data from your HM450K dataset with HM450.QCView
+Version: 0.0.1
+Authors@R: 
+    person(given = "Yoann",
+           family = "Pageaud",
+           role = c("aut", "cre"),
+           email = "y.pageaud@dkfz.de",
+           comment = c(ORCID = "https://orcid.org/0000-0002-1392-1744"))
+Description: HM450.QCView allows you to generate quality control plots from your
+            Human Methylation 450K dataset.
+License: GPL-3.0
+Encoding: UTF-8
+LazyData: true
+Depends:
+    ggplot2,
+    data.table,
+    RnBeads
+biocViews:
+Imports:
+    BiocompR,
+    parallel,
+    RColorBrewer
+RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
