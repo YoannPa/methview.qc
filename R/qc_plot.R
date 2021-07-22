@@ -88,15 +88,15 @@ snp.heatmap <- function(
   rs.probes <- rownames(RnBSet@sites)[
     grepl(pattern = "rs", x = rownames(RnBSet@sites))]
   #Extract methylation matrix from RnBSet
-  meth.mat <- meth(RnBSet, row.names = TRUE)
+  meth.mat <- RnBeads::meth(RnBSet, row.names = TRUE)
   rs.meth.mat <- meth.mat[rs.probes, ]
 
   #Plot SNP CpG heatmap using genotyping probes from HM450K data
-  snp.heatmap <- gg2heatmap(
+  snp.heatmap <- BiocompR::gg2heatmap(
     m = rs.meth.mat, dist.method = dist.method, row.type = "genotyping probes",
     y.lab = "HM450K genotyping probes", x.lab = x.lab,
     axis.text.y.right = axis.text.y.right,
-    axis.ticks.y.right = element_line(color = "black"),
+    axis.ticks.y.right = ggplot2::element_line(color = "black"),
     axis.text.x = axis.text.x, axis.title.y.right = axis.title.y.right,
     annot.grps = annot.grps, annot.pal = annot.pal,
     lgd.scale.name = "Methylation", lgd.text = lgd.text,
@@ -120,20 +120,20 @@ snp.heatmap <- function(
 
 load.HM450K.QC.theme <- function(){
   #Create plot theme
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.text.y = element_text(size = 10, color = "black"),
-    axis.title.y = element_text(size = 14),
-    axis.title.x = element_blank(),
-    panel.background = element_blank(),
-    panel.grid.major.x = element_line(color = "grey"),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_line(color = "grey"),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA),
-    plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "cm"))
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(hjust = 0.5),
+    axis.text.x = ggplot2::element_blank(),
+    axis.ticks.x = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_text(size = 10, color = "black"),
+    axis.title.y = ggplot2::element_text(size = 14),
+    axis.title.x = ggplot2::element_blank(),
+    panel.background = ggplot2::element_blank(),
+    panel.grid.major.x = ggplot2::element_line(color = "grey"),
+    panel.grid.minor.x = ggplot2::element_blank(),
+    panel.grid.major.y = ggplot2::element_line(color = "grey"),
+    panel.grid.minor.y = ggplot2::element_blank(),
+    panel.border = ggplot2::element_rect(color = "black", fill = NA),
+    plot.margin = grid::unit(c(0.1, 0.1, 0.1, 0.1), "cm"))
 }
 
 
@@ -159,12 +159,12 @@ load.HM450K.QC.theme <- function(){
 plot.HM450K.QC.probe <- function(
   probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
   #Melt Cy3 & Cy5 data.tables
-  DT.probe.Cy3 <- melt.data.table(
+  DT.probe.Cy3 <- data.table::melt.data.table(
     data = QC.data$`Cy3 - Electric Lime Green`[QC.probe.IDs == probe.ID],
     measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy3 intensity")[, c(
       "Samples", "Cy3 intensity"), ]
-  DT.probe.Cy5 <- melt.data.table(data = QC.data$`Cy5 - Dark Red`[
+  DT.probe.Cy5 <- data.table::melt.data.table(data = QC.data$`Cy5 - Dark Red`[
     QC.probe.IDs == probe.ID],
     measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")[, c(
@@ -183,73 +183,74 @@ plot.HM450K.QC.probe <- function(
        all(is.na(DT.probe.Cy5$`Cy5 intensity`)))){
 
     #Plot Barplot on Cy3 intensity for probe
-    cy3plot <- ggplot(
+    cy3plot <- ggplot2::ggplot(
       data = DT.probe.Cy3,
-      mapping = aes(x = Samples, y = `Cy3 intensity`)) +
-      geom_bar(stat = "identity", fill = "#00ff00", color = "black") +
-      scale_y_continuous(expand = c(0, 0)) +
+      mapping = ggplot2::aes(x = Samples, y = `Cy3 intensity`)) +
+      ggplot2::geom_bar(stat = "identity", fill = "#00ff00", color = "black") +
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
       theme_qc
     #Plot Barplot on Cy5 intensity for probe
-    cy5plot <- ggplot(
+    cy5plot <- ggplot2::ggplot(
       data = DT.probe.Cy5,
-      mapping = aes(x = Samples, y = `Cy5 intensity`)) +
-      geom_bar(stat = "identity", fill = "#ff0000", color = "black") +
-      scale_y_continuous(expand = c(0, 0)) +
+      mapping = ggplot2::aes(x = Samples, y = `Cy5 intensity`)) +
+      ggplot2::geom_bar(stat = "identity", fill = "#ff0000", color = "black") +
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
       theme_qc
 
     #Plot Cy5/Cy3 ratio barplot
-    DT.probe.ratio <- merge(
+    DT.probe.ratio <- data.table::merge.data.table(
       x = DT.probe.Cy3, y = DT.probe.Cy5, by = "Samples", all = TRUE)
     #Compute intensity ratio values.
-    DT.probe.ratio <- compute.intensity.ratio(
+    DT.probe.ratio <- HM450.QCView::compute.intensity.ratio(
       DT.probe.ratio = DT.probe.ratio)
 
     #Create DT.expected.intensity
-    DT.expected.intensity <- get.expected.intensity(
+    DT.expected.intensity <- HM450.QCView::get.expected.intensity(
       DT.QC.meta = DT.QC.meta, probe.id = probe.ID,
       channel.names = names(QC.data))
 
     #Barplot filled with ratio colors
-    ratioplot <- ggplot(
-      data = DT.probe.ratio, mapping = aes(
+    ratioplot <- ggplot2::ggplot(
+      data = DT.probe.ratio, mapping = ggplot2::aes(
         x = Samples, y = `Intensity ratio`, fill = color.ratio)) +
-      geom_bar(stat = "identity", color = "black") +
-      scale_fill_manual(
+      ggplot2::geom_bar(stat = "identity", color = "black") +
+      ggplot2::scale_fill_manual(
         values = sort(unique(DT.probe.ratio$color.ratio))) +
-      scale_y_continuous(expand = c(0, 0)) +
-      theme_qc + theme(
+      ggplot2::scale_y_continuous(expand = c(0, 0)) +
+      theme_qc + ggplot2::theme(
         legend.position = "none",
-        axis.text.x = element_text(size = 10, angle = -45, hjust = 0,
-                                   vjust = 0.5, color = "black"),
-        axis.ticks.x = element_line(color = "black"),
-        axis.title.x = element_text(size = 14))
+        axis.text.x = ggplot2::element_text(size = 10, angle = -45, hjust = 0,
+                                            vjust = 0.5, color = "black"),
+        axis.ticks.x = ggplot2::element_line(color = "black"),
+        axis.title.x = ggplot2::element_text(size = 14))
 
     #Convert ggplots in grobs
-    cy3grob <- ggplotGrob(cy3plot)
-    cy5grob <- ggplotGrob(cy5plot)
-    ratiogrob <- ggplotGrob(ratioplot)
+    cy3grob <- ggplot2::ggplotGrob(cy3plot)
+    cy5grob <- ggplot2::ggplotGrob(cy5plot)
+    ratiogrob <- ggplot2::ggplotGrob(ratioplot)
     #Resize based on widths
-    ls.qc.grobs <- resize.grobs(ls.grobs = list(
+    ls.qc.grobs <- BiocompR::resize.grobs(ls.grobs = list(
       'cy3grob'= cy3grob, 'cy5grob' = cy5grob, 'ratiogrob' = ratiogrob),
       dimensions = 'widths', start.unit = 3, end.unit = 5)
 
     #Final plot
-    qc.plot <- arrangeGrob(top = textGrob(paste(
+    qc.plot <- gridExtra::arrangeGrob(top = grid::textGrob(paste(
       cohort, "- HM450K Quality control intensities for",
       DT.QC.meta[ID == probe.ID]$Target, "probe",
       DT.QC.meta[ID == probe.ID]$Description, DT.QC.meta[ID == probe.ID]$Index,
       paste0("(ID = ", DT.QC.meta[ID == probe.ID]$ID, ")"))),
       grobs = list(
-        textGrob("Measured intensities"), textGrob("Expected intensity"),
-        ls.qc.grobs$cy3grob, textGrob(label = DT.expected.intensity[
+        grid::textGrob("Measured intensities"),
+        grid::textGrob("Expected intensity"),
+        ls.qc.grobs$cy3grob, grid::textGrob(label = DT.expected.intensity[
           Channel == "Cy3 - Electric Lime Green"]$`Expected intensity`),
-        ls.qc.grobs$cy5grob, textGrob(label = DT.expected.intensity[
+        ls.qc.grobs$cy5grob, grid::textGrob(label = DT.expected.intensity[
           Channel == "Cy5 - Dark Red"]$`Expected intensity`),
         ls.qc.grobs$ratiogrob),
       nrow = 4, ncol = 2, heights = c(0.2, 1, 1, 2),
       widths = c(1, 8/ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ])))
     #Return final plot
-    grid.arrange(qc.plot)
+    gridExtra::grid.arrange(qc.plot)
     return(qc.plot)
   }
 }
@@ -268,8 +269,8 @@ plot.HM450K.QC.probe <- function(
 #' @param QC.data  A \code{data.table} list matching QC metadata with green
 #'                 channel and red channel intensities, obtained with the
 #'                 function \link{merge.QC.intensities.and.meta}.
-#' @param cohort   A \code{character} string to specify the name of the cohort to
-#'                 be displayed as part of the plot title
+#' @param cohort   A \code{character} string to specify the name of the cohort
+#'                 to be displayed as part of the plot title
 #'                 (Default: cohort = "RnBSet").
 #' @param ncores   An \code{integer} to specify the number of cores/threads to
 #'                 be used to parallel-compute probes intensities.
@@ -305,11 +306,11 @@ plot.HM450K.QC.probe <- function(
 plot.HM450K.QC.target <- function(
   target, QC.data, cohort = "RnBSet", ncores = 1){
   #Create QC boxplots for all probes target types
-  DT.target.Cy3 <- melt.data.table(
+  DT.target.Cy3 <- data.table::melt.data.table(
     data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
     measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy3 intensity")
-  DT.target.Cy5 <- melt.data.table(
+  DT.target.Cy5 <- data.table::melt.data.table(
     data = QC.data$`Cy5 - Dark Red`[Target == target],
     measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")
@@ -317,16 +318,17 @@ plot.HM450K.QC.target <- function(
   #Rbind data.tables
   ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
   names(ls.dt.target) <- names(QC.data)
-  DT.target <- rbindlist(l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
+  DT.target <- data.table::rbindlist(
+    l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
 
   #Check expected intensities for each probes
-  ls.exp.intens <- mclapply(
+  ls.exp.intens <- parallel::mclapply(
     X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
-      get.expected.intensity(DT.QC.meta = DT.QC.meta, probe.id = i,
-                             channel.names = names(QC.data))
+      HM450.QCView::get.expected.intensity(
+        DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
     })
   names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)
-  DT.exp.intens <- rbindlist(l = ls.exp.intens, idcol = "Probe.ID")
+  DT.exp.intens <- data.table::rbindlist(l = ls.exp.intens, idcol = "Probe.ID")
   #Modify DT.target with expected intensities
   invisible(lapply(X = seq(nrow(DT.exp.intens)), FUN = function(i){
     DT.target[QC.probe.IDs == DT.exp.intens[i,]$Probe.ID &
@@ -352,73 +354,76 @@ plot.HM450K.QC.target <- function(
     names(probe.labels) <- unique(DT.target$QC.probe.IDs)
 
     #Plot target
-    target.plot <- ggplot(
-      data = DT.target,
-      mapping = aes(x = Cyanine, y = `Cy3 intensity`, fill = Cyanine)) +
-      theme_qc + theme(
+    target.plot <- ggplot2::ggplot(
+      data = DT.target, mapping = ggplot2::aes(
+        x = Cyanine, y = `Cy3 intensity`, fill = Cyanine)) +
+      theme_qc + ggplot2::theme(
         legend.position = "bottom",
-        legend.title = element_text(size = 13),
-        legend.text = element_text(size = 12),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.x = element_text(size = 13),
-        strip.text.x = element_text(size = 10, angle = 90, color = "black"),
-        strip.text.y = element_text(size = 13, angle = 0, color = "black"),
-        strip.background = element_rect(
+        legend.title = ggplot2::element_text(size = 13),
+        legend.text = ggplot2::element_text(size = 12),
+        axis.text.x = ggplot2::element_blank(),
+        axis.ticks.x = ggplot2::element_blank(),
+        axis.title.x = ggplot2::element_text(size = 13),
+        strip.text.x = ggplot2::element_text(
+          size = 10, angle = 90, color = "black"),
+        strip.text.y = ggplot2::element_text(
+          size = 13, angle = 0, color = "black"),
+        strip.background = ggplot2::element_rect(
           color = "black", size = 0.5, fill = "white"),
-        panel.grid.major.x = element_blank(),
-        panel.spacing.x = unit(0, "cm")) +
-      labs(x = "HM450K probe IDs", y = "Fluorescence intensity",
-           fill = "Channels",
-           title = paste(cohort, "- HM450K Quality control intensities for",
-                         target, "probes")) +
-      facet_grid(`Expected Intensity` ~ QC.probe.IDs, scales = "free",
-                 labeller = labeller(.cols = probe.labels)) +
-      scale_y_continuous(limits = c(0, max(DT.target$`Cy3 intensity`))) +
-      scale_x_discrete(
+        panel.grid.major.x = ggplot2::element_blank(),
+        panel.spacing.x = grid::unit(0, "cm")) +
+      ggplot2::labs(x = "HM450K probe IDs", y = "Fluorescence intensity",
+                    fill = "Channels", title = paste(
+                      cohort, "- HM450K Quality control intensities for",
+                      target, "probes")) +
+      ggplot2::facet_grid(`Expected Intensity` ~ QC.probe.IDs, scales = "free",
+                          labeller = ggplot2::labeller(.cols = probe.labels)) +
+      ggplot2::scale_y_continuous(
+        limits = c(0, max(DT.target$`Cy3 intensity`))) +
+      ggplot2::scale_x_discrete(
         breaks = unique(DT.target$QC.probe.IDs), labels = probe.labels) +
-      scale_fill_manual(values = c("#00ff00", "#ff0000"),
-                        labels = c("Green channel", "Red channel"))
+      ggplot2::scale_fill_manual(values = c("#00ff00", "#ff0000"),
+                                 labels = c("Green channel", "Red channel"))
 
     #If more than or equal to 30 samples draw boxplots with violins
     if(nrow(unique(DT.target, by = "Samples")) >= 30){
-      target.plot <- target.plot +
-        geom_violin() + geom_boxplot(fill = "white", width = 0.1)
+      target.plot <- target.plot + ggplot2::geom_violin() +
+        ggplot2::geom_boxplot(fill = "white", width = 0.1)
     } else if(nrow(unique(DT.target, by = "Samples")) >= 5){
       #If more than or equal to 5 samples draw boxplots alone
-      target.plot <- target.plot + geom_boxplot()
+      target.plot <- target.plot + ggplot2::geom_boxplot()
     } else {
       #If less than 5 samples draw dotplots
-      target.plot <- target.plot +
-        geom_point(shape = 21, size = 3, mapping = aes(
-          fill = DT.target$Cyanine))
+      target.plot <- target.plot + ggplot2::geom_point(
+        shape = 21, size = 3, mapping = ggplot2::aes(fill = DT.target$Cyanine))
     }
 
     #Set angle for X strip labels
     if(target %in% c("Bisulfite Conversion II", "Extension", "Hybridization",
                      "Non-polymorphic", "Specificity II", "Staining",
                      "Target Removal")){
-      target.plot <- target.plot + theme(
-        strip.text.x = element_text(size = 10, angle = 0, color = "black"))
+      target.plot <- target.plot + ggplot2::theme(
+        strip.text.x = ggplot2::element_text(
+          size = 10, angle = 0, color = "black"))
       width.target.plt <- 25
     } else if(target %in% c("Bisulfite Conversion I", "Specificity I")){
-      target.plot <- target.plot + theme(
-        strip.text.x = element_text(size = 10, angle = 90, color = "black"))
+      target.plot <- target.plot + ggplot2::theme(
+        strip.text.x = ggplot2::element_text(
+          size = 10, angle = 90, color = "black"))
       width.target.plt <- 25
     } else { stop("Probe type not supported.") }
 
     #If more than or equal to 30 samples draw boxplots with violins
     if(nrow(unique(DT.target, by = "Samples")) >= 30){
-      target.plot <- target.plot +
-        geom_violin() + geom_boxplot(fill = "white", width = 0.1)
+      target.plot <- target.plot + ggplot2::geom_violin() +
+        ggplot2::geom_boxplot(fill = "white", width = 0.1)
     } else if(nrow(unique(DT.target, by = "Samples")) >= 5){
       #If more than or equal to 5 samples draw boxplots alone
-      target.plot <- target.plot + geom_boxplot()
+      target.plot <- target.plot + ggplot2::geom_boxplot()
     } else {
       #If less than 5 samples draw dotplots
-      target.plot <- target.plot +
-        geom_point(shape = 21, size = 3, mapping = aes(
-          fill = DT.target$Cyanine))
+      target.plot <- target.plot + ggplot2::geom_point(
+        shape = 21, size = 3, mapping = ggplot2::aes(fill = DT.target$Cyanine))
     }
     #Plot and return final target plot
     target.plot
@@ -438,38 +443,39 @@ plot.HM450K.QC.target <- function(
         FUN = function(i){ c(min(i), max(i)) })
       #Negative Plot
       ls.neg.plot <- lapply(X = neg.target.ranges, FUN = function(i){
-        negative.plot <- ggplot(
+        negative.plot <- ggplot2::ggplot(
           data = DT.target[Index >= i[1] & Index <= i[2]],
-          mapping = aes(
+          mapping = ggplot2::aes(
             x = QC.probe.IDs, y = `Cy3 intensity`, fill = Cyanine)) +
-          theme_qc + theme(
+          theme_qc + ggplot2::theme(
             legend.position = "none",
-            axis.ticks.x = element_blank(),
-            axis.title.x = element_text(size = 13),
-            strip.text.y = element_text(
+            axis.ticks.x = ggplot2::element_blank(),
+            axis.title.x = ggplot2::element_text(size = 13),
+            strip.text.y = ggplot2::element_text(
               size = 13, angle = 90, color = "black"),
-            strip.background = element_rect(
+            strip.background = ggplot2::element_rect(
               color = "black", size = 0.5, fill = "white"),
-            panel.grid.major.x = element_blank(),
-            panel.spacing.x = unit(0, "cm")) +
-          labs(x = "HM450K negative probes",
-               y = "Log-scaled fluorescence intensity", title = paste(
-                 cohort, "- HM450K Quality control intensities for",
-                 target, "probes", i[1], "to", i[2])) +
-          facet_grid(Cyanine ~., scales = "free",
-                     labeller = labeller(.rows = strip.labels)) +
-          scale_y_log10(limits = c(
+            panel.grid.major.x = ggplot2::element_blank(),
+            panel.spacing.x = grid::unit(0, "cm")) +
+          ggplot2::labs(x = "HM450K negative probes",
+                        y = "Log-scaled fluorescence intensity", title = paste(
+                          cohort, "- HM450K Quality control intensities for",
+                          target, "probes", i[1], "to", i[2])) +
+          ggplot2::facet_grid(
+            Cyanine ~., scales = "free",
+            labeller = ggplot2::labeller(.rows = strip.labels)) +
+          ggplot2::scale_y_log10(limits = c(
             min(DT.target$`Cy3 intensity`[DT.target$`Cy3 intensity` > 1]),
             max(DT.target$`Cy3 intensity`))) +
-          scale_fill_manual(values = c("#00ff00", "#ff0000"))
+          ggplot2::scale_fill_manual(values = c("#00ff00", "#ff0000"))
 
         if(nrow(unique(DT.target, by = "Samples")) >= 5){
           #If more than or equal to 5 samples draw boxplots alone
-          negative.plot <- negative.plot + geom_boxplot()
+          negative.plot <- negative.plot + ggplot2::geom_boxplot()
         } else {
           #If less than 5 samples draw dotplots
           negative.plot <- negative.plot +
-            geom_point(shape = 21, size = 1, mapping = aes(
+            ggplot2::geom_point(shape = 21, size = 1, mapping = ggplot2::aes(
               fill = DT.target[Index >= i[1] & Index <= i[2]]$Cyanine))
         }
         #Plot final negative plot
@@ -496,40 +502,42 @@ plot.HM450K.QC.target <- function(
         unique(DT.target, by = "QC.probe.IDs")$Index, sep = ".")
 
       #Norm Plot
-      norm.plot <- ggplot(
+      norm.plot <- ggplot2::ggplot(
         data = DT.target,
-        mapping = aes(
+        mapping = ggplot2::aes(
           x = QC.probe.IDs, y = `Cy3 intensity`, fill = Cyanine)) +
-        theme_qc + theme(
+        theme_qc + ggplot2::theme(
           legend.position = "none",
-          axis.text.x = element_text(
+          axis.text.x = ggplot2::element_text(
             size = 10, hjust = 1, angle = 90, color = "black"),
           # axis.ticks.x = element_blank(),
-          axis.title.x = element_text(size = 13),
-          strip.text.y = element_text(
+          axis.title.x = ggplot2::element_text(size = 13),
+          strip.text.y = ggplot2::element_text(
             size = 13, angle = 90, color = "black"),
-          strip.background = element_rect(
+          strip.background = ggplot2::element_rect(
             color = "black", size = 0.5, fill = "white"),
-          panel.grid.major.x = element_blank(),
-          panel.spacing.x = unit(0, "cm")) +
-        labs(x = "HM450K probe IDs",
-             y = "Fluorescence intensity", title = paste(
-               cohort, "- HM450K Quality control intensities for",
-               target, "probes")) +
-        facet_grid(Cyanine ~., scales = "free",
-                   labeller = labeller(.rows = strip.labels)) +
-        scale_y_continuous(limits = c(0, max(DT.target$`Cy3 intensity`))) +
-        scale_x_discrete(
+          panel.grid.major.x = ggplot2::element_blank(),
+          panel.spacing.x = grid::unit(0, "cm")) +
+        ggplot2::labs(
+          x = "HM450K probe IDs", y = "Fluorescence intensity",
+          title = paste(cohort, "- HM450K Quality control intensities for",
+                        target, "probes")) +
+        ggplot2::facet_grid(
+          Cyanine ~., scales = "free",
+          labeller = ggplot2::labeller(.rows = strip.labels)) +
+        ggplot2::scale_y_continuous(
+          limits = c(0, max(DT.target$`Cy3 intensity`))) +
+        ggplot2::scale_x_discrete(
           breaks = unique(DT.target$QC.probe.IDs), labels = probe.labels) +
-        scale_fill_manual(values = c("#00ff00", "#ff0000"))
+        ggplot2::scale_fill_manual(values = c("#00ff00", "#ff0000"))
 
       if(nrow(unique(DT.target, by = "Samples")) >= 5){
         #If more than or equal to 5 samples draw boxplots alone
-        norm.plot <- norm.plot + geom_boxplot()
+        norm.plot <- norm.plot + ggplot2::geom_boxplot()
       } else {
         #If less than 5 samples draw dotplots
         norm.plot <- norm.plot +
-          geom_point(shape = 21, size = 3, mapping = aes(
+          ggplot2::geom_point(shape = 21, size = 3, mapping = ggplot2::aes(
             fill = DT.target$Cyanine))
       }
       #Plot and return norm plot

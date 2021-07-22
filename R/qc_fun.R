@@ -10,13 +10,13 @@
 
 load.HM450K.QC.meta <- function(){
   # Get HM450K QC metadata as a data.table
-  QC.meta <- rnb.get.annotation("controls450")
-  DT.QC.meta <- as.data.table(QC.meta)
+  QC.meta <- RnBeads::rnb.get.annotation("controls450")
+  DT.QC.meta <- data.table::as.data.table(QC.meta)
   DT.QC.meta[, ID := as.character(ID)]
   # Rename target levels to lowercase
-  setattr(DT.QC.meta$Target,"levels", vapply(
+  bit::setattr(DT.QC.meta$Target, "levels", vapply(
     X = levels(DT.QC.meta$Target), USE.NAMES = FALSE,
-    FUN.VALUE = character(length = 1), FUN = smart.tolower))
+    FUN.VALUE = character(length = 1), FUN = HM450.QCView::smart.tolower))
   return(DT.QC.meta)
 }
 
@@ -39,14 +39,14 @@ merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
   #Get sample IDs
   column.names <- RnBSet@pheno$ID
   #Get QC data
-  qc.data <- qc(RnBSet) #Cy3 is Green; Cy5 is Red.
+  qc.data <- RnBeads::qc(RnBSet) #Cy3 is Green; Cy5 is Red.
   #Merge Red and Green intensities matrices with QC probes metadata
   QC.data <- lapply(X = names(qc.data), FUN = function(i){
     colnames(qc.data[[i]]) <- column.names
-    DT.QC <- as.data.table(qc.data[[i]], keep.rownames = TRUE)
+    DT.QC <- data.table::as.data.table(qc.data[[i]], keep.rownames = TRUE)
     DT.QC <- merge(
       x = DT.QC.meta, y = DT.QC, by.x = "ID", by.y = "rn", all = TRUE)
-    setnames(x = DT.QC, old = "ID", new = "QC.probe.IDs")
+    data.table::setnames(x = DT.QC, old = "ID", new = "QC.probe.IDs")
     DT.QC
   })
   # Cy3 emission is electric lime green (#00ff00)
@@ -89,7 +89,7 @@ compute.intensity.ratio <- function(DT.probe.ratio){
   DT.probe.ratio[, color.ratio := unlist(lapply(
     X = DT.probe.ratio$`Intensity ratio`, FUN = function(j){
       if(!is.na(j)){
-        colorRampPalette(
+        grDevices::colorRampPalette(
           colors = c("#ff0000", "yellow", "#00ff00"))(round(j))[2]
       } else { "white" }
     }))]
@@ -101,7 +101,7 @@ compute.intensity.ratio <- function(DT.probe.ratio){
     DT.probe.ratio[Ratio.type == "Cy3/Cy5", color.ratio := unlist(lapply(
       X = DT.probe.ratio[Ratio.type == "Cy3/Cy5"]$`Intensity ratio`,
       FUN = function(j){
-        rev(colorRampPalette(
+        rev(grDevices::colorRampPalette(
           colors = c("#ff0000", "yellow", "#00ff00"))(round(j)))[2]
       }))]
   }
@@ -109,26 +109,28 @@ compute.intensity.ratio <- function(DT.probe.ratio){
   DT.probe.ratio[, round.ratio := round(`Intensity ratio`)]
   #If some ratio close to 1
   if(nrow(DT.probe.ratio[round.ratio == 1]) > 0){
-    DT.probe.ratio[round.ratio == 1, color.ratio := colorRampPalette(
+    DT.probe.ratio[round.ratio == 1, color.ratio := grDevices::colorRampPalette(
       colors = c("#ff0000", "yellow", "#00ff00"))(3)[2]]
   }
   #If some ratio close to 2
   if(nrow(DT.probe.ratio[round.ratio == 2]) > 0){
     DT.probe.ratio[round.ratio == 2 & Ratio.type == "Cy5/Cy3", color.ratio :=
-        colorRampPalette(
+                     grDevices::colorRampPalette(
                        colors = c("#ff0000", "yellow", "#00ff00"))(4)[2]]
     DT.probe.ratio[round.ratio == 2 & Ratio.type == "Cy3/Cy5",
-                   color.ratio := rev(colorRampPalette(
+                   color.ratio := rev(grDevices::colorRampPalette(
                      colors = c("#ff0000", "yellow", "#00ff00"))(4))[2]]
   }
   #If some ratio close to 3
   if(nrow(DT.probe.ratio[round.ratio == 3]) > 0){
     DT.probe.ratio[
       round.ratio == 3 & Ratio.type == "Cy5/Cy3", color.ratio :=
-        colorRampPalette(colors = c("#ff0000", "yellow", "#00ff00"))(4)[2]]
+        grDevices::colorRampPalette(
+          colors = c("#ff0000", "yellow", "#00ff00"))(4)[2]]
     DT.probe.ratio[
       round.ratio == 3 & Ratio.type == "Cy3/Cy5", color.ratio :=
-        rev(colorRampPalette(colors = c("#ff0000", "yellow", "#00ff00"))(4))[2]]
+        rev(grDevices::colorRampPalette(
+          colors = c("#ff0000", "yellow", "#00ff00"))(4))[2]]
   }
   return(DT.probe.ratio)
 }
@@ -157,49 +159,49 @@ get.expected.intensity <- function(DT.QC.meta, probe.id, channel.names){
   if(DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
      DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
      DT.QC.meta[ID == probe.id]$`Expected Intensity` == "High"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("High", "Background"))
   } else if(
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "Medium"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Medium", "Background"))
   } else if(
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "Low"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Low", "Background"))
   } else if(
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "-" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "+" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "High"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Background", "High"))
   } else if(
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "-" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "+" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "Background"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Background", "Background"))
   } else if(
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "Background"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Background", "Background"))
   } else if(
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "+" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "Background"){
-    DT.expected.intensity <- data.table(
+    DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Background", "Background"))
   } else { stop("Don't know how to handle this probe!") }

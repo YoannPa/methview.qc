@@ -21,8 +21,8 @@ target = c("Bisulfite Conversion I",
 channel and red channel intensities, obtained with the
 function \link{merge.QC.intensities.and.meta}.}
 
-\item{cohort}{A \code{character} string to specify the name of the cohort to
-be displayed as part of the plot title
+\item{cohort}{A \code{character} string to specify the name of the cohort
+to be displayed as part of the plot title
 (Default: cohort = "RnBSet").}
 
 \item{ncores}{An \code{integer} to specify the number of cores/threads to
