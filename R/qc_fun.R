@@ -21,6 +21,27 @@ load.HM450K.QC.meta <- function(){
 }
 
 
+#' Loads MethylationEPIC QC metadata as a data.table.
+#'
+#' @return A \code{data.table} with MethylationEPIC quality control metadata.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples DT.QC.meta <- load.EPIC.QC.meta()
+#' @references Assenov Y. et al., Comprehensive analysis of DNA methylation data
+#'             with RnBeads.
+
+load.EPIC.QC.meta <- function(){
+  # Get MethylationEPIC QC metadata as a data.table
+  QC.meta <- RnBeads::rnb.get.annotation("controlsEPIC")
+  DT.QC.meta <- data.table::as.data.table(QC.meta)
+  DT.QC.meta[, ID := as.character(ID)]
+  bit::setattr(DT.QC.meta$Target, "levels", vapply(
+    X = levels(DT.QC.meta$Target), USE.NAMES = FALSE,
+    FUN.VALUE = character(length = 1), FUN = HM450.QCView::smart.tolower))
+  return(DT.QC.meta)
+}
+
+
 #' Merges red and green channels intensities with QC probes metadata.
 #'
 #' @param RnBSet     A \code{RnBSet} basic object for storing HM450K DNA
@@ -201,6 +222,13 @@ get.expected.intensity <- function(DT.QC.meta, probe.id, channel.names){
     DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
     DT.QC.meta[ID == probe.id]$`Evaluate Red` == "+" &
     DT.QC.meta[ID == probe.id]$`Expected Intensity` == "Background"){
+    DT.expected.intensity <- data.table::data.table(
+      "Channel" = channel.names,
+      "Expected intensity" = c("Background", "Background"))
+  } else if(
+    DT.QC.meta[ID == probe.id]$`Evaluate Green` == "-" &
+    DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
+    DT.QC.meta[ID == probe.id]$`Expected Intensity` == "High"){
     DT.expected.intensity <- data.table::data.table(
       "Channel" = channel.names,
       "Expected intensity" = c("Background", "Background"))

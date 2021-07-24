@@ -139,6 +139,9 @@ load.HM450K.QC.theme <- function(){
 
 #' Plots fluorescence intensities barplots for a single QC HM450K probe.
 #'
+#' @param array.type A \code{character} string specifying the type of array used
+#'                   to generate the data (Default: array.type = "HM450K";
+#'                   Supported: array.type = c("HM450K", "EPIC")).
 #' @param probe.ID   A \code{character} string specifying the ID of an HM450K
 #'                   quality control probe.
 #' @param QC.data    A \code{data.table} list matching QC metadata with green
@@ -157,7 +160,7 @@ load.HM450K.QC.theme <- function(){
 #' @references
 
 plot.HM450K.QC.probe <- function(
-  probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
+  array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
   #Melt Cy3 & Cy5 data.tables
   DT.probe.Cy3 <- data.table::melt.data.table(
     data = QC.data$`Cy3 - Electric Lime Green`[QC.probe.IDs == probe.ID],
@@ -235,7 +238,7 @@ plot.HM450K.QC.probe <- function(
 
     #Final plot
     qc.plot <- gridExtra::arrangeGrob(top = grid::textGrob(paste(
-      cohort, "- HM450K Quality control intensities for",
+      cohort, "-", array.type, "Quality control intensities for",
       DT.QC.meta[ID == probe.ID]$Target, "probe",
       DT.QC.meta[ID == probe.ID]$Description, DT.QC.meta[ID == probe.ID]$Index,
       paste0("(ID = ", DT.QC.meta[ID == probe.ID]$ID, ")"))),
@@ -258,6 +261,9 @@ plot.HM450K.QC.probe <- function(
 #' Plots samples fluorescence intensities distribution for QC HM450K probes of a
 #' specific target type.
 #'
+#' @param array.type A \code{character} string specifying the type of array used
+#'                   to generate the data (Default: array.type = "HM450K";
+#'                   Supported: array.type = c("HM450K", "EPIC")).
 #' @param target   A \code{character} string specifying the HM450K QC target
 #'                 type. Each 'target' matches a specific step in Illumina array
 #'                 methods. Supported values:
@@ -269,6 +275,8 @@ plot.HM450K.QC.probe <- function(
 #' @param QC.data  A \code{data.table} list matching QC metadata with green
 #'                 channel and red channel intensities, obtained with the
 #'                 function \link{merge.QC.intensities.and.meta}.
+#' @param DT.QC.meta A \code{data.table} with HM450K quality control metadata
+#'                   obtained with the function \link{load.HM450K.QC.meta}.
 #' @param cohort   A \code{character} string to specify the name of the cohort
 #'                 to be displayed as part of the plot title
 #'                 (Default: cohort = "RnBSet").
@@ -304,7 +312,8 @@ plot.HM450K.QC.probe <- function(
 #' @references
 
 plot.HM450K.QC.target <- function(
-  target, QC.data, cohort = "RnBSet", ncores = 1){
+  array.type = "HM450K", target, QC.data, DT.QC.meta, cohort = "RnBSet",
+  ncores = 1){
   #Create QC boxplots for all probes target types
   DT.target.Cy3 <- data.table::melt.data.table(
     data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
@@ -322,7 +331,7 @@ plot.HM450K.QC.target <- function(
     l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
 
   #Check expected intensities for each probes
-  ls.exp.intens <- parallel::mclapply(
+  ls.exp.intens <- mclapply(
     X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
       HM450.QCView::get.expected.intensity(
         DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
@@ -372,10 +381,11 @@ plot.HM450K.QC.target <- function(
           color = "black", size = 0.5, fill = "white"),
         panel.grid.major.x = ggplot2::element_blank(),
         panel.spacing.x = grid::unit(0, "cm")) +
-      ggplot2::labs(x = "HM450K probe IDs", y = "Fluorescence intensity",
-                    fill = "Channels", title = paste(
-                      cohort, "- HM450K Quality control intensities for",
-                      target, "probes")) +
+      ggplot2::labs(
+        x = paste(array.type, "probe IDs"), y = "Fluorescence intensity",
+        fill = "Channels", title = paste(
+          cohort, "-", array.type, "Quality control intensities for", target,
+          "probes")) +
       ggplot2::facet_grid(`Expected Intensity` ~ QC.probe.IDs, scales = "free",
                           labeller = ggplot2::labeller(.cols = probe.labels)) +
       ggplot2::scale_y_continuous(
@@ -399,19 +409,35 @@ plot.HM450K.QC.target <- function(
     }
 
     #Set angle for X strip labels
-    if(target %in% c("Bisulfite Conversion II", "Extension", "Hybridization",
-                     "Non-polymorphic", "Specificity II", "Staining",
-                     "Target Removal")){
-      target.plot <- target.plot + ggplot2::theme(
-        strip.text.x = ggplot2::element_text(
-          size = 10, angle = 0, color = "black"))
-      width.target.plt <- 25
-    } else if(target %in% c("Bisulfite Conversion I", "Specificity I")){
-      target.plot <- target.plot + ggplot2::theme(
-        strip.text.x = ggplot2::element_text(
-          size = 10, angle = 90, color = "black"))
-      width.target.plt <- 25
-    } else { stop("Probe type not supported.") }
+    if(array.type == "HM450K"){
+      if(target %in% c("Bisulfite Conversion II", "Extension", "Hybridization",
+                       "Non-polymorphic", "Specificity II", "Staining",
+                       "Target Removal")){
+        target.plot <- target.plot + ggplot2::theme(
+          strip.text.x = ggplot2::element_text(
+            size = 10, angle = 0, color = "black"))
+        width.target.plt <- 25
+      } else if(target %in% c("Bisulfite Conversion I", "Specificity I")){
+        target.plot <- target.plot + ggplot2::theme(
+          strip.text.x = ggplot2::element_text(
+            size = 10, angle = 90, color = "black"))
+        width.target.plt <- 25
+      } else { stop("Probe type not supported.") }
+    } else if(array.type == "EPIC"){
+      if(target %in% c("Bisulfite Conversion II", "Extension", "Hybridization",
+                       "Specificity II", "Staining", "Target Removal")){
+        target.plot <- target.plot + ggplot2::theme(
+          strip.text.x = ggplot2::element_text(
+            size = 10, angle = 0, color = "black"))
+        width.target.plt <- 25
+      } else if(target %in% c("Bisulfite Conversion I", "Specificity I",
+                              "Non-polymorphic")){
+        target.plot <- target.plot + ggplot2::theme(
+          strip.text.x = ggplot2::element_text(
+            size = 10, angle = 90, color = "black"))
+        width.target.plt <- 25
+      } else { stop("Probe type not supported.") }
+    }
 
     #If more than or equal to 30 samples draw boxplots with violins
     if(nrow(unique(DT.target, by = "Samples")) >= 30){
@@ -437,10 +463,20 @@ plot.HM450K.QC.target <- function(
       names(strip.labels) <- unique(DT.target$Cyanine)
 
       #Calculate ranges of negative probes
-      neg.target.ranges <- lapply(
-        X = split(x = sort(unique(DT.target, by = "QC.probe.IDs")$Index),
-                  f = rep(c(1:4), times = c(154, 154, 154, 152))),
-        FUN = function(i){ c(min(i), max(i)) })
+      if(array.type == "HM450K"){
+        neg.target.ranges <- lapply(
+          X = split(x = sort(unique(DT.target, by = "QC.probe.IDs")$Index),
+                    f = rep(c(1:4), times = c(154, 154, 154, 152))),
+          FUN = function(i){ c(min(i), max(i)) })
+      } else if(array.type == "EPIC"){
+        neg.target.ranges <- lapply(
+          X = split(x = sort(unique(DT.target, by = "QC.probe.IDs")$Index),
+                    f = rep(c(1:3), times = c(137, 137, 137))),
+          FUN = function(i){ c(min(i), max(i)) })
+      } else {
+        stop("Unknown 'array.type'. Supported array.type are 'HM450K' & 'EPIC'.")
+      }
+
       #Negative Plot
       ls.neg.plot <- lapply(X = neg.target.ranges, FUN = function(i){
         negative.plot <- ggplot2::ggplot(
@@ -457,10 +493,11 @@ plot.HM450K.QC.target <- function(
               color = "black", size = 0.5, fill = "white"),
             panel.grid.major.x = ggplot2::element_blank(),
             panel.spacing.x = grid::unit(0, "cm")) +
-          ggplot2::labs(x = "HM450K negative probes",
-                        y = "Log-scaled fluorescence intensity", title = paste(
-                          cohort, "- HM450K Quality control intensities for",
-                          target, "probes", i[1], "to", i[2])) +
+          ggplot2::labs(
+            x = paste(array.type, "negative probes"),
+            y = "Log-scaled fluorescence intensity", title = paste(
+              cohort, "-", array.type, "Quality control intensities for",
+              target, "probes", i[1], "to", i[2])) +
           ggplot2::facet_grid(
             Cyanine ~., scales = "free",
             labeller = ggplot2::labeller(.rows = strip.labels)) +
@@ -519,9 +556,9 @@ plot.HM450K.QC.target <- function(
           panel.grid.major.x = ggplot2::element_blank(),
           panel.spacing.x = grid::unit(0, "cm")) +
         ggplot2::labs(
-          x = "HM450K probe IDs", y = "Fluorescence intensity",
-          title = paste(cohort, "- HM450K Quality control intensities for",
-                        target, "probes")) +
+          x = paste(array.type, "probe IDs"), y = "Fluorescence intensity",
+          title = paste(cohort, "-", array.type,
+                        "Quality control intensities for", target, "probes")) +
         ggplot2::facet_grid(
           Cyanine ~., scales = "free",
           labeller = ggplot2::labeller(.rows = strip.labels)) +

@@ -1,6 +1,6 @@
 Package: HM450.QCView
 Title: Visualize quality control data from your HM450K dataset with HM450.QCView
-Version: 0.0.1
+Version: 0.0.4
 Authors@R: 
     person(given = "Yoann",
            family = "Pageaud",

@@ -4,9 +4,13 @@
 \alias{plot.HM450K.QC.probe}
 \title{Plots fluorescence intensities barplots for a single QC HM450K probe.}
 \usage{
-\method{plot}{HM450K.QC.probe}(probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet")
+\method{plot}{HM450K.QC.probe}(array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet")
 }
 \arguments{
+\item{array.type}{A \code{character} string specifying the type of array used
+to generate the data (Default: array.type = "HM450K";
+Supported: array.type = c("HM450K", "EPIC")).}
+
 \item{probe.ID}{A \code{character} string specifying the ID of an HM450K
 quality control probe.}
 

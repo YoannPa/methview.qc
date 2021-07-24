@@ -5,9 +5,20 @@
 \title{Plots samples fluorescence intensities distribution for QC HM450K probes of a
 specific target type.}
 \usage{
-\method{plot}{HM450K.QC.target}(target, QC.data, cohort = "RnBSet", ncores = 1)
+\method{plot}{HM450K.QC.target}(
+  array.type = "HM450K",
+  target,
+  QC.data,
+  DT.QC.meta,
+  cohort = "RnBSet",
+  ncores = 1
+)
 }
 \arguments{
+\item{array.type}{A \code{character} string specifying the type of array used
+to generate the data (Default: array.type = "HM450K";
+Supported: array.type = c("HM450K", "EPIC")).}
+
 \item{target}{A \code{character} string specifying the HM450K QC target
 type. Each 'target' matches a specific step in Illumina array
 methods. Supported values:
@@ -20,6 +31,9 @@ target = c("Bisulfite Conversion I",
 \item{QC.data}{A \code{data.table} list matching QC metadata with green
 channel and red channel intensities, obtained with the
 function \link{merge.QC.intensities.and.meta}.}
+
+\item{DT.QC.meta}{A \code{data.table} with HM450K quality control metadata
+obtained with the function \link{load.HM450K.QC.meta}.}
 
 \item{cohort}{A \code{character} string to specify the name of the cohort
 to be displayed as part of the plot title
