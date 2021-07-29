@@ -2,17 +2,17 @@
 % Please edit documentation in R/qc_plot.R
 \name{snp.heatmap}
 \alias{snp.heatmap}
-\title{Draws a methylation heatmap from methylation of the 65 HM450K genotyping
-probes.}
+\title{Draws a heatmap from methylation array genotyping probes.}
 \usage{
 snp.heatmap(
   RnBSet,
   dist.method = "manhattan",
   annot.grps,
   annot.pal,
-  heatmap.pal,
+  heatmap.pal = c("#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#FDDBC7", "#F4A582",
+    "#D6604D", "#B2182B"),
   x.lab = "Samples",
-  plot.title,
+  plot.title = NULL,
   axis.text.x = element_text(size = 10, angle = -45, hjust = 0, vjust = 0.5, color =
     "black"),
   axis.text.y.right = element_text(size = 7, color = "black"),
@@ -24,9 +24,18 @@ snp.heatmap(
 )
 }
 \arguments{
-\item{RnBSet}{A \code{RnBSet} basic object for storing HM450K DNA
-methylation and experimental quality information
-(MethylationEPIC & Bisulfite data not supported).}
+\item{RnBSet}{A \code{RnBSet} basic object for storing
+methylation array data and experimental quality
+information (Bisulfite data not supported).
+\itemize{
+ \item{For more information about RnBSet object
+ read \link[RnBeads]{RnBSet-class}.}
+ \item{To create an RnBSet object run
+ \link[RnBeads]{rnb.execute.import}.}
+ \item{For additionnal options to import
+ methylation array data in the RnBSet see options
+ available in \link[RnBeads]{rnb.options}.}
+}}
 
 \item{dist.method}{A \code{character} vector to specify the distance
 methods to be used on the matrix rows and columns.
@@ -71,7 +80,7 @@ palette for the heatmap.}
 (Default: x.lab = 'Samples').}
 
 \item{plot.title}{A \code{character} to be used as title for the
-plot.}
+plot (Default: plot.title = NULL ; ).}
 
 \item{axis.text.x}{An \code{element_text} object to setup X axis text
 (Default: axis.text.x = element_text(size = 10,
@@ -102,12 +111,31 @@ dendrogram made on columns
 (Default: dend.col.size = 1).}
 }
 \value{
-A \code{grob} of the methylation heatmap created on HM450K genotyping
-        probes.
+A \code{grob} of the heatmap created on methylation array
+        genotyping probes.
 }
 \description{
-Draws a methylation heatmap from methylation of the 65 HM450K genotyping
-probes.
+Draws a heatmap from methylation array genotyping probes.
+}
+\examples{
+#Create an RnBSet for MethylationEPIC data.
+library(RnBeads)
+idat.dir <- "~/data/MethylationEPIC/"
+sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+rnb.options(identifiers.column = "barcode")
+#Load scientific palette package ggsci.
+library(ggsci)
+#Plot heatmap of MethylationEPIC genotyping probes.
+snp.htmp <- snp.heatmap(
+  RnBSet = rnb.set,
+  annot.grps = list("Donors" = rnb.set@pheno$ID),
+  annot.pal = pal_npg("nrc", alpha = 1)(10))
+#Save heatmap in a PDF file.
+ggsave(
+  filename = "heatmap.pdf", plot = snp.htmp$result.grob, device = "pdf",
+  path = "~/")
 }
 \references{
 Pageaud Y. et al., BiocompR - Advanced visualizations for data

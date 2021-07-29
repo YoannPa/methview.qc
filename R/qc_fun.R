@@ -1,16 +1,21 @@
 
-#' Loads HM450K QC metadata as a data.table.
-#'
-#' @return A \code{data.table} with HM450K quality control metadata.
+#' Loads methylation array QC metadata as a data.table.
+#' @param array.meta A \code{character} string specifying the array type to load
+#'                   quality control metadata from
+#'                   (Supported: array.meta = c("controls450", "controlsEPIC")).
+#' @return A \code{data.table} with HM450K or MethylationEPIC quality control
+#'         metadata depending on the QC metadata requested.
 #' @author Yoann Pageaud.
 #' @export
-#' @examples DT.QC.meta <- load.HM450K.QC.meta()
+#' @examples
+#' #Load quality control metadata for Human Methylation 450K array
+#' DT.QC.meta <- load.metharray.QC.meta(array.meta = "controls450")
 #' @references Assenov Y. et al., Comprehensive analysis of DNA methylation data
 #'             with RnBeads.
 
-load.HM450K.QC.meta <- function(){
-  # Get HM450K QC metadata as a data.table
-  QC.meta <- RnBeads::rnb.get.annotation("controls450")
+load.metharray.QC.meta <- function(array.meta){
+  # Get methylation array QC metadata as a data.table
+  QC.meta <- RnBeads::rnb.get.annotation(array.meta)
   DT.QC.meta <- data.table::as.data.table(QC.meta)
   DT.QC.meta[, ID := as.character(ID)]
   # Rename target levels to lowercase
@@ -20,41 +25,38 @@ load.HM450K.QC.meta <- function(){
   return(DT.QC.meta)
 }
 
-
-#' Loads MethylationEPIC QC metadata as a data.table.
-#'
-#' @return A \code{data.table} with MethylationEPIC quality control metadata.
-#' @author Yoann Pageaud.
-#' @export
-#' @examples DT.QC.meta <- load.EPIC.QC.meta()
-#' @references Assenov Y. et al., Comprehensive analysis of DNA methylation data
-#'             with RnBeads.
-
-load.EPIC.QC.meta <- function(){
-  # Get MethylationEPIC QC metadata as a data.table
-  QC.meta <- RnBeads::rnb.get.annotation("controlsEPIC")
-  DT.QC.meta <- data.table::as.data.table(QC.meta)
-  DT.QC.meta[, ID := as.character(ID)]
-  bit::setattr(DT.QC.meta$Target, "levels", vapply(
-    X = levels(DT.QC.meta$Target), USE.NAMES = FALSE,
-    FUN.VALUE = character(length = 1), FUN = HM450.QCView::smart.tolower))
-  return(DT.QC.meta)
-}
-
-
 #' Merges red and green channels intensities with QC probes metadata.
 #'
-#' @param RnBSet     A \code{RnBSet} basic object for storing HM450K DNA
-#'                   methylation and experimental quality information
-#'                   (MethylationEPIC & Bisulfite data not supported).
-#' @param DT.QC.meta A \code{data.table} with HM450K quality control metadata
-#'                   obtained using \link{load.HM450K.QC.meta}.
+#' @param RnBSet     An \code{RnBSet} basic object for storing methylation
+#'                   array DNA methylation and experimental quality information
+#'                   (Bisulfite data not supported).
+#'                   \itemize{
+#'                    \item{For more information about RnBSet object read
+#'                    \link[RnBeads]{RnBSet-class}.}
+#'                    \item{To create an RnBSet object run
+#'                    \link[RnBeads]{rnb.execute.import}.}
+#'                    \item{For additionnal options to import methylation array
+#'                    data in the RnBSet see options available in
+#'                    \link[RnBeads]{rnb.options}.}
+#'                   }
+#' @param DT.QC.meta A \code{data.table} with methylation array quality control
+#'                   metadata obtained using \link{load.metharray.QC.meta}.
 #' @return A \code{data.table} list matching QC metadata with green channel and
 #'         red channel intensities.
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' @references
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' #Create the data.table with quality control metadata
+#' dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+#' # Merge red and green channels intensities with QC metadata
+#' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 
 merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
   #Get sample IDs
@@ -70,8 +72,6 @@ merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
     data.table::setnames(x = DT.QC, old = "ID", new = "QC.probe.IDs")
     DT.QC
   })
-  # Cy3 emission is electric lime green (#00ff00)
-  # Cy5 emission is red (#ff0000)
   names(QC.data) <- c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")
   #Return QC.data
   return(QC.data)
@@ -98,8 +98,6 @@ merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
 #' }
 #' @author Yoann Pageaud.
 #' @export
-#' @examples
-#' @references
 #' @keywords internal
 
 compute.intensity.ratio <- function(DT.probe.ratio){
@@ -157,25 +155,32 @@ compute.intensity.ratio <- function(DT.probe.ratio){
 }
 
 
-#' Provides expected intensity for a given HM450K probe ID.
+#' Provides expected intensity for a given methylation array probe ID.
 #'
-#' @param DT.QC.meta    A \code{data.table} with HM450K quality control metadata
-#'                      obtained using \link{load.HM450K.QC.meta}.
-#' @param probe.id      A \code{character} string matching a HM450K probe ID
-#'                      listed in 'DT.QC.meta'.
+#' @param DT.QC.meta    A \code{data.table} with methylation array quality
+#'                      control metadata obtained using
+#'                      \link{load.metharray.QC.meta}.
+#' @param probe.id      A \code{character} string matching a methylation array
+#'                      probe ID listed in 'DT.QC.meta'.
 #' @param channel.names A \code{character} vector specifying the names of the 2
 #'                      color channels to use for creating the data.table of
-#'                      expected intensity.
+#'                      expected intensity (Default:
+#'                      channel.names = c("Cy3 - Electric Lime Green",
+#'                      "Cy5 - Dark Red")).
 #' @return A \code{data.table} with a 'Channel' column and an
 #'         'Expected intensity' column providing the probe intensity expected
 #'         for green and red channels.
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' @references
+#' #Create the data.table with quality control metadata from HM450K
+#' dt.meta <- load.metharray.QC.meta(array.meta = "controls450")
+#' #Check expected intensity for QC probe "27630314"
+#' get.expected.intensity(DT.QC.meta = dt.meta, probe.id = "27630314")
 
-get.expected.intensity <- function(DT.QC.meta, probe.id, channel.names){
-  #TODO: Maybe the definition of "Background" should be thought again ?
+get.expected.intensity <- function(
+  DT.QC.meta, probe.id,
+  channel.names = c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")){
   #Create DT.expected.intensity
   if(DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
      DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
@@ -233,6 +238,6 @@ get.expected.intensity <- function(DT.QC.meta, probe.id, channel.names){
       "Channel" = channel.names,
       "Expected intensity" = c("Background", "Background"))
   } else { stop("Don't know how to handle this probe!") }
-
+  #TODO: Maybe the definition of "Background" should be thought again ?
   return(DT.expected.intensity)
 }

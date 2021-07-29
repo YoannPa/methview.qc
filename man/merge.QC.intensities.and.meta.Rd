@@ -7,12 +7,21 @@
 \method{merge}{QC.intensities.and.meta}(RnBSet, DT.QC.meta)
 }
 \arguments{
-\item{RnBSet}{A \code{RnBSet} basic object for storing HM450K DNA
-methylation and experimental quality information
-(MethylationEPIC & Bisulfite data not supported).}
+\item{RnBSet}{An \code{RnBSet} basic object for storing methylation
+array DNA methylation and experimental quality information
+(Bisulfite data not supported).
+\itemize{
+ \item{For more information about RnBSet object read
+ \link[RnBeads]{RnBSet-class}.}
+ \item{To create an RnBSet object run
+ \link[RnBeads]{rnb.execute.import}.}
+ \item{For additionnal options to import methylation array
+ data in the RnBSet see options available in
+ \link[RnBeads]{rnb.options}.}
+}}
 
-\item{DT.QC.meta}{A \code{data.table} with HM450K quality control metadata
-obtained using \link{load.HM450K.QC.meta}.}
+\item{DT.QC.meta}{A \code{data.table} with methylation array quality control
+metadata obtained using \link{load.metharray.QC.meta}.}
 }
 \value{
 A \code{data.table} list matching QC metadata with green channel and
@@ -21,8 +30,18 @@ A \code{data.table} list matching QC metadata with green channel and
 \description{
 Merges red and green channels intensities with QC probes metadata.
 }
-\references{
-
+\examples{
+#Create an RnBSet for MethylationEPIC data
+library(RnBeads)
+idat.dir <- "~/data/MethylationEPIC/"
+sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+rnb.options(identifiers.column = "barcode")
+#Create the data.table with quality control metadata
+dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+# Merge red and green channels intensities with QC metadata
+dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 }
 \author{
 Yoann Pageaud.

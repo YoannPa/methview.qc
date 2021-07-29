@@ -29,9 +29,6 @@ A \code{data.table} with 7 columns:
 \description{
 Computes ratio of Cy3 & Cy5 intensities with associated color shades.
 }
-\references{
-
-}
 \author{
 Yoann Pageaud.
 }

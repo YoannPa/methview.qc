@@ -1,10 +1,18 @@
 
-#' Draws a methylation heatmap from methylation of the 65 HM450K genotyping
-#' probes.
+#' Draws a heatmap from methylation array genotyping probes.
 #'
-#' @param RnBSet             A \code{RnBSet} basic object for storing HM450K DNA
-#'                           methylation and experimental quality information
-#'                           (MethylationEPIC & Bisulfite data not supported).
+#' @param RnBSet             A \code{RnBSet} basic object for storing
+#'                           methylation array data and experimental quality
+#'                           information (Bisulfite data not supported).
+#'                           \itemize{
+#'                            \item{For more information about RnBSet object
+#'                            read \link[RnBeads]{RnBSet-class}.}
+#'                            \item{To create an RnBSet object run
+#'                            \link[RnBeads]{rnb.execute.import}.}
+#'                            \item{For additionnal options to import
+#'                            methylation array data in the RnBSet see options
+#'                            available in \link[RnBeads]{rnb.options}.}
+#'                           }
 #' @param dist.method        A \code{character} vector to specify the distance
 #'                           methods to be used on the matrix rows and columns.
 #'                           \itemize{
@@ -43,7 +51,7 @@
 #' @param x.lab              A \code{character} to specify X-axis title
 #'                           (Default: x.lab = 'Samples').
 #' @param plot.title         A \code{character} to be used as title for the
-#'                           plot.
+#'                           plot (Default: plot.title = NULL ; ).
 #' @param axis.text.x        An \code{element_text} object to setup X axis text
 #'                           (Default: axis.text.x = element_text(size = 10,
 #'                           angle = -45, hjust = 0, vjust = 0.5,
@@ -65,36 +73,70 @@
 #' @param dend.size          A \code{numeric} defining the height of the
 #'                           dendrogram made on columns
 #'                           (Default: dend.col.size = 1).
-#' @return A \code{grob} of the methylation heatmap created on HM450K genotyping
-#'         probes.
+#' @return A \code{grob} of the heatmap created on methylation array
+#'         genotyping probes.
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
+#' #Create an RnBSet for MethylationEPIC data.
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' #Load scientific palette package ggsci.
+#' library(ggsci)
+#' #Plot heatmap of MethylationEPIC genotyping probes.
+#' snp.htmp <- snp.heatmap(
+#'   RnBSet = rnb.set,
+#'   annot.grps = list("Donors" = rnb.set@pheno$ID),
+#'   annot.pal = pal_npg("nrc", alpha = 1)(10))
+#' #Save heatmap in a PDF file.
+#' ggsave(
+#'   filename = "heatmap.pdf", plot = snp.htmp$result.grob, device = "pdf",
+#'   path = "~/")
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 #' @references Assenov Y. et al., Comprehensive analysis of DNA methylation data
 #'             with RnBeads.
 
 snp.heatmap <- function(
-  RnBSet, dist.method = "manhattan", annot.grps, annot.pal, heatmap.pal,
-  x.lab = "Samples", plot.title, axis.text.x = element_text(
+  RnBSet, dist.method = "manhattan", annot.grps, annot.pal, heatmap.pal = c(
+    "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0","#FDDBC7", "#F4A582", "#D6604D",
+    "#B2182B"), x.lab = "Samples", plot.title = NULL,
+  axis.text.x = element_text(
     size = 10, angle = -45, hjust = 0, vjust = 0.5, color = "black"),
   axis.text.y.right = element_text(size = 7, color = "black"),
   axis.title.y.right = element_text(size = 11),
   lgd.text = element_text(size = 10), lgd.space.width = 1, annot.size = 1,
   dend.size = 1){
 
-  #Get the 65 genotyping (rs) probes
+  #Get the 65 or 59 genotyping (rs) probes
   rs.probes <- rownames(RnBSet@sites)[
     grepl(pattern = "rs", x = rownames(RnBSet@sites))]
   #Extract methylation matrix from RnBSet
   meth.mat <- RnBeads::meth(RnBSet, row.names = TRUE)
   rs.meth.mat <- meth.mat[rs.probes, ]
 
-  #Plot SNP CpG heatmap using genotyping probes from HM450K data
+  if(length(rs.probes) == 59){
+    array.type <- "MethylationEPIC"
+    if(is.null(plot.title)){
+      plot.title <- "Heatmap of MethylationEPIC genotyping probes"
+    }
+  } else if(length(rs.probes) == 65){
+    array.type <- "HM450K"
+    if(is.null(plot.title)){
+      plot.title <- "Heatmap of HM450K genotyping probes"
+    }
+  } else {
+    stop("RnBSet platform not supported. Supported platforms are HM450K and MethylationEPIC.")
+  }
+
+  #Plot SNP CpG heatmap using genotyping probes from methylation array data
   snp.heatmap <- BiocompR::gg2heatmap(
     m = rs.meth.mat, dist.method = dist.method, row.type = "genotyping probes",
-    y.lab = "HM450K genotyping probes", x.lab = x.lab,
+    y.lab = paste(array.type, "genotyping probes"), x.lab = x.lab,
     axis.text.y.right = axis.text.y.right,
     axis.ticks.y.right = ggplot2::element_line(color = "black"),
     axis.text.x = axis.text.x, axis.title.y.right = axis.title.y.right,
@@ -110,15 +152,15 @@ snp.heatmap <- function(
 
 #' Loads QC ggplot2 default theme.
 #'
-#' @return A ggplot2 \code{theme} object to be used as a default theme for QC
+#' @return A ggplot2 \code{theme} object used as a default theme for QC
 #'         plots.
 #' @author Yoann Pageaud.
 #' @export
-#' @examples
+#' @examples theme_qc <- HM450.QCView::load.metharray.QC.theme()
 #' @references
 #' @keywords internal
 
-load.HM450K.QC.theme <- function(){
+load.metharray.QC.theme <- function(){
   #Create plot theme
   ggplot2::theme(
     plot.title = ggplot2::element_text(hjust = 0.5),
@@ -137,29 +179,47 @@ load.HM450K.QC.theme <- function(){
 }
 
 
-#' Plots fluorescence intensities barplots for a single QC HM450K probe.
+#' Plots fluorescence intensities barplots for a single QC methylation array probe.
 #'
 #' @param array.type A \code{character} string specifying the type of array used
 #'                   to generate the data (Default: array.type = "HM450K";
 #'                   Supported: array.type = c("HM450K", "EPIC")).
-#' @param probe.ID   A \code{character} string specifying the ID of an HM450K
-#'                   quality control probe.
+#' @param probe.ID   A \code{character} string specifying the ID of a
+#'                   methylation array quality control probe.
 #' @param QC.data    A \code{data.table} list matching QC metadata with green
 #'                   channel and red channel intensities, obtained with the
 #'                   function \link{merge.QC.intensities.and.meta}.
-#' @param DT.QC.meta A \code{data.table} with HM450K quality control metadata
-#'                   obtained with the function \link{load.HM450K.QC.meta}.
+#' @param DT.QC.meta A \code{data.table} with methylation array quality control
+#'                   metadata obtained with the function
+#'                   \link{load.metharray.QC.meta}.
 #' @param cohort     A \code{character} string to specify the name of the cohort
 #'                   to be displayed as part of the plot title
 #'                   (Default: cohort = "RnBSet").
-#' @return A \code{gtable} barplot of the QC HM450K probe fluorescence
+#' @return A \code{gtable} barplot of the QC probe fluorescence
 #'         intensities.
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' @references
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' #Create the data.table with quality control metadata
+#' dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+#' # Merge red and green channels intensities with QC metadata
+#' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' #Draw probe specific QC plot for QC probe "21630339"
+#' probe.plot <- HM450.QCView:::plot.array.QC.probe(
+#'   array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
+#'   DT.QC.meta = dt.meta)
+#' #Save plot in a PDF file
+#' ggsave(filename = "QCprobe_21630339.pdf", plot = probe.plot, device = "pdf",
+#'        path = "~/")
 
-plot.HM450K.QC.probe <- function(
+plot.array.QC.probe <- function(
   array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
   #Melt Cy3 & Cy5 data.tables
   DT.probe.Cy3 <- data.table::melt.data.table(
@@ -172,7 +232,8 @@ plot.HM450K.QC.probe <- function(
     measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")[, c(
       "Samples", "Cy5 intensity"), ]
-
+  #Load metharray Quality Control theme
+  theme_qc <- HM450.QCView::load.metharray.QC.theme()
   #Check if any intensity equals to 0
   if(nrow(DT.probe.Cy3[`Cy3 intensity` == 0]) +
      nrow(DT.probe.Cy5[`Cy5 intensity` == 0]) > 0){
@@ -258,14 +319,14 @@ plot.HM450K.QC.probe <- function(
   }
 }
 
-#' Plots samples fluorescence intensities distribution for QC HM450K probes of a
+#' Plots samples fluorescence intensities distribution for QC probes of a
 #' specific target type.
 #'
 #' @param array.type A \code{character} string specifying the type of array used
 #'                   to generate the data (Default: array.type = "HM450K";
 #'                   Supported: array.type = c("HM450K", "EPIC")).
-#' @param target   A \code{character} string specifying the HM450K QC target
-#'                 type. Each 'target' matches a specific step in Illumina array
+#' @param target   A \code{character} string specifying the QC target type. Each
+#'                 'target' matches a specific step in Illumina array
 #'                 methods. Supported values:
 #'                 target = c("Bisulfite Conversion I",
 #'                 "Bisulfite Conversion II", "Extension", "Hybridization",
@@ -275,8 +336,8 @@ plot.HM450K.QC.probe <- function(
 #' @param QC.data  A \code{data.table} list matching QC metadata with green
 #'                 channel and red channel intensities, obtained with the
 #'                 function \link{merge.QC.intensities.and.meta}.
-#' @param DT.QC.meta A \code{data.table} with HM450K quality control metadata
-#'                   obtained with the function \link{load.HM450K.QC.meta}.
+#' @param DT.QC.meta A \code{data.table} with methylation array quality control metadata
+#'                   obtained with the function \link{load.metharray.QC.meta}.
 #' @param cohort   A \code{character} string to specify the name of the cohort
 #'                 to be displayed as part of the plot title
 #'                 (Default: cohort = "RnBSet").
@@ -309,9 +370,26 @@ plot.HM450K.QC.probe <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' @references
+#' #' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' #Create the data.table with quality control metadata
+#' dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+#' # Merge red and green channels intensities with QC metadata
+#' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' #Draw target specific QC plot for "Staining" QC probes
+#' target.plot <- HM450.QCView:::plot.array.QC.target(
+#'   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
+#'   DT.QC.meta = dt.meta, ncores = 2)
+#' #Save plot in a PDF file
+#' ggsave(filename = "QC_staining.pdf", plot = target.plot, device = "pdf",
+#'        path = "~/")
 
-plot.HM450K.QC.target <- function(
+plot.array.QC.target <- function(
   array.type = "HM450K", target, QC.data, DT.QC.meta, cohort = "RnBSet",
   ncores = 1){
   #Create QC boxplots for all probes target types
@@ -323,7 +401,8 @@ plot.HM450K.QC.target <- function(
     data = QC.data$`Cy5 - Dark Red`[Target == target],
     measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")
-
+  #Load metharray Quality Control theme
+  theme_qc <- HM450.QCView::load.metharray.QC.theme()
   #Rbind data.tables
   ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
   names(ls.dt.target) <- names(QC.data)
@@ -474,7 +553,8 @@ plot.HM450K.QC.target <- function(
                     f = rep(c(1:3), times = c(137, 137, 137))),
           FUN = function(i){ c(min(i), max(i)) })
       } else {
-        stop("Unknown 'array.type'. Supported array.type are 'HM450K' & 'EPIC'.")
+        stop(
+          "Unknown 'array.type'. Supported array.type are 'HM450K' & 'EPIC'.")
       }
 
       #Negative Plot

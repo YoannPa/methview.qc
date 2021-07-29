@@ -2,20 +2,27 @@
 % Please edit documentation in R/qc_fun.R
 \name{get.expected.intensity}
 \alias{get.expected.intensity}
-\title{Provides expected intensity for a given HM450K probe ID.}
+\title{Provides expected intensity for a given methylation array probe ID.}
 \usage{
-get.expected.intensity(DT.QC.meta, probe.id, channel.names)
+get.expected.intensity(
+  DT.QC.meta,
+  probe.id,
+  channel.names = c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")
+)
 }
 \arguments{
-\item{DT.QC.meta}{A \code{data.table} with HM450K quality control metadata
-obtained using \link{load.HM450K.QC.meta}.}
+\item{DT.QC.meta}{A \code{data.table} with methylation array quality
+control metadata obtained using
+\link{load.metharray.QC.meta}.}
 
-\item{probe.id}{A \code{character} string matching a HM450K probe ID
-listed in 'DT.QC.meta'.}
+\item{probe.id}{A \code{character} string matching a methylation array
+probe ID listed in 'DT.QC.meta'.}
 
 \item{channel.names}{A \code{character} vector specifying the names of the 2
 color channels to use for creating the data.table of
-expected intensity.}
+expected intensity (Default:
+channel.names = c("Cy3 - Electric Lime Green",
+"Cy5 - Dark Red")).}
 }
 \value{
 A \code{data.table} with a 'Channel' column and an
@@ -23,10 +30,13 @@ A \code{data.table} with a 'Channel' column and an
         for green and red channels.
 }
 \description{
-Provides expected intensity for a given HM450K probe ID.
+Provides expected intensity for a given methylation array probe ID.
 }
-\references{
-
+\examples{
+#Create the data.table with quality control metadata from HM450K
+dt.meta <- load.metharray.QC.meta(array.meta = "controls450")
+#Check expected intensity for QC probe "27630314"
+get.expected.intensity(DT.QC.meta = dt.meta, probe.id = "27630314")
 }
 \author{
 Yoann Pageaud.
