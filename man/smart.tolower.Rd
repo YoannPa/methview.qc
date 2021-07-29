@@ -18,8 +18,8 @@ A \code{character} string converted in lowercase.
 \description{
 Convert strings to lowercase in a smart way.
 }
-\references{
-
+\examples{
+smart.tolower(x = "A_QUIET_PLACE_PART_II")
 }
 \author{
 Yoann Pageaud.

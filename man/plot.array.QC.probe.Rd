@@ -46,7 +46,7 @@ dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
 dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #Draw probe specific QC plot for QC probe "21630339"
-probe.plot <- HM450.QCView:::plot.array.QC.probe(
+probe.plot <- methview.qc:::plot.array.QC.probe(
   array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
   DT.QC.meta = dt.meta)
 #Save plot in a PDF file

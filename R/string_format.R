@@ -8,8 +8,7 @@
 #' @return A \code{character} string converted in lowercase.
 #' @author Yoann Pageaud.
 #' @export
-#' @examples
-#' @references
+#' @examples smart.tolower(x = "A_QUIET_PLACE_PART_II")
 #' @keywords internal
 
 smart.tolower <- function(x, sep = c(" ", "_")){

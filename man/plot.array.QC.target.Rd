@@ -85,7 +85,7 @@ dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
 dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #Draw target specific QC plot for "Staining" QC probes
-target.plot <- HM450.QCView:::plot.array.QC.target(
+target.plot <- methview.qc:::plot.array.QC.target(
   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
   DT.QC.meta = dt.meta, ncores = 2)
 #Save plot in a PDF file

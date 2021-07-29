@@ -156,7 +156,7 @@ snp.heatmap <- function(
 #'         plots.
 #' @author Yoann Pageaud.
 #' @export
-#' @examples theme_qc <- HM450.QCView::load.metharray.QC.theme()
+#' @examples theme_qc <- methview.qc::load.metharray.QC.theme()
 #' @references
 #' @keywords internal
 
@@ -212,7 +212,7 @@ load.metharray.QC.theme <- function(){
 #' # Merge red and green channels intensities with QC metadata
 #' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw probe specific QC plot for QC probe "21630339"
-#' probe.plot <- HM450.QCView:::plot.array.QC.probe(
+#' probe.plot <- methview.qc:::plot.array.QC.probe(
 #'   array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta)
 #' #Save plot in a PDF file
@@ -233,7 +233,7 @@ plot.array.QC.probe <- function(
     variable.name = "Samples", value.name = "Cy5 intensity")[, c(
       "Samples", "Cy5 intensity"), ]
   #Load metharray Quality Control theme
-  theme_qc <- HM450.QCView::load.metharray.QC.theme()
+  theme_qc <- methview.qc::load.metharray.QC.theme()
   #Check if any intensity equals to 0
   if(nrow(DT.probe.Cy3[`Cy3 intensity` == 0]) +
      nrow(DT.probe.Cy5[`Cy5 intensity` == 0]) > 0){
@@ -265,11 +265,11 @@ plot.array.QC.probe <- function(
     DT.probe.ratio <- data.table::merge.data.table(
       x = DT.probe.Cy3, y = DT.probe.Cy5, by = "Samples", all = TRUE)
     #Compute intensity ratio values.
-    DT.probe.ratio <- HM450.QCView::compute.intensity.ratio(
+    DT.probe.ratio <- methview.qc::compute.intensity.ratio(
       DT.probe.ratio = DT.probe.ratio)
 
     #Create DT.expected.intensity
-    DT.expected.intensity <- HM450.QCView::get.expected.intensity(
+    DT.expected.intensity <- methview.qc::get.expected.intensity(
       DT.QC.meta = DT.QC.meta, probe.id = probe.ID,
       channel.names = names(QC.data))
 
@@ -382,7 +382,7 @@ plot.array.QC.probe <- function(
 #' # Merge red and green channels intensities with QC metadata
 #' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw target specific QC plot for "Staining" QC probes
-#' target.plot <- HM450.QCView:::plot.array.QC.target(
+#' target.plot <- methview.qc:::plot.array.QC.target(
 #'   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta, ncores = 2)
 #' #Save plot in a PDF file
@@ -402,7 +402,7 @@ plot.array.QC.target <- function(
     measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")
   #Load metharray Quality Control theme
-  theme_qc <- HM450.QCView::load.metharray.QC.theme()
+  theme_qc <- methview.qc::load.metharray.QC.theme()
   #Rbind data.tables
   ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
   names(ls.dt.target) <- names(QC.data)
@@ -412,7 +412,7 @@ plot.array.QC.target <- function(
   #Check expected intensities for each probes
   ls.exp.intens <- mclapply(
     X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
-      HM450.QCView::get.expected.intensity(
+      methview.qc::get.expected.intensity(
         DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
     })
   names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)

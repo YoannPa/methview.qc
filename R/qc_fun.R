@@ -21,7 +21,7 @@ load.metharray.QC.meta <- function(array.meta){
   # Rename target levels to lowercase
   bit::setattr(DT.QC.meta$Target, "levels", vapply(
     X = levels(DT.QC.meta$Target), USE.NAMES = FALSE,
-    FUN.VALUE = character(length = 1), FUN = HM450.QCView::smart.tolower))
+    FUN.VALUE = character(length = 1), FUN = methview.qc::smart.tolower))
   return(DT.QC.meta)
 }
 

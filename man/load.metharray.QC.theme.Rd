@@ -14,7 +14,7 @@ A ggplot2 \code{theme} object used as a default theme for QC
 Loads QC ggplot2 default theme.
 }
 \examples{
-theme_qc <- HM450.QCView::load.metharray.QC.theme()
+theme_qc <- methview.qc::load.metharray.QC.theme()
 }
 \references{
 
