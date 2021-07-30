@@ -4,7 +4,14 @@
 \alias{plot.all.qc}
 \title{Draws and saves all quality control plots available in methview.qc}
 \usage{
-\method{plot}{all.qc}(RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE)
+\method{plot}{all.qc}(
+  RnBSet,
+  cohort = "RnBSet",
+  save.dir,
+  ncores = 1,
+  include.gp = TRUE,
+  include.ffpe = FALSE
+)
 }
 \arguments{
 \item{RnBSet}{A \code{RnBSet} basic object for storing methylation array
@@ -36,6 +43,13 @@ heatmap should be plotted too (include.gp = TRUE) or not
 genotyping probes heatmap, include.gp = FALSE is advised.
 For more information about the genotyping probes heatmap
 see \link{snp.heatmap}.}
+
+\item{include.ffpe}{A \code{logical} to specify whether the FFPE negative
+control probe should be plotted a second time separately
+from the rest of the Negative QC probes (Warning: this is
+an experimental function; for more information about the
+FFPE negative control probe see
+\link{plot.negative.FFPE}).}
 }
 \description{
 Draws and saves all quality control plots available in methview.qc
@@ -49,7 +63,7 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 rnb.options(identifiers.column = "barcode")
 #Draw all plots from the quality control data of rnb.set
-methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2, include.gp = TRUE)
+methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
 }
 \author{
 Yoann Pageaud.

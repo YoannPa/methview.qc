@@ -664,6 +664,73 @@ plot.array.QC.target <- function(
   }
 }
 
+#' Plots FFPE negative control probe fluorescence intensities barplots (WARNING: Experimental).
+#' 
+#' @param RnBSet A \code{RnBSet} basic object for storing methylation array data
+#'               and experimental quality information (HM450K and Bisulfite data
+#'               not supported).
+#'               \itemize{
+#'                \item{For more information about RnBSet object read
+#'                \link[RnBeads]{RnBSet-class}.}
+#'                \item{To create an RnBSet object run
+#'                \link[RnBeads]{rnb.execute.import}.}
+#'                \item{For additionnal options to import methylation array data
+#'                in the RnBSet see options available in
+#'                \link[RnBeads]{rnb.options}.}
+#'               }
+#' @param cohort A \code{character} string to specify the name of the cohort to
+#'               be displayed as part of the plot title
+#'               (Default: cohort = "RnBSet").
+#' @return A \code{gtable} barplot of the QC probe fluorescence intensities.
+#' @details
+#' In MethylationEPIC array we identified the Negative quality control probe
+#' "Negative 1720" as sensitive to Formaldehyd Fixed Paraffin Embed (FFPE)
+#' sample treatment.\cr This probe (Negative 1720; ID = 36729435) displays
+#' unusual high fluorescence intensities in FFPE samples in both, green and red
+#' channels, more pronounced in the green channel.\cr We suspect that a similar
+#' Negative quality control probe also exists in HM450K array, but have not yet
+#' identified one. 
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' # Plot FFPE negative control probe
+#' neg.FFPE <- methview.qc:::plot.negative.FFPE(RnBSet = rnb.set)
+#' #Save plot
+#' ggsave(filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
+#'        plot = neg.FFPE, device = "pdf", width = 11, height = 7.3,
+#'        path = "~/")
+#' @keywords internal
+
+plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
+  #Set array type
+  if(get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
+    #Create the data.table with quality control metadata
+    DT.QC.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+    # Merge red and green channels intensities with QC metadata
+    QC.data <- methview.qc:::merge.QC.intensities.and.meta(
+      RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+    # Plot FFPE negative control prob 
+    methview.qc:::plot.array.QC.probe(
+      array.type = "EPIC", probe.ID = "36729435", QC.data = QC.data,
+      DT.QC.meta = DT.QC.meta, cohort = cohort)
+  } else if(get.platform(RnBSet = RnBSet) == "HM450K"){
+    stop("No FFPE negative control probe identified yet in HM450K platform.")
+  } else {
+    stop(paste(
+      "RnBSet platform not supported.",
+      "Supported platforms are HM450K and MethylationEPIC.",
+      "Please contact developper to request support for your methylation data.")
+    )
+  }
+}
+
 #' Draws and saves all quality control plots available in methview.qc
 #'
 #' @param RnBSet     A \code{RnBSet} basic object for storing methylation array
@@ -691,6 +758,12 @@ plot.array.QC.target <- function(
 #'                   genotyping probes heatmap, include.gp = FALSE is advised.
 #'                   For more information about the genotyping probes heatmap
 #'                   see \link{snp.heatmap}.
+#' @param include.ffpe A \code{logical} to specify whether the FFPE negative
+#'                     control probe should be plotted a second time separately
+#'                     from the rest of the Negative QC probes (Warning: this is
+#'                     an experimental function; for more information about the
+#'                     FFPE negative control probe see
+#'                     \link{plot.negative.FFPE}).
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
@@ -702,10 +775,11 @@ plot.array.QC.target <- function(
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' #Draw all plots from the quality control data of rnb.set
-#' methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2, include.gp = TRUE)
+#' methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
 
 plot.all.qc <- function(
-  RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE){
+  RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,
+  include.ffpe = FALSE){
   #Set array type
   if(get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
     array.type <- "EPIC"
@@ -830,7 +904,16 @@ plot.all.qc <- function(
       }
     }
   }))
-  
+  if(include.ffpe){
+    cat("\tFFPE Negative control probe\n")
+    # Plot FFPE negative control probe
+    neg.FFPE <- methview.qc:::plot.negative.FFPE(
+      RnBSet = RnBSet, cohort = cohort)
+    ggsave(
+      filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
+      plot = neg.FFPE, device = "pdf", width = 11, height = 7.3,
+      path = file.path(save.dir, "QC_Barplots", cohort))
+  }
   if(include.gp){
     cat("\tGenotyping probes heatmap\n")
     #Plot genotyping probes heatmap
@@ -839,7 +922,6 @@ plot.all.qc <- function(
       annot.pal = rainbow(n = length(RnBSet@pheno$ID)), plot.title =
         paste(cohort, "- Heatmap of", get.platform(RnBSet = RnBSet),
               "genotyping probes"))
-    
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
       ggsave(
         filename = paste0("Heatmap_genotyping_probes_",
