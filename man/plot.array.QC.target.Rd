@@ -73,7 +73,7 @@ Plots samples fluorescence intensities distribution for QC probes of a
 specific target type.
 }
 \examples{
-#' #Create an RnBSet for MethylationEPIC data
+#Create an RnBSet for MethylationEPIC data
 library(RnBeads)
 idat.dir <- "~/data/MethylationEPIC/"
 sample.annotation <- "~/data/Annotations/sample_sheet.csv"

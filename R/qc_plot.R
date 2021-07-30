@@ -370,7 +370,7 @@ plot.array.QC.probe <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #' #Create an RnBSet for MethylationEPIC data
+#' #Create an RnBSet for MethylationEPIC data
 #' library(RnBeads)
 #' idat.dir <- "~/data/MethylationEPIC/"
 #' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
@@ -662,4 +662,191 @@ plot.array.QC.target <- function(
       return(norm.plot)
     }
   }
+}
+
+#' Draws and saves all quality control plots available in methview.qc
+#'
+#' @param RnBSet     A \code{RnBSet} basic object for storing methylation array
+#'                   data and experimental quality information (Bisulfite data
+#'                   not supported).
+#'                   \itemize{
+#'                    \item{For more information about RnBSet object read
+#'                    \link[RnBeads]{RnBSet-class}.}
+#'                    \item{To create an RnBSet object run
+#'                    \link[RnBeads]{rnb.execute.import}.}
+#'                    \item{For additionnal options to import methylation array
+#'                    data in the RnBSet see options available in
+#'                    \link[RnBeads]{rnb.options}.}
+#'                   }
+#' @param cohort     A \code{character} string to specify the name of the cohort
+#'                   to be displayed as part of the plot title
+#'                   (Default: cohort = "RnBSet").
+#' @param save.dir   A \code{character} string to specify the path where the
+#'                   quality control plots should be saved.
+#' @param ncores     An \code{integer} to specify the number of cores/threads to
+#'                   be used to parallel-compute probes intensities.
+#' @param include.gp A \code{logical} to specify whether the genotyping probes
+#'                   heatmap should be plotted too (include.gp = TRUE) or not
+#'                   (include.gp = TRUE).\cr If you wish to customize your
+#'                   genotyping probes heatmap, include.gp = FALSE is advised.
+#'                   For more information about the genotyping probes heatmap
+#'                   see \link{snp.heatmap}.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' #Draw all plots from the quality control data of rnb.set
+#' methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2, include.gp = TRUE)
+
+plot.all.qc <- function(
+  RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE){
+  #Set array type
+  if(get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
+    array.type <- "EPIC"
+    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+      array.meta = "controlsEPIC")
+  } else if(get.platform(RnBSet = RnBSet) == "HM450K"){
+    array.type <- "HM450K"
+    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+      array.meta = "controls450")
+  } else {
+    stop(paste(
+      "RnBSet platform not supported.",
+      "Supported platforms are HM450K and MethylationEPIC.",
+      "Please contact developper to request support for your methylation data.")
+    )
+  }
+  
+  #Merge Red and Green intensities matrices with QC probes metadata
+  QC.data <- methview.qc:::merge.QC.intensities.and.meta(
+    RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+  
+  #Create graph directory
+  if(!dir.exists(save.dir)){
+    dir.create(save.dir)
+  }
+  #Create QC_Barplots & QC_Targets subdirectories
+  if(!dir.exists(file.path(save.dir, "QC_Barplots"))){
+    dir.create(file.path(save.dir, "QC_Barplots"))
+  }
+  if(!dir.exists(file.path(save.dir, "QC_Targets"))){
+    dir.create(file.path(save.dir, "QC_Targets"))
+  }
+  cat("Plotting...\n")
+  #Loop over probes target types
+  invisible(lapply(X = levels(DT.QC.meta$Target), FUN = function(target){
+    cat(paste0("\t", target, "\n"))
+    
+    #Create cohort & target directory
+    if(!dir.exists(file.path(save.dir, "QC_Barplots", cohort))){
+      dir.create(path = file.path(save.dir, "QC_Barplots", cohort))
+    }
+    if(!dir.exists(
+      file.path(save.dir, "QC_Barplots", cohort, target))){
+      dir.create(path = file.path(save.dir, "QC_Barplots", cohort, target))
+    }
+    if(!dir.exists(file.path(save.dir, "QC_Targets", cohort))){
+      dir.create(path = file.path(save.dir, "QC_Targets", cohort))
+    }
+    #Create QC barplots for every probe
+    invisible(mclapply(
+      X = DT.QC.meta[Target == target]$ID, mc.cores = ncores, FUN = function(i){
+        #Make QC barplots for every probe
+        qc.plot <- methview.qc:::plot.array.QC.probe(
+          array.type = array.type, probe.ID = i, QC.data = QC.data,
+          DT.QC.meta = DT.QC.meta, cohort = cohort)
+        
+        #Check if none of the values are missing
+        if(!(all(is.na(unlist(QC.data$`Cy3 - Electric Lime Green`[
+          QC.probe.IDs == i, -c(1:10), ]))) &
+          all(is.na(unlist(QC.data$`Cy5 - Dark Red`[
+            QC.probe.IDs == i, -c(1:10), ])))
+        )){
+          if(ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) > 40 &
+             ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) < 70){
+            width.plot <- 45
+          } else if(ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) >= 70 &
+                    ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) < 110){
+            width.plot <- 65
+          } else if(ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) >= 110){
+            width.plot <- 135
+          } else { width.plot <- 25 }
+          #Save plot
+          ggsave(filename = paste(
+            "Barplot", cohort, array.type, "QC", paste0(
+              gsub(pattern = " ", replacement = "_", x = paste(
+                DT.QC.meta[ID == i]$Target, DT.QC.meta[ID == i]$Description,
+                DT.QC.meta[ID == i]$Index)), ".pdf"), sep = "_"),
+            plot = qc.plot, device = "pdf",
+            path = file.path(save.dir, "QC_Barplots", cohort, target),
+            width = width.plot, height = 16, units = "cm", limitsize = FALSE)
+        }
+      }))
+    
+    #Create QC plots for the target type
+    target.plot <- methview.qc:::plot.array.QC.target(
+      array.type = array.type, target = target, QC.data = QC.data,
+      DT.QC.meta = DT.QC.meta, ncores = ncores, cohort = cohort)
+    
+    #Plot intensities for probes by target type
+    if(target %in% c(
+      "Bisulfite Conversion I", "Bisulfite Conversion II", "Extension",
+      "Hybridization", "Non-polymorphic", "Specificity I", "Specificity II",
+      "Staining", "Target Removal")){
+      
+      #Save plot
+      ggsave(filename = paste(
+        "Target", cohort, array.type, "QC", paste0(target, ".pdf"), sep = "_"),
+        plot = target.plot, device = "pdf",
+        path = file.path(save.dir, "QC_Targets", cohort),
+        width = 25, height = 16, units = "cm", limitsize = FALSE)
+      
+    } else { #Plot Norm & Negative plots
+      
+      if(target == "Negative") {
+        #Negative Plot
+        invisible(lapply(X = seq_along(target.plot), FUN = function(i){
+          #Save plot
+          ggsave(filename = paste(
+            "Target", cohort, array.type, "QC", target,
+            paste0(names(target.plot)[i], ".pdf"), sep = "_"),
+            plot = target.plot[[i]], device = "pdf",
+            path = file.path(save.dir, "QC_Targets", cohort),
+            width = 25, height = 16, units = "cm", limitsize = FALSE)
+        }))
+      } else { #Target is Norm
+        #Save plot
+        ggsave(filename = paste(
+          "Target", cohort, array.type, "QC", paste0(target, ".pdf"),
+          sep = "_"), plot = target.plot, device = "pdf", path = file.path(
+            save.dir, "QC_Targets", cohort), width = 25, height = 16,
+          units = "cm", limitsize = FALSE)
+      }
+    }
+  }))
+  
+  if(include.gp){
+    cat("\tGenotyping probes heatmap\n")
+    #Plot genotyping probes heatmap
+    snp.htmp <- snp.heatmap(
+      RnBSet = RnBSet, annot.grps = list("IDs" = RnBSet@pheno$ID),
+      annot.pal = rainbow(n = length(RnBSet@pheno$ID)), plot.title =
+        paste(cohort, "- Heatmap of", get.platform(RnBSet = RnBSet),
+              "genotyping probes"))
+    
+    invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+      ggsave(
+        filename = paste0("Heatmap_genotyping_probes_",
+                          get.platform(RnBSet = RnBSet), ".", frmt),
+        plot = snp.htmp$result.grob, device = frmt, width = 11, height = 11,
+        path = save.dir)
+    }))
+  }
+  cat("Done!\n")
 }

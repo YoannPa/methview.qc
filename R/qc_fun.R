@@ -1,4 +1,54 @@
 
+#' Detects platform used to generate data in the RnBSet.
+#' 
+#' @param RnBSet An \code{RnBSet} basic object for storing methylation array DNA
+#'               methylation and experimental quality information (Bisulfite
+#'               data not supported).
+#'               \itemize{
+#'                \item{For more information about RnBSet object read
+#'                \link[RnBeads]{RnBSet-class}.}
+#'                \item{To create an RnBSet object run
+#'                \link[RnBeads]{rnb.execute.import}.}
+#'                \item{For additionnal options to import methylation array data
+#'                in the RnBSet see options available in
+#'                \link[RnBeads]{rnb.options}.}
+#'               }
+#' @return A \code{character} string:
+#'         \itemize{
+#'          \item{"HM450K" if the RnBSet contains Human Methylation 450K data}
+#'          \item{"MethylationEPIC" if the RnBSet contains MethylationEPIC data}
+#'         }
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/my_idat_dir/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' #Check platform used to generate the dataset.
+#' get.platform(my.rnbset)
+
+get.platform <- function(RnBSet){
+  #Get the 65 or 59 genotyping (rs) probes
+  rs.probes <- rownames(RnBSet@sites)[
+    grepl(pattern = "rs", x = rownames(RnBSet@sites))]
+  
+  if(length(rs.probes) == 59){
+    array.type <- "MethylationEPIC"
+  } else if(length(rs.probes) == 65){
+    array.type <- "HM450K"
+  } else {
+    stop(paste(
+      "RnBSet platform not supported.",
+      "Supported platforms are HM450K and MethylationEPIC.",
+      "Please contact developper to request support for your methylation data.")
+    )
+  }
+  return(array.type)
+}
+
 #' Loads methylation array QC metadata as a data.table.
 #' @param array.meta A \code{character} string specifying the array type to load
 #'                   quality control metadata from
