@@ -71,7 +71,29 @@ devtools::install()
 For any questions **Not related to bugs or development** please check the section "**Known Issues**" available below. If the issue you experience is not adressed in the known issues you can write me at [y.pageaud@dkfz.de](y.pageaud@dkfz.de).  
 
 ### Known Issues
-No issues reported yet for the package.  
+**❎  C++14**  
+In CentOS Linux release 7.4 some users experienced this error happening during the installation of methview.qc.  
+To fix this issue proceed as following:
+1. Go to your personnal Linux directory:  
+```bash
+cd ~/
+```
+2. Create directory **.R/** and the file **.R/Makevars**  
+```bash
+mkdir .R
+nano .R/Makevars
+```
+3. In the opened file .R/Makevars paste the following line:  
+```bash
+CXX14 = g++ -std=c++1y -Wno-unused-variable -Wno-unused-function -fPIC
+```
+4. Save with **Ctrl + O** and close the file with **Ctrl + X**.   
+5. Restart your R session and try again to install methview.qc:  
+```R
+devtools::install()
+```
+Many thanks to [**@Lena-Vo**](https://github.com/Lena-Vo) who provided this solution.  
+For more information see this [issue](https://github.com/facebook/prophet/issues/760).  
 
 ## Technical questions / Development / Feature request
 If you encounters issues or if a feature you would expect is not available in a methview.qc function, please check if an existing issue adresses your point [here](https://github.com/YoannPa/methview.qc/issues/). If not, create a [new issue here](https://github.com/YoannPa/methview.qc/issues/new).  
