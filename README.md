@@ -71,8 +71,8 @@ devtools::install()
 For any questions **Not related to bugs or development** please check the section "**Known Issues**" available below. If the issue you experience is not adressed in the known issues you can write me at [y.pageaud@dkfz.de](y.pageaud@dkfz.de).  
 
 ### Known Issues
-**❎  C++14**  
-In CentOS Linux release 7.4 some users experienced this error happening during the installation of methview.qc.  
+**❎  Error: C++14 standard requested but CXX14 is not defined**  
+In CentOS Linux release 7.4 some users experienced this error happening during the installation of methview.qc. The error message is raised during installation of the sparseMatrixStats package.  
 To fix this issue proceed as following:
 1. Go to your personnal Linux directory:  
 ```bash
@@ -93,7 +93,6 @@ CXX14 = g++ -std=c++1y -Wno-unused-variable -Wno-unused-function -fPIC
 devtools::install()
 ```
 Many thanks to [**@Lena-Vo**](https://github.com/Lena-Vo) who provided this solution.  
-For more information see this [issue](https://github.com/facebook/prophet/issues/760).  
 
 ## Technical questions / Development / Feature request
 If you encounters issues or if a feature you would expect is not available in a methview.qc function, please check if an existing issue adresses your point [here](https://github.com/YoannPa/methview.qc/issues/). If not, create a [new issue here](https://github.com/YoannPa/methview.qc/issues/new).  
