@@ -155,7 +155,6 @@ snp.heatmap <- function(
 #' @return A ggplot2 \code{theme} object used as a default theme for QC
 #'         plots.
 #' @author Yoann Pageaud.
-#' @export
 #' @examples theme_qc <- methview.qc::load.metharray.QC.theme()
 #' @references
 #' @keywords internal
@@ -198,6 +197,7 @@ load.metharray.QC.theme <- function(){
 #' @return A \code{gtable} barplot of the QC probe fluorescence
 #'         intensities.
 #' @author Yoann Pageaud.
+#' @export plot.array.QC.probe
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -212,7 +212,7 @@ load.metharray.QC.theme <- function(){
 #' # Merge red and green channels intensities with QC metadata
 #' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw probe specific QC plot for QC probe "21630339"
-#' probe.plot <- methview.qc:::plot.array.QC.probe(
+#' probe.plot <- plot.array.QC.probe(
 #'   array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta)
 #' #Save plot in a PDF file
@@ -368,6 +368,7 @@ plot.array.QC.probe <- function(
 #'          }
 #'         }
 #' @author Yoann Pageaud.
+#' @export plot.array.QC.target
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -382,7 +383,7 @@ plot.array.QC.probe <- function(
 #' # Merge red and green channels intensities with QC metadata
 #' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw target specific QC plot for "Staining" QC probes
-#' target.plot <- methview.qc:::plot.array.QC.target(
+#' target.plot <- plot.array.QC.target(
 #'   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta, ncores = 2)
 #' #Save plot in a PDF file
@@ -966,6 +967,7 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #'                     FFPE negative control probe see
 #'                     \link{plot.negative.FFPE}).
 #' @author Yoann Pageaud.
+#' @export plot.all.qc
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -976,7 +978,7 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' #Draw all plots from the quality control data of rnb.set
-#' methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
+#' plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
 
 plot.all.qc <- function(
   RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,

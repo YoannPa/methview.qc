@@ -94,6 +94,7 @@ load.metharray.QC.meta <- function(array.meta){
 #' @return A \code{data.table} list matching QC metadata with green channel and
 #'         red channel intensities.
 #' @author Yoann Pageaud.
+#' @export merge.QC.intensities.and.meta
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data

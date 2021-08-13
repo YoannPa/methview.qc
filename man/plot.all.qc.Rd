@@ -63,7 +63,7 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 rnb.options(identifiers.column = "barcode")
 #Draw all plots from the quality control data of rnb.set
-methview.qc:::plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
+plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
 }
 \author{
 Yoann Pageaud.
