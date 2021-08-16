@@ -94,7 +94,7 @@ devtools::install()
 ```
 Many thanks to [**@Lena-Vo**](https://github.com/Lena-Vo) who provided this solution.  
 
-**❎  Error: `row.names<-.data.frame`(`*tmp*`, value = value) : invalid 'row.names' length**  
+**❎  Error: \`row.names<-.data.frame\`(\`*tmp*\`, value = value) : invalid 'row.names' length**  
 ```R
 `row.names<-.data.frame`(`*tmp*`, value = value) : 
   invalid 'row.names' length
