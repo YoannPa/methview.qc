@@ -155,6 +155,7 @@ snp.heatmap <- function(
 #' @return A ggplot2 \code{theme} object used as a default theme for QC
 #'         plots.
 #' @author Yoann Pageaud.
+#' @export
 #' @examples theme_qc <- methview.qc::load.metharray.QC.theme()
 #' @references
 #' @keywords internal

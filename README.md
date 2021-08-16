@@ -4,9 +4,9 @@ _**methview.qc** allows you to generate quality control plots from your methylat
 **Author: PAGEAUD Y.<sup>1</sup>**  
 **1-** [**DKFZ - Division of Applied Bioinformatics, Germany.**](https://www.dkfz.de/en/applied-bioinformatics/index.php)  
 
-**Version: 0.0.12 (Beta)**  
+**Version: 0.0.13 (Beta)**  
 **R Compatibility: Version 4.0.5**  
-**Last Update: 13/08/2021**  
+**Last Update: 16/08/2021**  
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
 ## Content
@@ -93,6 +93,23 @@ CXX14 = g++ -std=c++1y -Wno-unused-variable -Wno-unused-function -fPIC
 devtools::install()
 ```
 Many thanks to [**@Lena-Vo**](https://github.com/Lena-Vo) who provided this solution.  
+
+**❎  Error: `row.names<-.data.frame`(`*tmp*`, value = value) : invalid 'row.names' length**  
+```R
+`row.names<-.data.frame`(`*tmp*`, value = value) : 
+  invalid 'row.names' length
+```
+This error can arise from Bioconductor packages incompatibilities. Incriminated packages are dependencies of methview.qc.  
+In order to fix this issue it is recommended to run the following command:  
+```R
+BiocManager::valid()
+```
+Running this command allows you to list Bioconductor packages that are either "out-of-date" or "too new" regarding your current installation.  
+Among logs returned, you will be offered to "create a valid installation with
+" a dedicated Biocmanager::install command.  
+Using the command usually fix packages incompatibilities, and solve the issue.  
+If you still have this error after reinstalling these packages, feel free to
+create an issue.  
 
 ## Technical questions / Development / Feature request
 If you encounters issues or if a feature you would expect is not available in a methview.qc function, please check if an existing issue adresses your point [here](https://github.com/YoannPa/methview.qc/issues/). If not, create a [new issue here](https://github.com/YoannPa/methview.qc/issues/new).  
