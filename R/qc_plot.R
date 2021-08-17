@@ -118,19 +118,11 @@ snp.heatmap <- function(
   #Extract methylation matrix from RnBSet
   meth.mat <- RnBeads::meth(RnBSet, row.names = TRUE)
   rs.meth.mat <- meth.mat[rs.probes, ]
-
-  if(length(rs.probes) == 59){
-    array.type <- "MethylationEPIC"
-    if(is.null(plot.title)){
-      plot.title <- "Heatmap of MethylationEPIC genotyping probes"
-    }
-  } else if(length(rs.probes) == 65){
-    array.type <- "HM450K"
-    if(is.null(plot.title)){
-      plot.title <- "Heatmap of HM450K genotyping probes"
-    }
-  } else {
-    stop("RnBSet platform not supported. Supported platforms are HM450K and MethylationEPIC.")
+  #Get platform
+  array.type <- get.platform(RnBSet = RnBSet)
+  #Make plot title if none
+  if(is.null(plot.title)){
+    plot.title <- paste("Heatmap of", array.type, "genotyping probes")
   }
 
   #Plot SNP CpG heatmap using genotyping probes from methylation array data
@@ -1122,8 +1114,8 @@ plot.all.qc <- function(
     cat("\tGenotyping probes heatmap\n")
     #Plot genotyping probes heatmap
     snp.htmp <- snp.heatmap(
-      RnBSet = RnBSet, annot.grps = list("IDs" = RnBSet@pheno$ID),
-      annot.pal = rainbow(n = length(RnBSet@pheno$ID)), plot.title =
+      RnBSet = RnBSet, annot.grps = list("IDs" = RnBSet@pheno[, 1]),
+      annot.pal = rainbow(n = length(RnBSet@pheno[, 1])), plot.title =
         paste(cohort, "- Heatmap of", get.platform(RnBSet = RnBSet),
               "genotyping probes"))
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
