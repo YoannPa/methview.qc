@@ -714,7 +714,7 @@ target.biplot <- function(
       array.meta = "controls450")
   }
   #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc:::merge.QC.intensities.and.meta(
+  QC.data <- methview.qc::merge.QC.intensities.and.meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   QC.data <- data.table::rbindlist(
     l = QC.data, use.names = TRUE, idcol = "Channel")
@@ -734,12 +734,12 @@ target.biplot <- function(
       loadings = loadings, loadings.col = loadings.col,
       top.load.by.quad = top.load.by.quad)
   }
-  target <- target + scale_color_manual(values = c("#00ff00", "red"))
+  target <- target + ggplot2::scale_color_manual(values = c("#00ff00", "red"))
   if(methview.qc::get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
-    target <- target + scale_shape_manual(
+    target <- target + ggplot2::scale_shape_manual(
       values = c(66, 66, 69, 72, 25, 78, 88, 88, 88, 88, 82, 83, 83, 8, 84))
   } else if(methview.qc::get.platform(RnBSet = RnBSet) == "HM450K"){
-    target <- target + scale_shape_manual(
+    target <- target + ggplot2::scale_shape_manual(
       values = c(66, 66, 69, 72, 25, 78, 88, 88, 88, 88, 83, 83, 8, 84))
   } else {
     stop("Unknown 'array.type'. Supported array.type are 'HM450K' & 'EPIC'.")
@@ -817,28 +817,29 @@ sampleQC.biplot <- function(
       array.meta = "controls450")
   }
   #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc:::merge.QC.intensities.and.meta(
+  QC.data <- methview.qc::merge.QC.intensities.and.meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
-  QC.data <- rbindlist(l = QC.data, use.names = TRUE, idcol = "Channel")
+  QC.data <- data.table::rbindlist(
+    l = QC.data, use.names = TRUE, idcol = "Channel")
   QC.data[, Target := as.factor(Target)]
-  melt.QC.dt <- melt(
+  melt.QC.dt <- data.table::melt(
     QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
-  t.QC.dt <- dcast(melt.QC.dt, formula = Samples ~ Channel + Description)
-  # t.QC.dt <- merge(x = RnBSet@pheno, y = t.QC.dt, by.x = "ID", by.y = "Samples",
-  #                  all.y = TRUE)
-  t.QC.dt <- merge(x = RnBSet@pheno, y = t.QC.dt,
-                   by.x = colnames(RnBSet@pheno)[1], by.y = "Samples",
-                   all.y = TRUE)
+  t.QC.dt <- data.table::dcast(
+    melt.QC.dt, formula = Samples ~ Channel + Description)
+  RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+  t.QC.dt <- data.table::merge.data.table(
+    x = RnBSet@pheno, y = t.QC.dt,by.x = colnames(RnBSet@pheno)[1],
+    by.y = "Samples", all.y = TRUE)
   
   pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   if(is.null(top.load.by.quad)){
     if(is.null(shape.data)){
-      sample.biplot <- ggbipca(
+      sample.biplot <- BiocompR::ggbipca(
         prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data)
     } else {
-      sample.biplot <- ggbipca(
+      sample.biplot <- BiocompR::ggbipca(
         prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data,
@@ -846,13 +847,13 @@ sampleQC.biplot <- function(
     }
   } else {
     if(is.null(shape.data)){
-      sample.biplot <- ggbipca(
+      sample.biplot <- BiocompR::ggbipca(
         prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
         color.data = color.data)
     } else {
-      sample.biplot <- ggbipca(
+      sample.biplot <- BiocompR::ggbipca(
         prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
@@ -913,10 +914,10 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
     #Create the data.table with quality control metadata
     DT.QC.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
     # Merge red and green channels intensities with QC metadata
-    QC.data <- methview.qc:::merge.QC.intensities.and.meta(
+    QC.data <- methview.qc::merge.QC.intensities.and.meta(
       RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
     # Plot FFPE negative control prob 
-    methview.qc:::plot.array.QC.probe(
+    methview.qc::plot.array.QC.probe(
       array.type = "EPIC", probe.ID = "36729435", QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, cohort = cohort)
   } else if(get.platform(RnBSet = RnBSet) == "HM450K"){
@@ -998,7 +999,7 @@ plot.all.qc <- function(
   }
   
   #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc:::merge.QC.intensities.and.meta(
+  QC.data <- methview.qc::merge.QC.intensities.and.meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   
   #Create graph directory
@@ -1032,7 +1033,7 @@ plot.all.qc <- function(
     invisible(mclapply(
       X = DT.QC.meta[Target == target]$ID, mc.cores = ncores, FUN = function(i){
         #Make QC barplots for every probe
-        qc.plot <- methview.qc:::plot.array.QC.probe(
+        qc.plot <- methview.qc::plot.array.QC.probe(
           array.type = array.type, probe.ID = i, QC.data = QC.data,
           DT.QC.meta = DT.QC.meta, cohort = cohort)
         
@@ -1064,7 +1065,7 @@ plot.all.qc <- function(
       }))
     
     #Create QC plots for the target type
-    target.plot <- methview.qc:::plot.array.QC.target(
+    target.plot <- methview.qc::plot.array.QC.target(
       array.type = array.type, target = target, QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, ncores = ncores, cohort = cohort)
     
