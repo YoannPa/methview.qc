@@ -130,7 +130,7 @@ library(ggsci)
 #Plot heatmap of MethylationEPIC genotyping probes.
 snp.htmp <- snp.heatmap(
   RnBSet = rnb.set,
-  annot.grps = list("Donors" = rnb.set@pheno$ID),
+  annot.grps = list("Donors" = rnb.set@pheno[, 1]),
   annot.pal = pal_npg("nrc", alpha = 1)(10))
 #Save heatmap in a PDF file.
 ggsave(

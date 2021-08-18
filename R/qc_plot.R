@@ -90,7 +90,7 @@
 #' #Plot heatmap of MethylationEPIC genotyping probes.
 #' snp.htmp <- snp.heatmap(
 #'   RnBSet = rnb.set,
-#'   annot.grps = list("Donors" = rnb.set@pheno$ID),
+#'   annot.grps = list("Donors" = rnb.set@pheno[, 1]),
 #'   annot.pal = pal_npg("nrc", alpha = 1)(10))
 #' #Save heatmap in a PDF file.
 #' ggsave(
@@ -720,7 +720,7 @@ target.biplot <- function(
     l = QC.data, use.names = TRUE, idcol = "Channel")
   QC.data[, Target := as.factor(Target)]
   #Compute PCA
-  pca_res <- stats::prcomp(QC.data[, -c(1:11), ], scale. = FALSE)
+  pca_res <- stats::prcomp(x = QC.data[, -c(1:11), ], scale. = FALSE)
   #Plot target biplot
   if(is.null(top.load.by.quad)){
     target <- BiocompR::ggbipca(
@@ -824,8 +824,12 @@ sampleQC.biplot <- function(
   melt.QC.dt <- melt(
     QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
   t.QC.dt <- dcast(melt.QC.dt, formula = Samples ~ Channel + Description)
-  t.QC.dt <- merge(x = RnBSet@pheno, y = t.QC.dt, by.x = "ID", by.y = "Samples",
+  # t.QC.dt <- merge(x = RnBSet@pheno, y = t.QC.dt, by.x = "ID", by.y = "Samples",
+  #                  all.y = TRUE)
+  t.QC.dt <- merge(x = RnBSet@pheno, y = t.QC.dt,
+                   by.x = colnames(RnBSet@pheno)[1], by.y = "Samples",
                    all.y = TRUE)
+  
   pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   if(is.null(top.load.by.quad)){
     if(is.null(shape.data)){

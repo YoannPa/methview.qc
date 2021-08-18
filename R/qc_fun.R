@@ -111,15 +111,31 @@ load.metharray.QC.meta <- function(array.meta){
 
 merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
   #Get sample IDs
-  column.names <- RnBSet@pheno$ID
+  column.names <- RnBSet@pheno[, 1]
   #Get QC data
   qc.data <- RnBeads::qc(RnBSet) #Cy3 is Green; Cy5 is Red.
+  
+  #Check if some probes have missing intensities data in all samples and rise
+  # warning if any.
+  qc.new <- lapply(X = names(qc.data), FUN = function(i){
+    missing.probes <- rownames(qc.data[[i]])[
+      apply(X = is.na(qc.data[[i]]), MARGIN = 1, FUN = all)]
+    if(length(missing.probes) > 0){
+      warning(paste(i, "fluorescence intensity missing for probe IDs:",
+                    paste0(paste(missing.probes, collapse = ", "), ".")),
+              " Probes removed from final data.table.")
+      #Remove empty rows from qc.data[[i]]
+      qc.data[[i]][!rownames(qc.data[[i]]) %in% missing.probes,]
+    }
+  })
+  names(qc.new) <- names(qc.data)
+  qc.data <- qc.new
   #Merge Red and Green intensities matrices with QC probes metadata
   QC.data <- lapply(X = names(qc.data), FUN = function(i){
     colnames(qc.data[[i]]) <- column.names
     DT.QC <- data.table::as.data.table(qc.data[[i]], keep.rownames = TRUE)
     DT.QC <- merge(
-      x = DT.QC.meta, y = DT.QC, by.x = "ID", by.y = "rn", all = TRUE)
+      x = DT.QC.meta, y = DT.QC, by.x = "ID", by.y = "rn", all.y = TRUE)
     data.table::setnames(x = DT.QC, old = "ID", new = "QC.probe.IDs")
     DT.QC
   })
