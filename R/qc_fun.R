@@ -308,3 +308,150 @@ get.expected.intensity <- function(
   #TODO: Maybe the definition of "Background" should be thought again ?
   return(DT.expected.intensity)
 }
+
+
+#' Updates a target intensities metadata.
+#' 
+#' @param QC.data    A \code{data.table} list matching QC metadata with green
+#'                   channel and red channel intensities, obtained with the
+#'                   function \link{merge.QC.intensities.and.meta}.
+#' @param DT.QC.meta A \code{data.table} with methylation array quality control
+#'                   metadata obtained with the function
+#'                   \link{load.metharray.QC.meta}.
+#' @param target     A \code{character} specifying the name of the target step
+#'                   for which the metadata should be updated.
+#' @param ncores     An \code{integer} specifying the number of cores or threads
+#'                   to be used for parallel processing.      
+#' @return A \code{data.table} containing the updated metadata for a given
+#'         target step of a given quality control dataset.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' update.target.meta(QC.data = QC.data, target = "Hybridization")
+#' @keywords internal
+
+update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
+  #Melt Green & Red QC data
+  DT.target.Cy3 <- data.table::melt.data.table(
+    data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
+    measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
+    variable.name = "Samples", value.name = "Cy3 intensity")
+  DT.target.Cy5 <- data.table::melt.data.table(
+    data = QC.data$`Cy5 - Dark Red`[Target == target],
+    measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
+    variable.name = "Samples", value.name = "Cy5 intensity")
+  #Rbind data.tables
+  ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
+  names(ls.dt.target) <- names(QC.data)
+  DT.target <- data.table::rbindlist(
+    l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
+  #Check expected intensities for each probes
+  ls.exp.intens <- mclapply(
+    X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
+      methview.qc::get.expected.intensity(
+        DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
+    })
+  names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)
+  DT.exp.intens <- data.table::rbindlist(l = ls.exp.intens, idcol = "Probe.ID")
+  #Modify DT.target with expected intensities
+  invisible(lapply(X = seq(nrow(DT.exp.intens)), FUN = function(i){
+    DT.target[QC.probe.IDs == DT.exp.intens[i,]$Probe.ID &
+                Cyanine == DT.exp.intens[i,]$Channel,
+              `Expected Intensity` := DT.exp.intens[i,]$`Expected intensity`]
+  }))
+  #Change order of levels in expected intensity
+  DT.target[, `Expected Intensity` := factor(
+    `Expected Intensity`, levels = levels(`Expected Intensity`)[c(2, 4, 3, 1)])]
+  
+  return(DT.target)
+}
+
+
+#' Computes a deviation score between samples fluorescence and an internal
+#' HM450K reference.
+#'
+#' @param RnBSet  An \code{RnBSet} basic object for storing HM450K DNA
+#'                methylation and experimental quality information (Bisulfite
+#'                data  and MethylationEPIC data not supported).
+#'                \itemize{
+#'                 \item{For more information about RnBSet object read
+#'                 \link[RnBeads]{RnBSet-class}.}
+#'                 \item{To create an RnBSet object run
+#'                 \link[RnBeads]{rnb.execute.import}.}
+#'                 \item{For additionnal options to import methylation array
+#'                 data in the RnBSet see options available in
+#'                 \link[RnBeads]{rnb.options}.}
+#'                }
+#' @param samples A \code{character} vector specifying the samples to include
+#'                for the deviation score calculation. You can catch the sample
+#'                IDs you wish to evaluate running \code{RnBSet@pheno[,1]}
+#' @param target  A \code{character} specifying the name of the target step to
+#'                evaluate fluorescence from.
+#' @param ncores  An \code{integer} specifying the number of cores or threads to
+#'                be used for parallel processing.
+#' @return A \code{data.table} with probes data and samples computed deviation
+#'         scores.
+#' @details The deviation score is calculated as following:
+#'          \enumerate{
+#'           \item{the square root of samples intensities fluorescence is
+#'           calculated for both red & green channels.}
+#'           \item{the square root of the reference intensities fluorescence is
+#'           calculated the same way.}
+#'           \item{Then the ratio of the samples values out of the reference
+#'           values is calculated.}
+#'           \item{The previous result is multiplied by 100 to get a percentage.
+#'           }
+#'           \item{Then 100 is substracted to the result in order to obtain the
+#'           delta between this percentage and the reference (which counts as
+#'           100\% signal intensity). The resulting values are deviation scores
+#'           of fluorescence computed for each probes and each samples. It can
+#'           be extracted from the resulting data.table in the column
+#'           'percent.diff.sqrt'.}
+#'          }
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/my_idat_dir/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(
+#'   data.source = data.source, data.type = "idat.dir")
+#' #Compute deviation score
+#' devscore.fluo(RnBSet = rnb.set, samples = c("13169","13947","14312","14359"),
+#'               target = "Hybridization")
+
+devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
+  #Check it is HM450K
+  if(get.platform(RnBSet = RnBSet) != "HM450K"){
+    stop("devscore.fluo() only supports HM450K data for now.")
+  }
+  #Load quality control metadata for Human Methylation 450K array
+  DT.QC.meta <- load.metharray.QC.meta(array.meta = "controls450")
+  QC.data <- merge.QC.intensities.and.meta(
+    RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+  #Keep only samples requested
+  QC.data <- lapply(X = QC.data, FUN = function(i){
+    keep <- c(colnames(i)[1:10], samples)
+    i[, ..keep]
+  })
+  #Update target metadata
+  DT.target <- update.target.meta(QC.data = QC.data, DT.QC.meta = DT.QC.meta,
+                                  target = target, ncores = ncores)
+  #Create unique combination cyanine & ID
+  DT.target[, Cyanine.probe.ID := paste(Cyanine, QC.probe.IDs, sep = ".")]
+  hm450ref <- methview.qc:::sysdata[Target == target]
+  hm450ref[, Cyanine.probe.ID := paste(Channel, QC.probe.IDs, sep = ".")]
+  #Map HM450K reference fluorescence to DT.target
+  DT.target <- merge(
+    x = DT.target,
+    y = hm450ref[, c("Cyanine.probe.ID", "PCAWG.avg.intensity"), ],
+    by = "Cyanine.probe.ID", all.x = TRUE)
+  #Compute percentage difference of the square root of fluorescence intensities
+  DT.target[, percent.diff.sqrt := (
+    (sqrt(`Cy3 intensity`)/sqrt(PCAWG.avg.intensity))*100) - 100]
+  #Make percentage difference table
+  DT.target <- DT.target[, c(2:13, 16), ]
+  return(DT.target)
+}

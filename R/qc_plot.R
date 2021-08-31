@@ -386,40 +386,42 @@ plot.array.QC.probe <- function(
 plot.array.QC.target <- function(
   array.type = "HM450K", target, QC.data, DT.QC.meta, cohort = "RnBSet",
   ncores = 1){
-  #Create QC boxplots for all probes target types
-  DT.target.Cy3 <- data.table::melt.data.table(
-    data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
-    measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
-    variable.name = "Samples", value.name = "Cy3 intensity")
-  DT.target.Cy5 <- data.table::melt.data.table(
-    data = QC.data$`Cy5 - Dark Red`[Target == target],
-    measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
-    variable.name = "Samples", value.name = "Cy5 intensity")
   #Load metharray Quality Control theme
   theme_qc <- methview.qc::load.metharray.QC.theme()
-  #Rbind data.tables
-  ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
-  names(ls.dt.target) <- names(QC.data)
-  DT.target <- data.table::rbindlist(
-    l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
-
-  #Check expected intensities for each probes
-  ls.exp.intens <- mclapply(
-    X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
-      methview.qc::get.expected.intensity(
-        DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
-    })
-  names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)
-  DT.exp.intens <- data.table::rbindlist(l = ls.exp.intens, idcol = "Probe.ID")
-  #Modify DT.target with expected intensities
-  invisible(lapply(X = seq(nrow(DT.exp.intens)), FUN = function(i){
-    DT.target[QC.probe.IDs == DT.exp.intens[i,]$Probe.ID &
-                Cyanine == DT.exp.intens[i,]$Channel,
-              `Expected Intensity` := DT.exp.intens[i,]$`Expected intensity`]
-  }))
-  #Change order of levels in expected intensity
-  DT.target[, `Expected Intensity` := factor(
-    `Expected Intensity`, levels = levels(`Expected Intensity`)[c(2, 4, 3, 1)])]
+  #Update target metadata
+  DT.target <- update.target.meta(
+    QC.data = QC.data, target = target, ncores = ncores)
+  # #Create QC boxplots for all probes target types
+  # DT.target.Cy3 <- data.table::melt.data.table(
+  #   data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
+  #   measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
+  #   variable.name = "Samples", value.name = "Cy3 intensity")
+  # DT.target.Cy5 <- data.table::melt.data.table(
+  #   data = QC.data$`Cy5 - Dark Red`[Target == target],
+  #   measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
+  #   variable.name = "Samples", value.name = "Cy5 intensity")
+  # #Rbind data.tables
+  # ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
+  # names(ls.dt.target) <- names(QC.data)
+  # DT.target <- data.table::rbindlist(
+  #   l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
+  # #Check expected intensities for each probes
+  # ls.exp.intens <- mclapply(
+  #   X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
+  #     methview.qc::get.expected.intensity(
+  #       DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
+  #   })
+  # names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)
+  # DT.exp.intens <- data.table::rbindlist(l = ls.exp.intens, idcol = "Probe.ID")
+  # #Modify DT.target with expected intensities
+  # invisible(lapply(X = seq(nrow(DT.exp.intens)), FUN = function(i){
+  #   DT.target[QC.probe.IDs == DT.exp.intens[i,]$Probe.ID &
+  #               Cyanine == DT.exp.intens[i,]$Channel,
+  #             `Expected Intensity` := DT.exp.intens[i,]$`Expected intensity`]
+  # }))
+  # #Change order of levels in expected intensity
+  # DT.target[, `Expected Intensity` := factor(
+  #   `Expected Intensity`, levels = levels(`Expected Intensity`)[c(2, 4, 3, 1)])]
 
   #Plot intensities for probes by target type
   if(target %in% c(
