@@ -111,7 +111,7 @@ snp.heatmap <- function(
   axis.title.y.right = element_text(size = 11),
   lgd.text = element_text(size = 10), lgd.space.width = 1, annot.size = 1,
   dend.size = 1){
-
+  
   #Get the 65 or 59 genotyping (rs) probes
   rs.probes <- rownames(RnBSet@sites)[
     grepl(pattern = "rs", x = rownames(RnBSet@sites))]
@@ -124,7 +124,7 @@ snp.heatmap <- function(
   if(is.null(plot.title)){
     plot.title <- paste("Heatmap of", array.type, "genotyping probes")
   }
-
+  
   #Plot SNP CpG heatmap using genotyping probes from methylation array data
   snp.heatmap <- BiocompR::gg2heatmap(
     m = rs.meth.mat, dist.method = dist.method, row.type = "genotyping probes",
@@ -137,7 +137,7 @@ snp.heatmap <- function(
     annot.size = annot.size, dend.size = dend.size,
     heatmap.pal = heatmap.pal, dendrograms = TRUE, y.axis.right = TRUE,
     plot.title = plot.title, lgd.space.width = lgd.space.width)
-
+  
   return(snp.heatmap)
 }
 
@@ -238,7 +238,7 @@ plot.array.QC.probe <- function(
   #Check if none of the values are missing
   if(!(all(is.na(DT.probe.Cy3$`Cy3 intensity`)) &
        all(is.na(DT.probe.Cy5$`Cy5 intensity`)))){
-
+    
     #Plot Barplot on Cy3 intensity for probe
     cy3plot <- ggplot2::ggplot(
       data = DT.probe.Cy3,
@@ -253,19 +253,19 @@ plot.array.QC.probe <- function(
       ggplot2::geom_bar(stat = "identity", fill = "#ff0000", color = "black") +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
       theme_qc
-
+    
     #Plot Cy5/Cy3 ratio barplot
     DT.probe.ratio <- data.table::merge.data.table(
       x = DT.probe.Cy3, y = DT.probe.Cy5, by = "Samples", all = TRUE)
     #Compute intensity ratio values.
     DT.probe.ratio <- methview.qc::compute.intensity.ratio(
       DT.probe.ratio = DT.probe.ratio)
-
+    
     #Create DT.expected.intensity
     DT.expected.intensity <- methview.qc::get.expected.intensity(
       DT.QC.meta = DT.QC.meta, probe.id = probe.ID,
       channel.names = names(QC.data))
-
+    
     #Barplot filled with ratio colors
     ratioplot <- ggplot2::ggplot(
       data = DT.probe.ratio, mapping = ggplot2::aes(
@@ -280,7 +280,7 @@ plot.array.QC.probe <- function(
                                             vjust = 0.5, color = "black"),
         axis.ticks.x = ggplot2::element_line(color = "black"),
         axis.title.x = ggplot2::element_text(size = 14))
-
+    
     #Convert ggplots in grobs
     cy3grob <- ggplot2::ggplotGrob(cy3plot)
     cy5grob <- ggplot2::ggplotGrob(cy5plot)
@@ -289,7 +289,7 @@ plot.array.QC.probe <- function(
     ls.qc.grobs <- BiocompR::resize.grobs(ls.grobs = list(
       'cy3grob'= cy3grob, 'cy5grob' = cy5grob, 'ratiogrob' = ratiogrob),
       dimensions = 'widths', start.unit = 3, end.unit = 5)
-
+    
     #Final plot
     qc.plot <- gridExtra::arrangeGrob(top = grid::textGrob(paste(
       cohort, "-", array.type, "Quality control intensities for",
@@ -422,13 +422,13 @@ plot.array.QC.target <- function(
   # #Change order of levels in expected intensity
   # DT.target[, `Expected Intensity` := factor(
   #   `Expected Intensity`, levels = levels(`Expected Intensity`)[c(2, 4, 3, 1)])]
-
+  
   #Plot intensities for probes by target type
   if(target %in% c(
     "Bisulfite Conversion I", "Bisulfite Conversion II", "Extension",
     "Hybridization", "Non-polymorphic", "Specificity I", "Specificity II",
     "Staining", "Target Removal")){
-
+    
     #Make X-Axis labels
     probe.labels <- paste(
       paste(unique(DT.target, by = "QC.probe.IDs")$Description,
@@ -436,7 +436,7 @@ plot.array.QC.target <- function(
       "\n(ID = ", unique(DT.target, by = "QC.probe.IDs")$QC.probe.IDs, ")",
       sep = "")
     names(probe.labels) <- unique(DT.target$QC.probe.IDs)
-
+    
     #Plot target
     target.plot <- ggplot2::ggplot(
       data = DT.target, mapping = ggplot2::aes(
@@ -469,7 +469,7 @@ plot.array.QC.target <- function(
         breaks = unique(DT.target$QC.probe.IDs), labels = probe.labels) +
       ggplot2::scale_fill_manual(values = c("#00ff00", "#ff0000"),
                                  labels = c("Green channel", "Red channel"))
-
+    
     #If more than or equal to 30 samples draw boxplots with violins
     if(nrow(unique(DT.target, by = "Samples")) >= 30){
       target.plot <- target.plot + ggplot2::geom_violin() +
@@ -482,7 +482,7 @@ plot.array.QC.target <- function(
       target.plot <- target.plot + ggplot2::geom_point(
         shape = 21, size = 3, mapping = ggplot2::aes(fill = DT.target$Cyanine))
     }
-
+    
     #Set angle for X strip labels
     if(array.type == "HM450K"){
       if(target %in% c("Bisulfite Conversion II", "Extension", "Hybridization",
@@ -513,7 +513,7 @@ plot.array.QC.target <- function(
         width.target.plt <- 25
       } else { stop("Probe type not supported.") }
     }
-
+    
     #If more than or equal to 30 samples draw boxplots with violins
     if(nrow(unique(DT.target, by = "Samples")) >= 30){
       target.plot <- target.plot + ggplot2::geom_violin() +
@@ -529,14 +529,14 @@ plot.array.QC.target <- function(
     #Plot and return final target plot
     target.plot
     return(target.plot)
-
+    
   } else { #Plot Norm & Negative plots
-
+    
     if(target == "Negative") {
       #Make Y-Axis Strip labels
       strip.labels <- c("Green channel", "Red channel")
       names(strip.labels) <- unique(DT.target$Cyanine)
-
+      
       #Calculate ranges of negative probes
       if(array.type == "HM450K"){
         neg.target.ranges <- lapply(
@@ -552,7 +552,7 @@ plot.array.QC.target <- function(
         stop(
           "Unknown 'array.type'. Supported array.type are 'HM450K' & 'EPIC'.")
       }
-
+      
       #Negative Plot
       ls.neg.plot <- lapply(X = neg.target.ranges, FUN = function(i){
         negative.plot <- ggplot2::ggplot(
@@ -581,7 +581,7 @@ plot.array.QC.target <- function(
             min(DT.target$`Cy3 intensity`[DT.target$`Cy3 intensity` > 1]),
             max(DT.target$`Cy3 intensity`))) +
           ggplot2::scale_fill_manual(values = c("#00ff00", "#ff0000"))
-
+        
         if(nrow(unique(DT.target, by = "Samples")) >= 5){
           #If more than or equal to 5 samples draw boxplots alone
           negative.plot <- negative.plot + ggplot2::geom_boxplot()
@@ -600,7 +600,7 @@ plot.array.QC.target <- function(
       #Return list of negative plots
       return(ls.neg.plot)
     } else { #Target is Norm
-
+      
       #Make Y-Axis Strip labels
       if(target %in% c("Norm C", "Norm G")){
         strip.labels <- c("Green channel\n(High)", "Red channel\n(Background)")
@@ -613,7 +613,7 @@ plot.array.QC.target <- function(
       probe.labels <- paste(
         unique(DT.target, by = "QC.probe.IDs")$Description,
         unique(DT.target, by = "QC.probe.IDs")$Index, sep = ".")
-
+      
       #Norm Plot
       norm.plot <- ggplot2::ggplot(
         data = DT.target,
@@ -643,7 +643,7 @@ plot.array.QC.target <- function(
         ggplot2::scale_x_discrete(
           breaks = unique(DT.target$QC.probe.IDs), labels = probe.labels) +
         ggplot2::scale_fill_manual(values = c("#00ff00", "#ff0000"))
-
+      
       if(nrow(unique(DT.target, by = "Samples")) >= 5){
         #If more than or equal to 5 samples draw boxplots alone
         norm.plot <- norm.plot + ggplot2::geom_boxplot()
@@ -1134,4 +1134,119 @@ plot.all.qc <- function(
     }))
   }
   cat("Done!\n")
+}
+
+
+#' Plots QC deviation heatmaps based on samples fluorescence deviation score.
+#' 
+#' @param RnBSet           A \code{RnBSet} basic object for storing methylation
+#'                         array data and experimental quality information
+#'                         (Bisulfite data not supported).
+#'                         \itemize{
+#'                          \item{For more information about RnBSet object read
+#'                          \link[RnBeads]{RnBSet-class}.}
+#'                          \item{To create an RnBSet object run
+#'                          \link[RnBeads]{rnb.execute.import}.}
+#'                          \item{For additionnal options to import methylation
+#'                          array data in the RnBSet see options available in
+#'                          \link[RnBeads]{rnb.options}.}
+#'                         }
+#' @param target           A \code{character} string specifying the QC target
+#'                         type. Each 'target' matches a specific step in
+#'                         Illumina array methods. Supported values:
+#'                         target = c("Bisulfite Conversion I",
+#'                         "Bisulfite Conversion II", "Extension",
+#'                         "Hybridization", "Negative", "Non-polymorphic",
+#'                         "Norm A", "Norm C", "Norm G", "Norm T",
+#'                         "Specificity I", "Specificity II", "Staining",
+#'                         "Target Removal").
+#' @param samples          A \code{character} vector specifying the samples to
+#'                         include for the deviation score calculation. You can
+#'                         catch the sample IDs you wish to evaluate running
+#'                         \code{RnBSet@pheno[,1]}
+#' @param axis.text.y.left An \code{element_text} object to setup right Y axis
+#'                         text (Default: axis.text.y.right =
+#'                         element_text(size = 12, color = "black")).
+#' @param axis.text.x      An \code{element_text} object to setup X axis text
+#'                         (Default: axis.text.x = element_text(size = 12,
+#'                         angle = -45, hjust = 0, vjust = 0.5,
+#'                         color = "black")).
+#' @param ncores           An \code{integer} specifying the number of cores or
+#'                         threads to be used for parallel processing.
+#' @return A \code{list} of 2 heatmaps as grid objects (grobs):
+#'         \itemize{
+#'          \item{one heatmap for probes deviation scores in the green channel.}
+#'          \item{one heatmap for probes deviation scores in the red channel.}
+#'         }
+#' @details For more information about how the fluorescence deviation score is
+#'          calculated, please refer to the details section of
+#'          \link{devscore.fluo}.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for HM450K data
+#' library(RnBeads)
+#' idat.dir <- "~/data/my_idat_dir/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(
+#'   data.source = data.source, data.type = "idat.dir")
+#' #Draw deviation score heatmaps for green and red channels
+#' dev.heatmaps <- devscore.heatmaps(
+#'   RnBSet = rnb.set, samples = c("13169", "13947", "14312", "14359"),
+#'   target = "Hybridization")
+#' #One can then access both heatmaps from the list dev.heatmaps
+
+devscore.heatmaps <- function(
+  RnBSet, target, samples = NULL,
+  axis.text.y.left = ggplot2::element_text(size = 12, colour = "black"),
+  axis.text.x = ggplot2::element_text(
+    size = 12, angle = -45, hjust = 0, vjust = 0.5, colour = "black"),
+  ncores = 1){
+  #If no specific samples provided take them all
+  if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
+  #Compute deviation score of fluorescence
+  DT.target <- methview.qc::devscore.fluo(
+    RnBSet = RnBSet, samples = samples, target = target, ncores = ncores)
+  #Create probes labels
+  DT.target[, probe.labels := paste(paste(Description, Index, sep = "."),
+                                    " (ID = ", QC.probe.IDs, ")", sep = "")]
+  #Cast matrix of deviation score for Red and Green channels
+  DT.target <- data.table::dcast(data = DT.target, formula = ... ~ Samples,
+                                 value.var = "percent.diff.sqrt")
+  #Convert to matrix
+  m_red = data.table:::as.matrix.data.table(x = DT.target[
+    Cyanine == "Cy5 - Dark Red"][,-c(1:11),], rownames = 1)
+  m_green = data.table:::as.matrix.data.table(x = DT.target[
+    Cyanine == "Cy3 - Electric Lime Green"][, -c(1:11), ], rownames = 1)
+  #Draw Red channel deviation scores heatmap
+  red_htmp <- BiocompR::gg2heatmap(
+    m = m_red, dendrograms = c(FALSE, TRUE),
+    row.type = paste(target, "QC probes"), plot.title =
+      "HM450K deviation score of red channel fluorescence intensities", 
+    dist.method = c("none", "manhattan"),
+    y.lab = paste(target, "quality control probes"), 
+    lgd.scale.name = "% Fluorescence\ndeviation score",
+    axis.title.y.left = ggplot2::element_text(size = 14),
+    axis.text.y.left = axis.text.y.left,
+    axis.ticks.y.left = ggplot2::element_line(color = "black"),
+    axis.title.x = ggplot2::element_text(size = 14),
+    axis.text.x = axis.text.x,
+    heatmap.pal = c("mediumblue", "green3", "red"), ncores = ncores)
+  #Draw Green channel deviation scores heatmap
+  green_htmp <- BiocompR::gg2heatmap(
+    m = m_green, dendrograms = c(FALSE, TRUE),
+    row.type = paste(target, "QC probes"), plot.title =
+      "HM450K deviation score of green channel fluorescence intensities", 
+    dist.method = c("none", "manhattan"),
+    y.lab = paste(target, "quality control probes"), 
+    lgd.scale.name = "% Fluorescence\ndeviation score",
+    axis.title.y.left = ggplot2::element_text(size = 14),
+    axis.text.y.left = axis.text.y.left,
+    axis.ticks.y.left = ggplot2::element_line(color = "black"),
+    axis.title.x = ggplot2::element_text(size = 14),
+    axis.text.x = axis.text.x,
+    heatmap.pal = c("mediumblue", "green3", "red"), ncores = ncores)
+  #Return list of 2 heatmaps
+  return(list("Green channel" = green_htmp, "Red channel" = red_htmp))
 }

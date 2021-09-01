@@ -59,7 +59,7 @@ The deviation score is calculated as following:
          }
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
+#Create an RnBSet for HM450K data
 library(RnBeads)
 idat.dir <- "~/data/my_idat_dir/"
 sample.annotation <- "~/data/Annotations/sample_sheet.csv"

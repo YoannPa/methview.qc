@@ -346,7 +346,7 @@ update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   DT.target <- data.table::rbindlist(
     l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
   #Check expected intensities for each probes
-  ls.exp.intens <- mclapply(
+  ls.exp.intens <- parallel::mclapply(
     X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
       methview.qc::get.expected.intensity(
         DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
@@ -411,7 +411,7 @@ update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
+#' #Create an RnBSet for HM450K data
 #' library(RnBeads)
 #' idat.dir <- "~/data/my_idat_dir/"
 #' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
@@ -424,12 +424,12 @@ update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
 
 devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
   #Check it is HM450K
-  if(get.platform(RnBSet = RnBSet) != "HM450K"){
+  if(methview.qc::get.platform(RnBSet = RnBSet) != "HM450K"){
     stop("devscore.fluo() only supports HM450K data for now.")
   }
   #Load quality control metadata for Human Methylation 450K array
-  DT.QC.meta <- load.metharray.QC.meta(array.meta = "controls450")
-  QC.data <- merge.QC.intensities.and.meta(
+  DT.QC.meta <- methview.qc::load.metharray.QC.meta(array.meta = "controls450")
+  QC.data <- methview.qc::merge.QC.intensities.and.meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   #Keep only samples requested
   QC.data <- lapply(X = QC.data, FUN = function(i){
@@ -437,14 +437,15 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
     i[, ..keep]
   })
   #Update target metadata
-  DT.target <- update.target.meta(QC.data = QC.data, DT.QC.meta = DT.QC.meta,
-                                  target = target, ncores = ncores)
+  DT.target <- methview.qc::update.target.meta(
+    QC.data = QC.data, DT.QC.meta = DT.QC.meta, target = target,
+    ncores = ncores)
   #Create unique combination cyanine & ID
   DT.target[, Cyanine.probe.ID := paste(Cyanine, QC.probe.IDs, sep = ".")]
   hm450ref <- methview.qc:::sysdata[Target == target]
   hm450ref[, Cyanine.probe.ID := paste(Channel, QC.probe.IDs, sep = ".")]
   #Map HM450K reference fluorescence to DT.target
-  DT.target <- merge(
+  DT.target <- data.table::merge.data.table(
     x = DT.target,
     y = hm450ref[, c("Cyanine.probe.ID", "PCAWG.avg.intensity"), ],
     by = "Cyanine.probe.ID", all.x = TRUE)
