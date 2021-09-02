@@ -40,9 +40,8 @@ be used to parallel-compute probes intensities.}
 \item{include.gp}{A \code{logical} to specify whether the genotyping probes
 heatmap should be plotted too (include.gp = TRUE) or not
 (include.gp = TRUE).\cr If you wish to customize your
-genotyping probes heatmap, include.gp = FALSE is advised.
-For more information about the genotyping probes heatmap
-see \link{snp.heatmap}.}
+genotyping probes heatmap, include.gp must be set to FALSE.
+For more information see the details section.}
 
 \item{include.ffpe}{A \code{logical} to specify whether the FFPE negative
 control probe should be plotted a second time separately
@@ -53,6 +52,14 @@ FFPE negative control probe see
 }
 \description{
 Draws and saves all quality control plots available in methview.qc
+}
+\details{
+The genotyping probes heatmap produced by \link{plot.all.qc} when
+\code{include.gp = TRUE} is an automatic, non-custom heatmap created using
+\link{snp.heatmap}. You can customize the genotyping probes heatmap using the
+function \link{snp.heatmap} outside \link{plot.all.qc}. Using
+\link{snp.heatmap} you can provide custom annotations to the top annotation
+bar, and personalized a lot more the different components of the plot.
 }
 \examples{
 #Create an RnBSet for MethylationEPIC data

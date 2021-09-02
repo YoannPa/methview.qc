@@ -957,15 +957,21 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' @param include.gp A \code{logical} to specify whether the genotyping probes
 #'                   heatmap should be plotted too (include.gp = TRUE) or not
 #'                   (include.gp = TRUE).\cr If you wish to customize your
-#'                   genotyping probes heatmap, include.gp = FALSE is advised.
-#'                   For more information about the genotyping probes heatmap
-#'                   see \link{snp.heatmap}.
+#'                   genotyping probes heatmap, include.gp must be set to FALSE.
+#'                   For more information see the details section.
 #' @param include.ffpe A \code{logical} to specify whether the FFPE negative
 #'                     control probe should be plotted a second time separately
 #'                     from the rest of the Negative QC probes (Warning: this is
 #'                     an experimental function; for more information about the
 #'                     FFPE negative control probe see
 #'                     \link{plot.negative.FFPE}).
+#' @details
+#' The genotyping probes heatmap produced by \link{plot.all.qc} when
+#' \code{include.gp = TRUE} is an automatic, non-custom heatmap created using
+#' \link{snp.heatmap}. You can customize the genotyping probes heatmap using the
+#' function \link{snp.heatmap} outside \link{plot.all.qc}. Using
+#' \link{snp.heatmap} you can provide custom annotations to the top annotation
+#' bar, and personalized a lot more the different components of the plot.
 #' @author Yoann Pageaud.
 #' @export plot.all.qc
 #' @export
