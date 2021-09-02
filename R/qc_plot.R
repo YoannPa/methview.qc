@@ -126,19 +126,19 @@ snp.heatmap <- function(
   }
   
   #Plot SNP CpG heatmap using genotyping probes from methylation array data
-  snp.heatmap <- BiocompR::gg2heatmap(
+  snp.htmp <- BiocompR::gg2heatmap(
     m = rs.meth.mat, dist.method = dist.method, row.type = "genotyping probes",
     y.lab = paste(array.type, "genotyping probes"), x.lab = x.lab,
     axis.text.y.right = axis.text.y.right,
     axis.ticks.y.right = ggplot2::element_line(color = "black"),
     axis.text.x = axis.text.x, axis.title.y.right = axis.title.y.right,
     annot.grps = annot.grps, annot.pal = annot.pal,
-    lgd.scale.name = "Methylation", lgd.text = lgd.text,
+    lgd.scale.name = "Biallelic SNPs version", lgd.text = lgd.text,
     annot.size = annot.size, dend.size = dend.size,
     heatmap.pal = heatmap.pal, dendrograms = TRUE, y.axis.right = TRUE,
     plot.title = plot.title, lgd.space.width = lgd.space.width)
   
-  return(snp.heatmap)
+  return(snp.htmp)
 }
 
 
