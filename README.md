@@ -4,9 +4,9 @@ _**methview.qc** allows you to generate quality control plots from your methylat
 **Author: PAGEAUD Y.<sup>1</sup>**  
 **1-** [**DKFZ - Division of Applied Bioinformatics, Germany.**](https://www.dkfz.de/en/applied-bioinformatics/index.php)  
 
-**Version: 0.0.21 (Beta)**  
+**Version: 0.0.23 (Beta)**  
 **R Compatibility: Version 4.0.5**  
-**Last Update: 2/09/2021**  
+**Last Update: 20/09/2021**  
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
 ## Content

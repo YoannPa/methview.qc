@@ -1145,45 +1145,70 @@ plot.all.qc <- function(
 
 #' Plots QC deviation heatmaps based on samples fluorescence deviation score.
 #' 
-#' @param RnBSet           A \code{RnBSet} basic object for storing methylation
-#'                         array data and experimental quality information
-#'                         (Bisulfite data not supported).
-#'                         \itemize{
-#'                          \item{For more information about RnBSet object read
-#'                          \link[RnBeads]{RnBSet-class}.}
-#'                          \item{To create an RnBSet object run
-#'                          \link[RnBeads]{rnb.execute.import}.}
-#'                          \item{For additionnal options to import methylation
-#'                          array data in the RnBSet see options available in
-#'                          \link[RnBeads]{rnb.options}.}
-#'                         }
-#' @param target           A \code{character} string specifying the QC target
-#'                         type. Each 'target' matches a specific step in
-#'                         Illumina array methods. Supported values:
-#'                         target = c("Bisulfite Conversion I",
-#'                         "Bisulfite Conversion II", "Extension",
-#'                         "Hybridization", "Negative", "Non-polymorphic",
-#'                         "Norm A", "Norm C", "Norm G", "Norm T",
-#'                         "Specificity I", "Specificity II", "Staining",
-#'                         "Target Removal").
-#' @param samples          A \code{character} vector specifying the samples to
-#'                         include for the deviation score calculation. You can
-#'                         catch the sample IDs you wish to evaluate running
-#'                         \code{RnBSet@pheno[,1]}
-#' @param axis.text.y.left An \code{element_text} object to setup right Y axis
-#'                         text (Default: axis.text.y.right =
-#'                         element_text(size = 12, color = "black")).
-#' @param axis.text.x      An \code{element_text} object to setup X axis text
-#'                         (Default: axis.text.x = element_text(size = 12,
-#'                         angle = -45, hjust = 0, vjust = 0.5,
-#'                         color = "black")).
-#' @param ncores           An \code{integer} specifying the number of cores or
-#'                         threads to be used for parallel processing.
-#' @return A \code{list} of 2 heatmaps as grid objects (grobs):
-#'         \itemize{
-#'          \item{one heatmap for probes deviation scores in the green channel.}
-#'          \item{one heatmap for probes deviation scores in the red channel.}
-#'         }
+#' @param RnBSet     A \code{RnBSet} basic object for storing methylation array
+#'                   data and experimental quality information (Bisulfite data
+#'                   not supported).
+#'                   \itemize{
+#'                    \item{For more information about RnBSet object read
+#'                    \link[RnBeads]{RnBSet-class}.}
+#'                    \item{To create an RnBSet object run
+#'                    \link[RnBeads]{rnb.execute.import}.}
+#'                    \item{For additionnal options to import methylation array
+#'                    data in the RnBSet see options available in
+#'                    \link[RnBeads]{rnb.options}.}
+#'                   }
+#' @param target     A \code{character} string specifying the QC target type.
+#'                   Each 'target' matches a specific step in Illumina array
+#'                   methods. Supported values:
+#'                   target = c("Bisulfite Conversion I",
+#'                   "Bisulfite Conversion II", "Extension", "Hybridization",
+#'                   "Negative", "Non-polymorphic", "Norm A", "Norm C",
+#'                   "Norm G", "Norm T", "Specificity I", "Specificity II",
+#'                   "Staining", "Target Removal", NULL). If target is NULL,
+#'                   quality control probes from all targets will be considered
+#'                   (Default: target = NULL).
+#' @param samples    A \code{character} vector specifying the samples to include
+#'                   for the deviation score calculation. You can catch the
+#'                   sample IDs you wish to evaluate running
+#'                   \code{RnBSet@pheno[,1]}. If samples is NULL, all samples in
+#'                   RnBSet will be considered (Default: samples = NULL).
+#' @param dist.col   A \code{character} to specify the distance methods to be
+#'                   used for clustering data on columns and plot dendrogram on 
+#'                   columns (Default: dist.col = "manhattan").
+#' @param annot.grps A \code{list} of vectors of groups to which variables
+#'                   belongs for the annotation sidebars. Vectors' lengths have
+#'                   to match the number of variables.
+#' @param annot.pal  A \code{vector} or a list of vectors containing colors as
+#'                   characters for the annotation sidebars. The length of
+#'                   vectors has to match the number of levels of vectors listed
+#'                   in 'annot.grps'.
+#'                   \itemize{
+#'                    \item{If annot.pal is a list: its length must match the
+#'                    length of the list provided to 'annot.grps'.}
+#'                    \item{If annot.pal is a vector: make sure that the levels
+#'                    content of annotations listed in 'annot.grps' is the same,
+#'                    and that no annotation contains less or more levels than
+#'                    another one in 'annot.grps'.}
+#'                   }
+#' @param annot.size A \code{numeric} defining the width of the annotation bars
+#'                   (Default: annot.size = 1).
+#' @param show.annot A \code{logical} to specify whether annotations should be
+#'                   displayed at the top of the heatmap (show.annot = TRUE) or
+#'                   not (show.annot = FALSE).
+#' @param dend.size  A \code{numeric} defining columns dendrogram size
+#'                   (Default: dend.size = 1).
+#' @param lgd.width  A \code{numeric} specifying the width of the legend space
+#'                   (Default: lgd.space.width = 1).
+#' @param ncores     An \code{integer} specifying the number of cores or threads
+#'                   to be used for parallel processing.
+#' @param draw       A \code{logical} to specify whether the final heatmap
+#'                   should be drawn automatically when gg2heatmap() execution
+#'                   ends (draw = TRUE), or if it shouldn't (draw = FALSE).
+#' @param verbose    A \code{logical} to display information about the
+#'                   step-by-step processing of the data if TRUE
+#'                   (Default: verbose = FALSE).
+#' @return A \code{grob} of the computed heatmap. If draw = FALSE, you can draw
+#'         the plot using the grid::grid.draw() function on the grob.
 #' @details For more information about how the fluorescence deviation score is
 #'          calculated, please refer to the details section of
 #'          \link{devscore.fluo}.
@@ -1198,61 +1223,107 @@ plot.all.qc <- function(
 #' rnb.set <- rnb.execute.import(
 #'   data.source = data.source, data.type = "idat.dir")
 #' #Draw deviation score heatmaps for green and red channels
-#' dev.heatmaps <- devscore.heatmaps(
-#'   RnBSet = rnb.set, samples = c("13169", "13947", "14312", "14359"),
-#'   target = "Hybridization")
-#' #One can then access both heatmaps from the list dev.heatmaps
+#' dev.heatmap <- devscore.heatmap(RnBSet = rnb.set)
+#' #If 'draw' is set to FALSE you can plot heatmap as following
+#' grid::grid.newpage()
+#' grid::grid.draw(dev.heatmap)
 
-devscore.heatmaps <- function(
-  RnBSet, target, samples = NULL,
-  axis.text.y.left = ggplot2::element_text(size = 12, colour = "black"),
-  axis.text.x = ggplot2::element_text(
-    size = 12, angle = -45, hjust = 0, vjust = 0.5, colour = "black"),
-  ncores = 1){
+devscore.heatmap <- function(
+  RnBSet, target = NULL, samples = NULL, dist.col = "manhattan",
+  annot.grps = NULL, annot.pal = NULL, annot.size = 1,
+  show.annot = FALSE, dend.size = 1, lgd.width = 1, ncores = 1,
+  draw = TRUE, verbose = FALSE){
   #If no specific samples provided take them all
   if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
-  #Compute deviation score of fluorescence
-  DT.target <- methview.qc::devscore.fluo(
-    RnBSet = RnBSet, samples = samples, target = target, ncores = ncores)
+  
+  if(is.null(target)){
+    ls.dt.target <- lapply(
+      X = levels(load.metharray.QC.meta("controls450")$Target),
+      FUN = function(t){ methview.qc::devscore.fluo(
+        RnBSet = RnBSet, samples = samples, target = t, ncores = ncores)})
+    DT.target <- data.table::rbindlist(ls.dt.target)
+  } else {
+    #Compute deviation score of fluorescence
+    DT.target <- methview.qc::devscore.fluo(
+      RnBSet = RnBSet, samples = samples, target = target, ncores = ncores)
+  }
   #Create probes labels
   DT.target[, probe.labels := paste(paste(Description, Index, sep = "."),
                                     " (ID = ", QC.probe.IDs, ")", sep = "")]
-  #Cast matrix of deviation score for Red and Green channels
-  DT.target <- data.table::dcast(data = DT.target, formula = ... ~ Samples,
-                                 value.var = "percent.diff.sqrt")
-  #Convert to matrix
-  m_red = data.table:::as.matrix.data.table(x = DT.target[
-    Cyanine == "Cy5 - Dark Red"][,-c(1:11),], rownames = 1)
-  m_green = data.table:::as.matrix.data.table(x = DT.target[
-    Cyanine == "Cy3 - Electric Lime Green"][, -c(1:11), ], rownames = 1)
-  #Draw Red channel deviation scores heatmap
-  red_htmp <- BiocompR::gg2heatmap(
-    m = m_red, dendrograms = c(FALSE, TRUE),
-    row.type = paste(target, "QC probes"), plot.title =
-      "HM450K deviation score of red channel fluorescence intensities", 
-    dist.method = c("none", "manhattan"),
-    y.lab = paste(target, "quality control probes"), 
-    lgd.scale.name = "% Fluorescence\ndeviation score",
-    axis.title.y.left = ggplot2::element_text(size = 14),
-    axis.text.y.left = axis.text.y.left,
-    axis.ticks.y.left = ggplot2::element_line(color = "black"),
-    axis.title.x = ggplot2::element_text(size = 14),
-    axis.text.x = axis.text.x,
-    heatmap.pal = c("mediumblue", "green3", "red"), ncores = ncores)
-  #Draw Green channel deviation scores heatmap
-  green_htmp <- BiocompR::gg2heatmap(
-    m = m_green, dendrograms = c(FALSE, TRUE),
-    row.type = paste(target, "QC probes"), plot.title =
-      "HM450K deviation score of green channel fluorescence intensities", 
-    dist.method = c("none", "manhattan"),
-    y.lab = paste(target, "quality control probes"), 
-    lgd.scale.name = "% Fluorescence\ndeviation score",
-    axis.title.y.left = ggplot2::element_text(size = 14),
-    axis.text.y.left = axis.text.y.left,
-    axis.ticks.y.left = ggplot2::element_line(color = "black"),
-    axis.title.x = ggplot2::element_text(size = 14),
-    axis.text.x = axis.text.x,
-    heatmap.pal = c("mediumblue", "green3", "red"), ncores = ncores)
-  #Return list of 2 heatmaps
-  return(list("Green channel" = green_htmp, "Red channel" = red_htmp))
+  #Convert Cyanine as factor
+  DT.target[, Cyanine := as.factor(Cyanine)]
+  #Rename levels
+  data.table::setattr(x = DT.target$Cyanine, name = "levels",
+                      value = c("Green Channel", "Red Channel"))
+  #Create molten data.frame for gg2heatmap input
+  molten_dt <- DT.target[, c(14, 12, 13, 1:11), ]
+  #Set annotation default values
+  if(is.null(annot.grps)){
+    annot.grps <- list("Groups" = unique(molten_dt[[2]]))
+  }
+  if(is.null(annot.pal)){
+    annot.pal <- grDevices::rainbow(n = length(unique(molten_dt[[2]])))
+  }
+  #If target is NULL means all targets
+  if(is.null(target)){ target <- "All" }
+  #Set plot theme
+  if(target %in% c(
+    "Bisulfite Conversion I", "Bisulfite Conversion II", "Extension",
+    "Hybridization", "Non-polymorphic", "Specificity I", "Specificity II",
+    "Staining", "Target Removal")){
+    plot_theme = theme(
+      axis.title.y.left = ggplot2::element_text(size = 14),
+      axis.text.y.left = ggplot2::element_text(size = 12, colour = "black"),
+      axis.ticks.y.left = ggplot2::element_line(color = "black"),
+      axis.title.x = ggplot2::element_text(size = 14),
+      axis.text.x = element_text(
+        size = 8, angle = -90, hjust = 0, vjust = 0.5, colour = "black"),
+      strip.text.y = element_text(size = 14),
+      panel.border = element_rect(color = "black", fill = NA, size = 1 ))
+  } else if(target %in% c("Norm A", "Norm G")){
+    plot_theme = theme(
+      axis.title.y.left = ggplot2::element_text(size = 14),
+      axis.text.y.left = ggplot2::element_text(size = 8, colour = "black"),
+      axis.ticks.y.left = ggplot2::element_line(color = "black"),
+      axis.title.x = ggplot2::element_text(size = 14),
+      axis.text.x = element_text(
+        size = 8, angle = -90, hjust = 0, vjust = 0.5, colour = "black"),
+      strip.text.y = element_text(size = 14),
+      panel.border = element_rect(color = "black", fill = NA, size = 1 ))
+  } else if(target %in% c("Norm C", "Norm T", "Negative", "All")){
+    plot_theme = theme(
+      axis.title.y.left = ggplot2::element_text(size = 14),
+      axis.text.y.left = element_blank(),
+      axis.ticks.y.left = element_blank(),
+      axis.title.x = ggplot2::element_text(size = 14),
+      axis.text.x = element_text(
+        size = 8, angle = -90, hjust = 0, vjust = 0.5, colour = "black"),
+      strip.text.y = element_text(size = 14),
+      panel.border = element_rect(color = "black", fill = NA, size = 1 ))
+  }
+  #Row string
+  if(target == "All"){ row.string <- "QC probes measures" } else {
+    row.string <- paste(target, "QC probes measures")
+  }
+  #Draw heatmap
+  res.htmp <- BiocompR::gg2heatmap(
+    m = molten_dt, dendrograms = c(FALSE, TRUE), dend.size = c(0, dend.size),
+    facet = NULL, row.type = row.string,
+    plot.title = "HM450K fluorescence deviation score",
+    dist.method = c("none", dist.col), lgd.space.width = lgd.width,
+    y.lab = paste(target, "quality control probes"), annot.grps = annot.grps,
+    annot.pal = annot.pal, annot.size = annot.size, show.annot = show.annot,
+    scale_fill_grad = scale_fill_gradientn(
+      colors = c("mediumblue", "mediumblue", "green3", "green3", "red", "red"),
+      values = rescale(c(-100, -30, -20, 20, 30, 100)), limits = c(-100, 100),
+      breaks = seq(-100, 100, by = 20),
+      labels = c("-100%\nor lower", paste0(seq(-80, 80, by = 20), "%"),
+                 "100%\nor higher"), oob = squish, na.value = "black"),
+    guide_custom_bar = guide_colorbar(
+      title = "Fluorescence\ndeviation", title.vjust = 0.86,
+      ticks.linewidth = 2, barwidth = 25),
+    theme_heatmap = plot_theme, split.by.rows = "Cyanine", na.handle = "keep",
+    ncores = ncores, verbose = verbose, draw = draw)
+  #Return Grob of the final heatmap
+  return(res.htmp$result.grob)
 }
