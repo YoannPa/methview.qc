@@ -52,22 +52,32 @@
 #'                           (Default: x.lab = 'Samples').
 #' @param plot.title         A \code{character} to be used as title for the
 #'                           plot (Default: plot.title = NULL ; ).
-#' @param axis.text.x        An \code{element_text} object to setup X axis text
-#'                           (Default: axis.text.x = element_text(size = 10,
-#'                           angle = -45, hjust = 0, vjust = 0.5,
-#'                           color = "black")).
-#' @param axis.text.y.right  An \code{element_text} object to setup right Y axis
-#'                           text (Default: axis.text.y.right =
+#' @param htmp.text.x        An \code{element_text} object to setup X axis text 
+#'                           of the heatmap (Default: htmp.text.x = 
+#'                           element_text(size = 10, angle = -45, hjust = 0,
+#'                           vjust = 0.5, color = "black")).
+#' @param htmp.text.y.right  An \code{element_text} object to setup right Y axis
+#'                           text of the heatmap (Default: htmp.text.y.right = 
 #'                           element_text(size = 7, color = "black")).
-#' @param axis.title.y.right An \code{element_text} object to setup right Y axis
-#'                           title
-#'                           (Default: axis.title.y.right =
+#' @param htmp.title.y.right An \code{element_text} object to setup right Y axis
+#'                           title of the heatmap (Default: htmp.title.y.right = 
 #'                           element_text(size = 11)).
+#' @param anno.text.y.right  An \code{element_text} object to setup right Y axis
+#'                           text of the top annotation bar (Default: 
+#'                           anno.text.y.right = 
+#'                           element_text(size = 7, color = "black")).
+#' @param anno.ticks.y.right An \code{element_line} object to setup right Y axis
+#'                           ticks on the top annotation bar (Default:
+#'                           anno.ticks.y.right =
+#'                           element_line(color = "black")).
 #' @param lgd.text           An \code{element_text} object to setup legend
 #'                           labels (Default: lgd.text =
 #'                           element_text(size = 10)).
 #' @param lgd.space.width    A \code{numeric} specifying the width of the legend
 #'                           space (Default: lgd.space.width = 1).
+#' @param show.annot         A \code{logical} to specify whether annotations
+#'                           should be displayed at the top of the heatmap
+#'                           (show.annot = TRUE) or not (show.annot = FALSE).
 #' @param annot.size         A \code{numeric} defining the width of the
 #'                           annotation bars (Default: annot.size = 1).
 #' @param dend.size          A \code{numeric} defining the height of the
@@ -102,15 +112,18 @@
 #'             with RnBeads.
 
 snp.heatmap <- function(
-  RnBSet, dist.method = "manhattan", annot.grps, annot.pal, heatmap.pal = c(
-    "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0","#FDDBC7", "#F4A582", "#D6604D",
-    "#B2182B"), x.lab = "Samples", plot.title = NULL,
-  axis.text.x = element_text(
+  RnBSet, dist.method = "manhattan", annot.grps = NULL, annot.pal = NULL,
+  heatmap.pal = c("#2166AC", "#4393C3", "#92C5DE", "#D1E5F0","#FDDBC7",
+                  "#F4A582", "#D6604D", "#B2182B"),
+  x.lab = "Samples", plot.title = NULL,
+  htmp.text.x = element_text(
     size = 10, angle = -45, hjust = 0, vjust = 0.5, color = "black"),
-  axis.text.y.right = element_text(size = 7, color = "black"),
-  axis.title.y.right = element_text(size = 11),
-  lgd.text = element_text(size = 10), lgd.space.width = 1, annot.size = 1,
-  dend.size = 1){
+  htmp.text.y.right = ggplot2::element_text(size = 7, color = "black"),
+  htmp.title.y.right = ggplot2::element_text(size = 12),
+  anno.text.y.right = ggplot2::element_text(size = 12, color = "black"),
+  anno.ticks.y.right = ggplot2::element_line(color = "black"),
+  lgd.text = ggplot2::element_text(size = 10), lgd.space.width = 1,
+  show.annot = FALSE, annot.size = 1, dend.size = c(0, 2)){
   
   #Get the 65 or 59 genotyping (rs) probes
   rs.probes <- rownames(RnBSet@sites)[
@@ -119,25 +132,37 @@ snp.heatmap <- function(
   meth.mat <- RnBeads::meth(RnBSet, row.names = TRUE)
   rs.meth.mat <- meth.mat[rs.probes, ]
   #Get platform
-  array.type <- get.platform(RnBSet = RnBSet)
+  array.type <- methview.qc::get.platform(RnBSet = RnBSet)
   #Make plot title if none
   if(is.null(plot.title)){
     plot.title <- paste("Heatmap of", array.type, "genotyping probes")
   }
-  
+  #Set annot.grps and annot.pal if none defined
+  if(is.null(annot.grps) & is.null(annot.pal)){
+    annot.grps <- list(Groups = seq(ncol(rs.meth.mat)))
+    annot.pal <- grDevices::rainbow(n = ncol(rs.meth.mat))
+  }
   #Plot SNP CpG heatmap using genotyping probes from methylation array data
   snp.htmp <- BiocompR::gg2heatmap(
     m = rs.meth.mat, dist.method = dist.method, row.type = "genotyping probes",
     y.lab = paste(array.type, "genotyping probes"), x.lab = x.lab,
-    axis.text.y.right = axis.text.y.right,
-    axis.ticks.y.right = ggplot2::element_line(color = "black"),
-    axis.text.x = axis.text.x, axis.title.y.right = axis.title.y.right,
-    annot.grps = annot.grps, annot.pal = annot.pal,
-    lgd.scale.name = "Biallelic SNPs version", lgd.text = lgd.text,
-    annot.size = annot.size, dend.size = dend.size,
-    heatmap.pal = heatmap.pal, dendrograms = TRUE, y.axis.right = TRUE,
-    plot.title = plot.title, lgd.space.width = lgd.space.width)
-  
+    theme_heatmap = theme(
+      axis.text.y.right = htmp.text.y.right,
+      axis.ticks.y.right = ggplot2::element_line(color = "black"),
+      axis.text.x = htmp.text.x, axis.title.y.right = htmp.title.y.right),
+    annot.grps = annot.grps, annot.pal = annot.pal, theme_annot = theme(
+      axis.text.y.right = anno.text.y.right,
+      axis.ticks.y.right = anno.ticks.y.right), show.annot = show.annot,
+    guide_custom_bar = ggplot2::guide_colorbar(
+      title = "Biallelic SNPs version", barwidth = 15, ticks.linewidth = 2,
+      ticks.colour = "black", title.vjust = 0.86),
+    scale_fill_grad = ggplot2::scale_fill_gradientn(
+      colors = heatmap.pal, limits = c(0, 1), breaks = seq(0, 1, by = 0.5),
+      labels = c("Homozygous\nV1", "Heterozygous\nV1/V2","Homozygous\nV2"),
+      na.value = "black"),
+    lgd.text = lgd.text, annot.size = annot.size, dend.size = dend.size,
+    dendrograms = TRUE, y.axis.right = TRUE, plot.title = plot.title,
+    lgd.space.width = lgd.space.width)
   return(snp.htmp)
 }
 

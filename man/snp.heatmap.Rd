@@ -7,20 +7,23 @@
 snp.heatmap(
   RnBSet,
   dist.method = "manhattan",
-  annot.grps,
-  annot.pal,
+  annot.grps = NULL,
+  annot.pal = NULL,
   heatmap.pal = c("#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#FDDBC7", "#F4A582",
     "#D6604D", "#B2182B"),
   x.lab = "Samples",
   plot.title = NULL,
-  axis.text.x = element_text(size = 10, angle = -45, hjust = 0, vjust = 0.5, color =
+  htmp.text.x = element_text(size = 10, angle = -45, hjust = 0, vjust = 0.5, color =
     "black"),
-  axis.text.y.right = element_text(size = 7, color = "black"),
-  axis.title.y.right = element_text(size = 11),
-  lgd.text = element_text(size = 10),
+  htmp.text.y.right = ggplot2::element_text(size = 7, color = "black"),
+  htmp.title.y.right = ggplot2::element_text(size = 12),
+  anno.text.y.right = ggplot2::element_text(size = 12, color = "black"),
+  anno.ticks.y.right = ggplot2::element_line(color = "black"),
+  lgd.text = ggplot2::element_text(size = 10),
   lgd.space.width = 1,
+  show.annot = FALSE,
   annot.size = 1,
-  dend.size = 1
+  dend.size = c(0, 2)
 )
 }
 \arguments{
@@ -82,19 +85,28 @@ palette for the heatmap.}
 \item{plot.title}{A \code{character} to be used as title for the
 plot (Default: plot.title = NULL ; ).}
 
-\item{axis.text.x}{An \code{element_text} object to setup X axis text
-(Default: axis.text.x = element_text(size = 10,
-angle = -45, hjust = 0, vjust = 0.5,
-color = "black")).}
+\item{htmp.text.x}{An \code{element_text} object to setup X axis text 
+of the heatmap (Default: htmp.text.x = 
+element_text(size = 10, angle = -45, hjust = 0,
+vjust = 0.5, color = "black")).}
 
-\item{axis.text.y.right}{An \code{element_text} object to setup right Y axis
-text (Default: axis.text.y.right =
+\item{htmp.text.y.right}{An \code{element_text} object to setup right Y axis
+text of the heatmap (Default: htmp.text.y.right = 
 element_text(size = 7, color = "black")).}
 
-\item{axis.title.y.right}{An \code{element_text} object to setup right Y axis
-title
-(Default: axis.title.y.right =
+\item{htmp.title.y.right}{An \code{element_text} object to setup right Y axis
+title of the heatmap (Default: htmp.title.y.right = 
 element_text(size = 11)).}
+
+\item{anno.text.y.right}{An \code{element_text} object to setup right Y axis
+text of the top annotation bar (Default: 
+anno.text.y.right = 
+element_text(size = 7, color = "black")).}
+
+\item{anno.ticks.y.right}{An \code{element_line} object to setup right Y axis
+ticks on the top annotation bar (Default:
+anno.ticks.y.right =
+element_line(color = "black")).}
 
 \item{lgd.text}{An \code{element_text} object to setup legend
 labels (Default: lgd.text =
@@ -102,6 +114,10 @@ element_text(size = 10)).}
 
 \item{lgd.space.width}{A \code{numeric} specifying the width of the legend
 space (Default: lgd.space.width = 1).}
+
+\item{show.annot}{A \code{logical} to specify whether annotations
+should be displayed at the top of the heatmap
+(show.annot = TRUE) or not (show.annot = FALSE).}
 
 \item{annot.size}{A \code{numeric} defining the width of the
 annotation bars (Default: annot.size = 1).}
