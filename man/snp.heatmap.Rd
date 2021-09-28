@@ -21,6 +21,7 @@ snp.heatmap(
   anno.ticks.y.right = ggplot2::element_line(color = "black"),
   lgd.text = ggplot2::element_text(size = 10),
   lgd.space.width = 1,
+  lgd.space.height = 26,
   show.annot = FALSE,
   annot.size = 1,
   dend.size = c(0, 2)

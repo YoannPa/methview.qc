@@ -123,7 +123,8 @@ snp.heatmap <- function(
   anno.text.y.right = ggplot2::element_text(size = 12, color = "black"),
   anno.ticks.y.right = ggplot2::element_line(color = "black"),
   lgd.text = ggplot2::element_text(size = 10), lgd.space.width = 1,
-  show.annot = FALSE, annot.size = 1, dend.size = c(0, 2)){
+  lgd.space.height = 26, show.annot = FALSE, annot.size = 1,
+  dend.size = c(0, 2)){
   
   #Get the 65 or 59 genotyping (rs) probes
   rs.probes <- rownames(RnBSet@sites)[
@@ -144,15 +145,14 @@ snp.heatmap <- function(
   }
   #Plot SNP CpG heatmap using genotyping probes from methylation array data
   snp.htmp <- BiocompR::gg2heatmap(
-    m = rs.meth.mat, dist.method = dist.method, row.type = "genotyping probes",
-    y.lab = paste(array.type, "genotyping probes"), x.lab = x.lab,
+    m = rs.meth.mat, dist.method = dist.method, dendrograms = TRUE,
+    dend.size = dend.size, plot.labs = ggplot2::labs(
+      title = plot.title, x = x.lab, y = paste(array.type,"genotyping probes")),
+    row.type = "genotyping probes",
     theme_heatmap = theme(
       axis.text.y.right = htmp.text.y.right,
       axis.ticks.y.right = ggplot2::element_line(color = "black"),
       axis.text.x = htmp.text.x, axis.title.y.right = htmp.title.y.right),
-    annot.grps = annot.grps, annot.pal = annot.pal, theme_annot = theme(
-      axis.text.y.right = anno.text.y.right,
-      axis.ticks.y.right = anno.ticks.y.right), show.annot = show.annot,
     guide_custom_bar = ggplot2::guide_colorbar(
       title = "Biallelic SNPs version", barwidth = 15, ticks.linewidth = 2,
       ticks.colour = "black", title.vjust = 0.86),
@@ -160,9 +160,13 @@ snp.heatmap <- function(
       colors = heatmap.pal, limits = c(0, 1), breaks = seq(0, 1, by = 0.5),
       labels = c("Homozygous\nV1", "Heterozygous\nV1/V2","Homozygous\nV2"),
       na.value = "black"),
-    lgd.text = lgd.text, annot.size = annot.size, dend.size = dend.size,
-    dendrograms = TRUE, y.axis.right = TRUE, plot.title = plot.title,
-    lgd.space.width = lgd.space.width)
+    annot.grps = annot.grps, annot.pal = annot.pal, annot.size = annot.size,
+    theme_annot = theme(
+      axis.text.y.right = anno.text.y.right,
+      axis.ticks.y.right = anno.ticks.y.right), show.annot = show.annot,
+    theme_legend = theme(legend.text = lgd.text), 
+    y.axis.right = TRUE, lgd.space.width = lgd.space.width,
+    lgd.space.height = lgd.space.height)
   return(snp.htmp)
 }
 
@@ -414,40 +418,8 @@ plot.array.QC.target <- function(
   #Load metharray Quality Control theme
   theme_qc <- methview.qc::load.metharray.QC.theme()
   #Update target metadata
-  DT.target <- update.target.meta(
-    QC.data = QC.data, target = target, ncores = ncores)
-  # #Create QC boxplots for all probes target types
-  # DT.target.Cy3 <- data.table::melt.data.table(
-  #   data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
-  #   measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
-  #   variable.name = "Samples", value.name = "Cy3 intensity")
-  # DT.target.Cy5 <- data.table::melt.data.table(
-  #   data = QC.data$`Cy5 - Dark Red`[Target == target],
-  #   measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
-  #   variable.name = "Samples", value.name = "Cy5 intensity")
-  # #Rbind data.tables
-  # ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
-  # names(ls.dt.target) <- names(QC.data)
-  # DT.target <- data.table::rbindlist(
-  #   l = ls.dt.target, idcol = "Cyanine", use.names = FALSE)
-  # #Check expected intensities for each probes
-  # ls.exp.intens <- mclapply(
-  #   X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
-  #     methview.qc::get.expected.intensity(
-  #       DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
-  #   })
-  # names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)
-  # DT.exp.intens <- data.table::rbindlist(l = ls.exp.intens, idcol = "Probe.ID")
-  # #Modify DT.target with expected intensities
-  # invisible(lapply(X = seq(nrow(DT.exp.intens)), FUN = function(i){
-  #   DT.target[QC.probe.IDs == DT.exp.intens[i,]$Probe.ID &
-  #               Cyanine == DT.exp.intens[i,]$Channel,
-  #             `Expected Intensity` := DT.exp.intens[i,]$`Expected intensity`]
-  # }))
-  # #Change order of levels in expected intensity
-  # DT.target[, `Expected Intensity` := factor(
-  #   `Expected Intensity`, levels = levels(`Expected Intensity`)[c(2, 4, 3, 1)])]
-  
+  DT.target <- methview.qc::update.target.meta(
+    QC.data = QC.data, DT.QC.meta = DT.QC.meta, target = target,ncores = ncores)
   #Plot intensities for probes by target type
   if(target %in% c(
     "Bisulfite Conversion I", "Bisulfite Conversion II", "Extension",
@@ -684,6 +656,7 @@ plot.array.QC.target <- function(
     }
   }
 }
+
 
 #' Draws a PCA biplots on methylation array quality control targets
 #' 
@@ -1096,9 +1069,8 @@ plot.all.qc <- function(
             width = width.plot, height = 16, units = "cm", limitsize = FALSE)
         }
       }))
-    
     #Create QC plots for the target type
-    target.plot <- methview.qc::plot.array.QC.target(
+    target.plot <- BiocompR::plot.array.QC.target(
       array.type = array.type, target = target, QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, ncores = ncores, cohort = cohort)
     
@@ -1107,14 +1079,12 @@ plot.all.qc <- function(
       "Bisulfite Conversion I", "Bisulfite Conversion II", "Extension",
       "Hybridization", "Non-polymorphic", "Specificity I", "Specificity II",
       "Staining", "Target Removal")){
-      
       #Save plot
       ggsave(filename = paste(
         "Target", cohort, array.type, "QC", paste0(target, ".pdf"), sep = "_"),
         plot = target.plot, device = "pdf",
         path = file.path(save.dir, "QC_Targets", cohort),
         width = 25, height = 16, units = "cm", limitsize = FALSE)
-      
     } else { #Plot Norm & Negative plots
       
       if(target == "Negative") {
@@ -1151,11 +1121,7 @@ plot.all.qc <- function(
   if(include.gp){
     cat("\tGenotyping probes heatmap\n")
     #Plot genotyping probes heatmap
-    snp.htmp <- snp.heatmap(
-      RnBSet = RnBSet, annot.grps = list("IDs" = RnBSet@pheno[, 1]),
-      annot.pal = rainbow(n = length(RnBSet@pheno[, 1])), plot.title =
-        paste(cohort, "- Heatmap of", get.platform(RnBSet = RnBSet),
-              "genotyping probes"))
+    snp.htmp <- snp.heatmap(RnBSet = RnBSet)
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
       ggsave(
         filename = paste0("Heatmap_genotyping_probes_",
@@ -1332,12 +1298,14 @@ devscore.heatmap <- function(
   }
   #Draw heatmap
   res.htmp <- BiocompR::gg2heatmap(
-    m = molten_dt, dendrograms = c(FALSE, TRUE), dend.size = c(0, dend.size),
-    facet = NULL, row.type = row.string,
-    plot.title = "HM450K fluorescence deviation score",
-    dist.method = c("none", dist.col), lgd.space.width = lgd.width,
-    y.lab = paste(target, "quality control probes"), annot.grps = annot.grps,
-    annot.pal = annot.pal, annot.size = annot.size, show.annot = show.annot,
+    m = molten_dt, dist.method = c("none", dist.col),
+    dendrograms = c(FALSE, TRUE), dend.size = c(0, dend.size),
+    plot.labs = ggplot2::labs(
+      title = "HM450K fluorescence deviation score",
+      y = paste(target, "quality control probes")),
+    row.type = row.string, facet = NULL, 
+    lgd.space.width = lgd.width, annot.grps = annot.grps, annot.pal = annot.pal,
+    annot.size = annot.size, show.annot = show.annot,
     scale_fill_grad = scale_fill_gradientn(
       colors = c("mediumblue", "mediumblue", "green3", "green3", "red", "red"),
       values = rescale(c(-100, -30, -20, 20, 30, 100)), limits = c(-100, 100),
