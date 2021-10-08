@@ -24,7 +24,8 @@ snp.heatmap(
   lgd.space.height = 26,
   show.annot = FALSE,
   annot.size = 1,
-  dend.size = c(0, 2)
+  dend.size = c(0, 2),
+  draw = TRUE
 )
 }
 \arguments{
@@ -126,6 +127,11 @@ annotation bars (Default: annot.size = 1).}
 \item{dend.size}{A \code{numeric} defining the height of the
 dendrogram made on columns
 (Default: dend.col.size = 1).}
+
+\item{draw}{A \code{logical} to specify whether the SNP heatmap
+should be drawn automatically when execution ends
+(Default: draw = TRUE), or if it shouldn't
+(draw = FALSE).}
 }
 \value{
 A \code{grob} of the heatmap created on methylation array

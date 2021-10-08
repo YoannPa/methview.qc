@@ -10,6 +10,7 @@
   save.dir,
   ncores = 1,
   include.gp = TRUE,
+  include.ds = TRUE,
   include.ffpe = FALSE
 )
 }
@@ -39,9 +40,15 @@ be used to parallel-compute probes intensities.}
 
 \item{include.gp}{A \code{logical} to specify whether the genotyping probes
 heatmap should be plotted too (include.gp = TRUE) or not
-(include.gp = TRUE).\cr If you wish to customize your
+(include.gp = FALSE).\cr If you wish to customize your
 genotyping probes heatmap, include.gp must be set to FALSE.
 For more information see the details section.}
+
+\item{include.ds}{A \code{logical} to specify whether the fluorescence
+deviation heatmap should be plotted too (include.ds = TRUE)
+or not (include.ds = FALSE).\cr If you wish to customize
+your fluorescence deviatiom heatmap, include.ds must be set
+to FALSE. For more information see the details section.}
 
 \item{include.ffpe}{A \code{logical} to specify whether the FFPE negative
 control probe should be plotted a second time separately
@@ -54,12 +61,14 @@ FFPE negative control probe see
 Draws and saves all quality control plots available in methview.qc
 }
 \details{
-The genotyping probes heatmap produced by \link{plot.all.qc} when
-\code{include.gp = TRUE} is an automatic, non-custom heatmap created using
-\link{snp.heatmap}. You can customize the genotyping probes heatmap using the
-function \link{snp.heatmap} outside \link{plot.all.qc}. Using
-\link{snp.heatmap} you can provide custom annotations to the top annotation
-bar, and personalized a lot more the different components of the plot.
+The genotyping probes heatmap and the fluorescence deviation heatmap produced
+by \link{plot.all.qc} when \code{include.gp = TRUE} and 
+\code{include.ds = TRUE} respectively are automatic, non-custom heatmaps
+created using \link{snp.heatmap} and \link{devscore.heatmap} respectively.
+You can customize any of these heatmaps using directly \link{snp.heatmap} or
+\link{devscore.heatmap} outside \link{plot.all.qc}. This way, you can provide
+custom annotations to the top annotation bar, and personalized a lot more the
+different components of your plots.
 }
 \examples{
 #Create an RnBSet for MethylationEPIC data

@@ -83,6 +83,10 @@
 #' @param dend.size          A \code{numeric} defining the height of the
 #'                           dendrogram made on columns
 #'                           (Default: dend.col.size = 1).
+#' @param draw               A \code{logical} to specify whether the SNP heatmap
+#'                           should be drawn automatically when execution ends
+#'                           (Default: draw = TRUE), or if it shouldn't
+#'                           (draw = FALSE).
 #' @return A \code{grob} of the heatmap created on methylation array
 #'         genotyping probes.
 #' @author Yoann Pageaud.
@@ -124,7 +128,7 @@ snp.heatmap <- function(
   anno.ticks.y.right = ggplot2::element_line(color = "black"),
   lgd.text = ggplot2::element_text(size = 10), lgd.space.width = 1,
   lgd.space.height = 26, show.annot = FALSE, annot.size = 1,
-  dend.size = c(0, 2)){
+  dend.size = c(0, 2), draw = TRUE){
   
   #Get the 65 or 59 genotyping (rs) probes
   rs.probes <- rownames(RnBSet@sites)[
@@ -152,7 +156,8 @@ snp.heatmap <- function(
     theme_heatmap = theme(
       axis.text.y.right = htmp.text.y.right,
       axis.ticks.y.right = ggplot2::element_line(color = "black"),
-      axis.text.x = htmp.text.x, axis.title.y.right = htmp.title.y.right),
+      axis.text.x = htmp.text.x, axis.title.y.right = htmp.title.y.right,
+      plot.margin = margin(0, 0.5, 0, 0, unit = "cm")),
     guide_custom_bar = ggplot2::guide_colorbar(
       title = "Biallelic SNPs version", barwidth = 15, ticks.linewidth = 2,
       ticks.colour = "black", title.vjust = 0.86),
@@ -166,7 +171,7 @@ snp.heatmap <- function(
       axis.ticks.y.right = anno.ticks.y.right), show.annot = show.annot,
     theme_legend = theme(legend.text = lgd.text), 
     y.axis.right = TRUE, lgd.space.width = lgd.space.width,
-    lgd.space.height = lgd.space.height)
+    lgd.space.height = lgd.space.height, draw = draw)
   return(snp.htmp)
 }
 
@@ -954,9 +959,14 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #'                   be used to parallel-compute probes intensities.
 #' @param include.gp A \code{logical} to specify whether the genotyping probes
 #'                   heatmap should be plotted too (include.gp = TRUE) or not
-#'                   (include.gp = TRUE).\cr If you wish to customize your
+#'                   (include.gp = FALSE).\cr If you wish to customize your
 #'                   genotyping probes heatmap, include.gp must be set to FALSE.
 #'                   For more information see the details section.
+#' @param include.ds A \code{logical} to specify whether the fluorescence
+#'                   deviation heatmap should be plotted too (include.ds = TRUE)
+#'                   or not (include.ds = FALSE).\cr If you wish to customize
+#'                   your fluorescence deviatiom heatmap, include.ds must be set
+#'                   to FALSE. For more information see the details section.
 #' @param include.ffpe A \code{logical} to specify whether the FFPE negative
 #'                     control probe should be plotted a second time separately
 #'                     from the rest of the Negative QC probes (Warning: this is
@@ -964,12 +974,14 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #'                     FFPE negative control probe see
 #'                     \link{plot.negative.FFPE}).
 #' @details
-#' The genotyping probes heatmap produced by \link{plot.all.qc} when
-#' \code{include.gp = TRUE} is an automatic, non-custom heatmap created using
-#' \link{snp.heatmap}. You can customize the genotyping probes heatmap using the
-#' function \link{snp.heatmap} outside \link{plot.all.qc}. Using
-#' \link{snp.heatmap} you can provide custom annotations to the top annotation
-#' bar, and personalized a lot more the different components of the plot.
+#' The genotyping probes heatmap and the fluorescence deviation heatmap produced
+#' by \link{plot.all.qc} when \code{include.gp = TRUE} and 
+#' \code{include.ds = TRUE} respectively are automatic, non-custom heatmaps
+#' created using \link{snp.heatmap} and \link{devscore.heatmap} respectively.
+#' You can customize any of these heatmaps using directly \link{snp.heatmap} or
+#' \link{devscore.heatmap} outside \link{plot.all.qc}. This way, you can provide
+#' custom annotations to the top annotation bar, and personalized a lot more the
+#' different components of your plots.
 #' @author Yoann Pageaud.
 #' @export plot.all.qc
 #' @export
@@ -986,7 +998,7 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 
 plot.all.qc <- function(
   RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,
-  include.ffpe = FALSE){
+  include.ds = TRUE, include.ffpe = FALSE){
   #Set array type
   if(get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
     array.type <- "EPIC"
@@ -1018,6 +1030,15 @@ plot.all.qc <- function(
   }
   if(!dir.exists(file.path(save.dir, "QC_Targets"))){
     dir.create(file.path(save.dir, "QC_Targets"))
+  }
+  #Create QC heatmaps subdirectories
+  if(include.gp & !dir.exists(file.path(
+    save.dir, "Genotyping_probes_heatmaps"))){
+    dir.create(file.path(save.dir, "Genotyping_probes_heatmaps"))
+  }
+  if(include.ds & !dir.exists(file.path(
+    save.dir, "Fluorescence_deviation_heatmaps"))){
+    dir.create(file.path(save.dir, "Fluorescence_deviation_heatmaps"))
   }
   cat("Plotting...\n")
   #Loop over probes target types
@@ -1070,7 +1091,7 @@ plot.all.qc <- function(
         }
       }))
     #Create QC plots for the target type
-    target.plot <- BiocompR::plot.array.QC.target(
+    target.plot <- methview.qc::plot.array.QC.target(
       array.type = array.type, target = target, QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, ncores = ncores, cohort = cohort)
     
@@ -1108,6 +1129,33 @@ plot.all.qc <- function(
       }
     }
   }))
+  if(include.gp){
+    cat("\tGenotyping probes heatmap\n")
+    #Plot genotyping probes heatmap
+    snp.htmp <- methview.qc::snp.heatmap(RnBSet = RnBSet, draw = FALSE)
+    invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+      ggsave(
+        filename = paste0(paste(
+          "Heatmap_genotyping_probes", cohort, get.platform(RnBSet = RnBSet),
+          sep = "_"), ".", frmt),
+        plot = snp.htmp$result.grob, device = frmt, width = 11, height = 11,
+        path = file.path(save.dir, "Genotyping_probes_heatmaps"))
+    }))
+  }
+  if(include.ds){
+    cat("\tFluorescence deviation score heatmap\n")
+    #Plot luorescence deviation score heatmap
+    ds.htmp <- methview.qc::devscore.heatmap(
+      RnBSet = RnBSet, ncores = ncores, draw = FALSE)
+    invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+      ggsave(
+        filename = paste0(paste(
+          "Heatmap_fluorescence_deviation", cohort,
+          get.platform(RnBSet = RnBSet), sep = "_"), ".", frmt), plot = ds.htmp,
+        device = frmt, width = 11, height = 11, path = file.path(
+          save.dir, "Fluorescence_deviation_heatmaps"))
+    }))
+  }
   if(include.ffpe){
     cat("\tFFPE Negative control probe\n")
     # Plot FFPE negative control probe
@@ -1117,18 +1165,6 @@ plot.all.qc <- function(
       filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
       plot = neg.FFPE, device = "pdf", width = 11, height = 7.3,
       path = file.path(save.dir, "QC_Barplots", cohort))
-  }
-  if(include.gp){
-    cat("\tGenotyping probes heatmap\n")
-    #Plot genotyping probes heatmap
-    snp.htmp <- snp.heatmap(RnBSet = RnBSet)
-    invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-      ggsave(
-        filename = paste0("Heatmap_genotyping_probes_",
-                          get.platform(RnBSet = RnBSet), ".", frmt),
-        plot = snp.htmp$result.grob, device = frmt, width = 11, height = 11,
-        path = save.dir)
-    }))
   }
   cat("Done!\n")
 }
@@ -1226,7 +1262,6 @@ devscore.heatmap <- function(
   draw = TRUE, verbose = FALSE){
   #If no specific samples provided take them all
   if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
-  
   if(is.null(target)){
     ls.dt.target <- lapply(
       X = levels(load.metharray.QC.meta("controls450")$Target),
@@ -1268,9 +1303,10 @@ devscore.heatmap <- function(
       axis.ticks.y.left = ggplot2::element_line(color = "black"),
       axis.title.x = ggplot2::element_text(size = 14),
       axis.text.x = element_text(
-        size = 8, angle = -90, hjust = 0, vjust = 0.5, colour = "black"),
+        size = 8, angle = 90, hjust = 0, vjust = 0.5, colour = "black"),
       strip.text.y = element_text(size = 14),
-      panel.border = element_rect(color = "black", fill = NA, size = 1 ))
+      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      plot.margin = margin(0, 0, 0, 0.1, unit = "cm"))
   } else if(target %in% c("Norm A", "Norm G")){
     plot_theme = theme(
       axis.title.y.left = ggplot2::element_text(size = 14),
@@ -1278,9 +1314,10 @@ devscore.heatmap <- function(
       axis.ticks.y.left = ggplot2::element_line(color = "black"),
       axis.title.x = ggplot2::element_text(size = 14),
       axis.text.x = element_text(
-        size = 8, angle = -90, hjust = 0, vjust = 0.5, colour = "black"),
+        size = 8, angle = 90, hjust = 0, vjust = 0.5, colour = "black"),
       strip.text.y = element_text(size = 14),
-      panel.border = element_rect(color = "black", fill = NA, size = 1 ))
+      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      plot.margin = margin(0, 0, 0, 0.1, unit = "cm"))
   } else if(target %in% c("Norm C", "Norm T", "Negative", "All")){
     plot_theme = theme(
       axis.title.y.left = ggplot2::element_text(size = 14),
@@ -1288,9 +1325,10 @@ devscore.heatmap <- function(
       axis.ticks.y.left = element_blank(),
       axis.title.x = ggplot2::element_text(size = 14),
       axis.text.x = element_text(
-        size = 8, angle = -90, hjust = 0, vjust = 0.5, colour = "black"),
+        size = 8, angle = 90, hjust = 0, vjust = 0.5, colour = "black"),
       strip.text.y = element_text(size = 14),
-      panel.border = element_rect(color = "black", fill = NA, size = 1 ))
+      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      plot.margin = margin(0, 0, 0, 0.1, unit = "cm"))
   }
   #Row string
   if(target == "All"){ row.string <- "QC probes measures" } else {
