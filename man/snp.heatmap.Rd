@@ -19,7 +19,7 @@ snp.heatmap(
   htmp.title.y.right = ggplot2::element_text(size = 12),
   anno.text.y.right = ggplot2::element_text(size = 12, color = "black"),
   anno.ticks.y.right = ggplot2::element_line(color = "black"),
-  lgd.text = ggplot2::element_text(size = 10),
+  theme_legend = theme(legend.text = ggplot2::element_text(size = 10)),
   lgd.space.width = 1,
   lgd.space.height = 26,
   show.annot = FALSE,
@@ -110,9 +110,11 @@ ticks on the top annotation bar (Default:
 anno.ticks.y.right =
 element_line(color = "black")).}
 
-\item{lgd.text}{An \code{element_text} object to setup legend
-labels (Default: lgd.text =
-element_text(size = 10)).}
+\item{theme_legend}{A ggplot2 \code{theme} to specify any theme
+parameter you wish to custom on legends
+(Default: theme_legend = NULL). For more
+information about how to define a theme, see
+\link[ggplot2]{theme}.}
 
 \item{lgd.space.width}{A \code{numeric} specifying the width of the legend
 space (Default: lgd.space.width = 1).}

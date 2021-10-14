@@ -70,9 +70,11 @@
 #'                           ticks on the top annotation bar (Default:
 #'                           anno.ticks.y.right =
 #'                           element_line(color = "black")).
-#' @param lgd.text           An \code{element_text} object to setup legend
-#'                           labels (Default: lgd.text =
-#'                           element_text(size = 10)).
+#' @param theme_legend       A ggplot2 \code{theme} to specify any theme
+#'                           parameter you wish to custom on legends
+#'                           (Default: theme_legend = NULL). For more
+#'                           information about how to define a theme, see
+#'                           \link[ggplot2]{theme}.
 #' @param lgd.space.width    A \code{numeric} specifying the width of the legend
 #'                           space (Default: lgd.space.width = 1).
 #' @param show.annot         A \code{logical} to specify whether annotations
@@ -126,7 +128,8 @@ snp.heatmap <- function(
   htmp.title.y.right = ggplot2::element_text(size = 12),
   anno.text.y.right = ggplot2::element_text(size = 12, color = "black"),
   anno.ticks.y.right = ggplot2::element_line(color = "black"),
-  lgd.text = ggplot2::element_text(size = 10), lgd.space.width = 1,
+  theme_legend = theme(legend.text = ggplot2::element_text(size = 10)),
+  lgd.space.width = 1,
   lgd.space.height = 26, show.annot = FALSE, annot.size = 1,
   dend.size = c(0, 2), draw = TRUE){
   
@@ -169,7 +172,7 @@ snp.heatmap <- function(
     theme_annot = theme(
       axis.text.y.right = anno.text.y.right,
       axis.ticks.y.right = anno.ticks.y.right), show.annot = show.annot,
-    theme_legend = theme(legend.text = lgd.text), 
+    theme_legend = theme_legend, 
     y.axis.right = TRUE, lgd.space.width = lgd.space.width,
     lgd.space.height = lgd.space.height, draw = draw)
   return(snp.htmp)
