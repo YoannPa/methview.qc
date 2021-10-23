@@ -14,6 +14,7 @@ devscore.heatmap(
   annot.size = 1,
   show.annot = FALSE,
   dend.size = 1,
+  theme_legend = NULL,
   lgd.width = 1,
   ncores = 1,
   draw = TRUE,
@@ -81,6 +82,11 @@ not (show.annot = FALSE).}
 
 \item{dend.size}{A \code{numeric} defining columns dendrogram size
 (Default: dend.size = 1).}
+
+\item{theme_legend}{A ggplot2 \code{theme} to specify any theme parameter you
+wish to custom on legends (Default: theme_legend = NULL).
+For more information about how to define a theme, see
+\link[ggplot2]{theme}.}
 
 \item{lgd.width}{A \code{numeric} specifying the width of the legend space
 (Default: lgd.space.width = 1).}

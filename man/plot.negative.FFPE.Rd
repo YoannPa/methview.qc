@@ -4,7 +4,7 @@
 \alias{plot.negative.FFPE}
 \title{Plots FFPE negative control probe fluorescence intensities barplots (WARNING: Experimental).}
 \usage{
-\method{plot}{negative.FFPE}(RnBSet, cohort = "RnBSet")
+plot.negative.FFPE(RnBSet, cohort = "RnBSet")
 }
 \arguments{
 \item{RnBSet}{A \code{RnBSet} basic object for storing methylation array data

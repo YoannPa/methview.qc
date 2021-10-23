@@ -1227,6 +1227,10 @@ plot.all.qc <- function(
 #'                   not (show.annot = FALSE).
 #' @param dend.size  A \code{numeric} defining columns dendrogram size
 #'                   (Default: dend.size = 1).
+#' @param theme_legend A ggplot2 \code{theme} to specify any theme parameter you
+#'                     wish to custom on legends (Default: theme_legend = NULL).
+#'                     For more information about how to define a theme, see
+#'                     \link[ggplot2]{theme}.
 #' @param lgd.width  A \code{numeric} specifying the width of the legend space
 #'                   (Default: lgd.space.width = 1).
 #' @param ncores     An \code{integer} specifying the number of cores or threads
@@ -1260,9 +1264,9 @@ plot.all.qc <- function(
 
 devscore.heatmap <- function(
   RnBSet, target = NULL, samples = NULL, dist.col = "manhattan",
-  annot.grps = NULL, annot.pal = NULL, annot.size = 1,
-  show.annot = FALSE, dend.size = 1, lgd.width = 1, ncores = 1,
-  draw = TRUE, verbose = FALSE){
+  annot.grps = NULL, annot.pal = NULL, annot.size = 1, show.annot = FALSE,
+  dend.size = 1, theme_legend = NULL, lgd.width = 1, ncores = 1, draw = TRUE,
+  verbose = FALSE){
   #If no specific samples provided take them all
   if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
   if(is.null(target)){
@@ -1339,25 +1343,25 @@ devscore.heatmap <- function(
   }
   #Draw heatmap
   res.htmp <- BiocompR::gg2heatmap(
-    m = molten_dt, dist.method = c("none", dist.col),
-    dendrograms = c(FALSE, TRUE), dend.size = c(0, dend.size),
+    m = molten_dt, na.handle = "keep", dist.method = c("none", dist.col),
+    dendrograms = c(FALSE, TRUE), dend.size = c(0, dend.size), ncores = ncores,
     plot.labs = ggplot2::labs(
       title = "HM450K fluorescence deviation score",
       y = paste(target, "quality control probes")),
-    row.type = row.string, facet = NULL, 
-    lgd.space.width = lgd.width, annot.grps = annot.grps, annot.pal = annot.pal,
-    annot.size = annot.size, show.annot = show.annot,
-    scale_fill_grad = scale_fill_gradientn(
-      colors = c("mediumblue", "mediumblue", "green3", "green3", "red", "red"),
-      values = rescale(c(-100, -30, -20, 20, 30, 100)), limits = c(-100, 100),
-      breaks = seq(-100, 100, by = 20),
-      labels = c("-100%\nor lower", paste0(seq(-80, 80, by = 20), "%"),
-                 "100%\nor higher"), oob = squish, na.value = "black"),
-    guide_custom_bar = guide_colorbar(
+    row.type = row.string, facet = NULL, split.by.rows = "Cyanine",
+    theme_heatmap = plot_theme,
+    guide_custom_bar = ggplot2::guide_colorbar(
       title = "Fluorescence\ndeviation", title.vjust = 0.86,
       ticks.linewidth = 2, barwidth = 25),
-    theme_heatmap = plot_theme, split.by.rows = "Cyanine", na.handle = "keep",
-    ncores = ncores, verbose = verbose, draw = draw)
+    scale_fill_grad = ggplot2::scale_fill_gradientn(
+      colors = c("mediumblue", "mediumblue", "green3", "green3", "red", "red"),
+      values = scales::rescale(c(-100, -30, -20, 20, 30, 100)),
+      limits = c(-100, 100), breaks = seq(-100, 100, by = 20),
+      labels = c("-100%\nor lower", paste0(seq(-80, 80, by = 20), "%"),
+                 "100%\nor higher"), oob = squish, na.value = "black"),
+    annot.grps = annot.grps, annot.pal = annot.pal, annot.size = annot.size,
+    show.annot = show.annot, theme_legend = theme_legend,
+    lgd.space.width = lgd.width, draw = draw, verbose = verbose)
   #Return Grob of the final heatmap
   return(res.htmp$result.grob)
 }
