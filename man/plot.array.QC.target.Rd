@@ -5,7 +5,7 @@
 \title{Plots samples fluorescence intensities distribution for QC probes of a
 specific target type.}
 \usage{
-plot.array.QC.target(
+\method{plot}{array.QC.target}(
   array.type = "HM450K",
   target,
   QC.data,

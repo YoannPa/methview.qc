@@ -4,7 +4,7 @@
 \alias{plot.all.qc}
 \title{Draws and saves all quality control plots available in methview.qc}
 \usage{
-plot.all.qc(
+\method{plot}{all.qc}(
   RnBSet,
   cohort = "RnBSet",
   save.dir,

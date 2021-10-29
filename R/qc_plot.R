@@ -171,7 +171,8 @@ snp.heatmap <- function(
     annot.grps = annot.grps, annot.pal = annot.pal, annot.size = annot.size,
     theme_annot = theme(
       axis.text.y.right = anno.text.y.right,
-      axis.ticks.y.right = anno.ticks.y.right), show.annot = show.annot,
+      axis.ticks.y.right = anno.ticks.y.right,
+      plot.margin = margin(0, 0.5, 0.1, 0, unit = "cm")), show.annot = show.annot,
     theme_legend = theme_legend, 
     y.axis.right = TRUE, lgd.space.width = lgd.space.width,
     lgd.space.height = lgd.space.height, draw = draw)
@@ -1360,6 +1361,7 @@ devscore.heatmap <- function(
       labels = c("-100%\nor lower", paste0(seq(-80, 80, by = 20), "%"),
                  "100%\nor higher"), oob = squish, na.value = "black"),
     annot.grps = annot.grps, annot.pal = annot.pal, annot.size = annot.size,
+    theme_annot = theme(plot.margin = margin(0, 0, 0.1, 0.1, unit = "cm")),
     show.annot = show.annot, theme_legend = theme_legend,
     lgd.space.width = lgd.width, draw = draw, verbose = verbose)
   #Return Grob of the final heatmap

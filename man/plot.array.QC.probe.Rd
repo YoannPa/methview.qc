@@ -4,13 +4,7 @@
 \alias{plot.array.QC.probe}
 \title{Plots fluorescence intensities barplots for a single QC methylation array probe.}
 \usage{
-plot.array.QC.probe(
-  array.type = "HM450K",
-  probe.ID,
-  QC.data,
-  DT.QC.meta,
-  cohort = "RnBSet"
-)
+\method{plot}{array.QC.probe}(array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet")
 }
 \arguments{
 \item{array.type}{A \code{character} string specifying the type of array used
