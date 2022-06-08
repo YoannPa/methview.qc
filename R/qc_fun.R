@@ -28,9 +28,9 @@
 #' data.source <- c(idat.dir, sample.annotation)
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' #Check platform used to generate the dataset.
-#' get.platform(my.rnbset)
+#' get_platform(my.rnbset)
 
-get.platform <- function(RnBSet){
+get_platform <- function(RnBSet){
   #Get the 65 or 59 genotyping (rs) probes
   rs.probes <- rownames(RnBSet@sites)[
     grepl(pattern = "rs", x = rownames(RnBSet@sites))]
@@ -59,11 +59,11 @@ get.platform <- function(RnBSet){
 #' @export
 #' @examples
 #' #Load quality control metadata for Human Methylation 450K array
-#' DT.QC.meta <- load.metharray.QC.meta(array.meta = "controls450")
+#' DT.QC.meta <- load_metharray_QC_meta(array.meta = "controls450")
 #' @references Assenov Y. et al., Comprehensive analysis of DNA methylation data
 #'             with RnBeads.
 
-load.metharray.QC.meta <- function(array.meta){
+load_metharray_QC_meta <- function(array.meta){
   # Get methylation array QC metadata as a data.table
   QC.meta <- RnBeads::rnb.get.annotation(array.meta)
   DT.QC.meta <- data.table::as.data.table(QC.meta)
@@ -90,11 +90,11 @@ load.metharray.QC.meta <- function(array.meta){
 #'                    \link[RnBeads]{rnb.options}.}
 #'                   }
 #' @param DT.QC.meta A \code{data.table} with methylation array quality control
-#'                   metadata obtained using \link{load.metharray.QC.meta}.
+#'                   metadata obtained using \link{load_metharray_QC_meta}.
 #' @return A \code{data.table} list matching QC metadata with green channel and
 #'         red channel intensities.
 #' @author Yoann Pageaud.
-#' @export merge.QC.intensities.and.meta
+#' @export mergeQC_intensities_and_meta
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -105,11 +105,11 @@ load.metharray.QC.meta <- function(array.meta){
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
-#' dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+#' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
-#' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 
-merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
+mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
   #Get sample IDs
   column.names <- RnBSet@pheno[, 1]
   #Get QC data
@@ -126,7 +126,7 @@ merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
               " Probes removed from final data.table.")
       #Remove empty rows from qc.data[[i]]
       qc.data[[i]][!rownames(qc.data[[i]]) %in% missing.probes,]
-    }
+    } else { qc.data[[i]] }
   })
   names(qc.new) <- names(qc.data)
   qc.data <- qc.new
@@ -167,7 +167,7 @@ merge.QC.intensities.and.meta <- function(RnBSet, DT.QC.meta){
 #' @export
 #' @keywords internal
 
-compute.intensity.ratio <- function(DT.probe.ratio){
+compute_intensity_ratio <- function(DT.probe.ratio){
   #Calculate ratio Cy5/Cy3
   DT.probe.ratio[, c("Intensity ratio", "Ratio.type") := .(
     `Cy5 intensity`/`Cy3 intensity`, "Cy5/Cy3")]
@@ -226,7 +226,7 @@ compute.intensity.ratio <- function(DT.probe.ratio){
 #'
 #' @param DT.QC.meta    A \code{data.table} with methylation array quality
 #'                      control metadata obtained using
-#'                      \link{load.metharray.QC.meta}.
+#'                      \link{load_metharray_QC_meta}.
 #' @param probe.id      A \code{character} string matching a methylation array
 #'                      probe ID listed in 'DT.QC.meta'.
 #' @param channel.names A \code{character} vector specifying the names of the 2
@@ -241,11 +241,11 @@ compute.intensity.ratio <- function(DT.probe.ratio){
 #' @export
 #' @examples
 #' #Create the data.table with quality control metadata from HM450K
-#' dt.meta <- load.metharray.QC.meta(array.meta = "controls450")
+#' dt.meta <- load_metharray_QC_meta(array.meta = "controls450")
 #' #Check expected intensity for QC probe "27630314"
-#' get.expected.intensity(DT.QC.meta = dt.meta, probe.id = "27630314")
+#' get_expected_intensity(DT.QC.meta = dt.meta, probe.id = "27630314")
 
-get.expected.intensity <- function(
+get_expected_intensity <- function(
   DT.QC.meta, probe.id,
   channel.names = c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")){
   #Create DT.expected.intensity
@@ -314,10 +314,10 @@ get.expected.intensity <- function(
 #' 
 #' @param QC.data    A \code{data.table} list matching QC metadata with green
 #'                   channel and red channel intensities, obtained with the
-#'                   function \link{merge.QC.intensities.and.meta}.
+#'                   function \link{mergeQC_intensities_and_meta}.
 #' @param DT.QC.meta A \code{data.table} with methylation array quality control
 #'                   metadata obtained with the function
-#'                   \link{load.metharray.QC.meta}.
+#'                   \link{load_metharray_QC_meta}.
 #' @param target     A \code{character} specifying the name of the target step
 #'                   for which the metadata should be updated.
 #' @param ncores     An \code{integer} specifying the number of cores or threads
@@ -327,10 +327,10 @@ get.expected.intensity <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' update.target.meta(QC.data = QC.data, target = "Hybridization")
+#' update_target_meta(QC.data = QC.data, target = "Hybridization")
 #' @keywords internal
 
-update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
+update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   #Melt Green & Red QC data
   DT.target.Cy3 <- data.table::melt.data.table(
     data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
@@ -348,7 +348,7 @@ update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   #Check expected intensities for each probes
   ls.exp.intens <- parallel::mclapply(
     X = unique(DT.target$QC.probe.IDs), mc.cores = ncores, FUN = function(i){
-      methview.qc::get.expected.intensity(
+      methview.qc::get_expected_intensity(
         DT.QC.meta = DT.QC.meta, probe.id = i, channel.names = names(QC.data))
     })
   names(ls.exp.intens) <- unique(DT.target$QC.probe.IDs)
@@ -424,12 +424,12 @@ update.target.meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
 
 devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
   #Check it is HM450K
-  if(methview.qc::get.platform(RnBSet = RnBSet) != "HM450K"){
+  if(methview.qc::get_platform(RnBSet = RnBSet) != "HM450K"){
     stop("devscore.fluo() only supports HM450K data for now.")
   }
   #Load quality control metadata for Human Methylation 450K array
-  DT.QC.meta <- methview.qc::load.metharray.QC.meta(array.meta = "controls450")
-  QC.data <- methview.qc::merge.QC.intensities.and.meta(
+  DT.QC.meta <- methview.qc::load_metharray_QC_meta(array.meta = "controls450")
+  QC.data <- methview.qc::mergeQC_intensities_and_meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   #Keep only samples requested
   QC.data <- lapply(X = QC.data, FUN = function(i){
@@ -437,7 +437,7 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
     i[, ..keep]
   })
   #Update target metadata
-  DT.target <- methview.qc::update.target.meta(
+  DT.target <- methview.qc::update_target_meta(
     QC.data = QC.data, DT.QC.meta = DT.QC.meta, target = target,
     ncores = ncores)
   #Create unique combination cyanine & ID

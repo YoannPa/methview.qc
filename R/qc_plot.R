@@ -104,7 +104,7 @@
 #' #Load scientific palette package ggsci.
 #' library(ggsci)
 #' #Plot heatmap of MethylationEPIC genotyping probes.
-#' snp.htmp <- snp.heatmap(
+#' snp.htmp <- snp_heatmap(
 #'   RnBSet = rnb.set,
 #'   annot.grps = list("Donors" = rnb.set@pheno[, 1]),
 #'   annot.pal = pal_npg("nrc", alpha = 1)(10))
@@ -117,7 +117,7 @@
 #' @references Assenov Y. et al., Comprehensive analysis of DNA methylation data
 #'             with RnBeads.
 
-snp.heatmap <- function(
+snp_heatmap <- function(
   RnBSet, dist.method = "manhattan", annot.grps = NULL, annot.pal = NULL,
   heatmap.pal = c("#2166AC", "#4393C3", "#92C5DE", "#D1E5F0","#FDDBC7",
                   "#F4A582", "#D6604D", "#B2182B"),
@@ -140,7 +140,7 @@ snp.heatmap <- function(
   meth.mat <- RnBeads::meth(RnBSet, row.names = TRUE)
   rs.meth.mat <- meth.mat[rs.probes, ]
   #Get platform
-  array.type <- methview.qc::get.platform(RnBSet = RnBSet)
+  array.type <- methview.qc::get_platform(RnBSet = RnBSet)
   #Make plot title if none
   if(is.null(plot.title)){
     plot.title <- paste("Heatmap of", array.type, "genotyping probes")
@@ -186,11 +186,11 @@ snp.heatmap <- function(
 #'         plots.
 #' @author Yoann Pageaud.
 #' @export
-#' @examples theme_qc <- methview.qc::load.metharray.QC.theme()
+#' @examples theme_qc <- methview.qc::load_metharray_QCtheme()
 #' @references
 #' @keywords internal
 
-load.metharray.QC.theme <- function(){
+load_metharray_QCtheme <- function(){
   #Create plot theme
   ggplot2::theme(
     plot.title = ggplot2::element_text(hjust = 0.5),
@@ -218,17 +218,17 @@ load.metharray.QC.theme <- function(){
 #'                   methylation array quality control probe.
 #' @param QC.data    A \code{data.table} list matching QC metadata with green
 #'                   channel and red channel intensities, obtained with the
-#'                   function \link{merge.QC.intensities.and.meta}.
+#'                   function \link{mergeQC_intensities_and_meta}.
 #' @param DT.QC.meta A \code{data.table} with methylation array quality control
 #'                   metadata obtained with the function
-#'                   \link{load.metharray.QC.meta}.
+#'                   \link{load_metharray_QC_meta}.
 #' @param cohort     A \code{character} string to specify the name of the cohort
 #'                   to be displayed as part of the plot title
 #'                   (Default: cohort = "RnBSet").
 #' @return A \code{gtable} barplot of the QC probe fluorescence
 #'         intensities.
 #' @author Yoann Pageaud.
-#' @export plot.array.QC.probe
+#' @export plot_array_QCprobe
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -239,18 +239,18 @@ load.metharray.QC.theme <- function(){
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
-#' dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+#' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
-#' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw probe specific QC plot for QC probe "21630339"
-#' probe.plot <- plot.array.QC.probe(
+#' probe.plot <- plot_array_QCprobe(
 #'   array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta)
 #' #Save plot in a PDF file
 #' ggsave(filename = "QCprobe_21630339.pdf", plot = probe.plot, device = "pdf",
 #'        path = "~/")
 
-plot.array.QC.probe <- function(
+plot_array_QCprobe <- function(
   array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
   #Melt Cy3 & Cy5 data.tables
   DT.probe.Cy3 <- data.table::melt.data.table(
@@ -264,7 +264,7 @@ plot.array.QC.probe <- function(
     variable.name = "Samples", value.name = "Cy5 intensity")[, c(
       "Samples", "Cy5 intensity"), ]
   #Load metharray Quality Control theme
-  theme_qc <- methview.qc::load.metharray.QC.theme()
+  theme_qc <- methview.qc::load_metharray_QCtheme()
   #Check if any intensity equals to 0
   if(nrow(DT.probe.Cy3[`Cy3 intensity` == 0]) +
      nrow(DT.probe.Cy5[`Cy5 intensity` == 0]) > 0){
@@ -296,11 +296,11 @@ plot.array.QC.probe <- function(
     DT.probe.ratio <- data.table::merge.data.table(
       x = DT.probe.Cy3, y = DT.probe.Cy5, by = "Samples", all = TRUE)
     #Compute intensity ratio values.
-    DT.probe.ratio <- methview.qc::compute.intensity.ratio(
+    DT.probe.ratio <- methview.qc::compute_intensity_ratio(
       DT.probe.ratio = DT.probe.ratio)
     
     #Create DT.expected.intensity
-    DT.expected.intensity <- methview.qc::get.expected.intensity(
+    DT.expected.intensity <- methview.qc::get_expected_intensity(
       DT.QC.meta = DT.QC.meta, probe.id = probe.ID,
       channel.names = names(QC.data))
     
@@ -366,9 +366,9 @@ plot.array.QC.probe <- function(
 #'                 "Target Removal").
 #' @param QC.data  A \code{data.table} list matching QC metadata with green
 #'                 channel and red channel intensities, obtained with the
-#'                 function \link{merge.QC.intensities.and.meta}.
+#'                 function \link{mergeQC_intensities_and_meta}.
 #' @param DT.QC.meta A \code{data.table} with methylation array quality control metadata
-#'                   obtained with the function \link{load.metharray.QC.meta}.
+#'                   obtained with the function \link{load_metharray_QC_meta}.
 #' @param cohort   A \code{character} string to specify the name of the cohort
 #'                 to be displayed as part of the plot title
 #'                 (Default: cohort = "RnBSet").
@@ -399,7 +399,7 @@ plot.array.QC.probe <- function(
 #'          }
 #'         }
 #' @author Yoann Pageaud.
-#' @export plot.array.QC.target
+#' @export plot_array_QCtarget
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -410,24 +410,24 @@ plot.array.QC.probe <- function(
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
-#' dt.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+#' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
-#' dt.mrg <- merge.QC.intensities.and.meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw target specific QC plot for "Staining" QC probes
-#' target.plot <- plot.array.QC.target(
+#' target.plot <- plot_array_QCtarget(
 #'   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta, ncores = 2)
 #' #Save plot in a PDF file
 #' ggsave(filename = "QC_staining.pdf", plot = target.plot, device = "pdf",
 #'        path = "~/")
 
-plot.array.QC.target <- function(
+plot_array_QCtarget <- function(
   array.type = "HM450K", target, QC.data, DT.QC.meta, cohort = "RnBSet",
   ncores = 1){
   #Load metharray Quality Control theme
-  theme_qc <- methview.qc::load.metharray.QC.theme()
+  theme_qc <- methview.qc::load_metharray_QCtheme()
   #Update target metadata
-  DT.target <- methview.qc::update.target.meta(
+  DT.target <- methview.qc::update_target_meta(
     QC.data = QC.data, DT.QC.meta = DT.QC.meta, target = target,ncores = ncores)
   #Plot intensities for probes by target type
   if(target %in% c(
@@ -715,15 +715,15 @@ plot.array.QC.target <- function(
 target.biplot <- function(
   RnBSet, PCx = 1, PCy = 2, point.size = 3, loadings = TRUE,
   loadings.col = "blue", top.load.by.quad = NULL){
-  if(methview.qc::get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
-    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+  if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controlsEPIC")
-  } else if(methview.qc::get.platform(RnBSet = RnBSet) == "HM450K"){
-    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controls450")
   }
   #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc::merge.QC.intensities.and.meta(
+  QC.data <- methview.qc::mergeQC_intensities_and_meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   QC.data <- data.table::rbindlist(
     l = QC.data, use.names = TRUE, idcol = "Channel")
@@ -744,10 +744,10 @@ target.biplot <- function(
       top.load.by.quad = top.load.by.quad)
   }
   target <- target + ggplot2::scale_color_manual(values = c("#00ff00", "red"))
-  if(methview.qc::get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
+  if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     target <- target + ggplot2::scale_shape_manual(
       values = c(66, 66, 69, 72, 25, 78, 88, 88, 88, 88, 82, 83, 83, 8, 84))
-  } else if(methview.qc::get.platform(RnBSet = RnBSet) == "HM450K"){
+  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
     target <- target + ggplot2::scale_shape_manual(
       values = c(66, 66, 69, 72, 25, 78, 88, 88, 88, 88, 83, 83, 8, 84))
   } else {
@@ -818,15 +818,15 @@ target.biplot <- function(
 sampleQC.biplot <- function(
   RnBSet, PCx = 1, PCy = 2, loadings = TRUE, loadings.col = "blue",
   point.size = 2.5, top.load.by.quad = 5, color.data = "ID", shape.data = NULL){
-  if(methview.qc::get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
-    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+  if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controlsEPIC")
-  } else if(methview.qc::get.platform(RnBSet = RnBSet) == "HM450K"){
-    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controls450")
   }
   #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc::merge.QC.intensities.and.meta(
+  QC.data <- methview.qc::mergeQC_intensities_and_meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   QC.data <- data.table::rbindlist(
     l = QC.data, use.names = TRUE, idcol = "Channel")
@@ -910,26 +910,26 @@ sampleQC.biplot <- function(
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' # Plot FFPE negative control probe
-#' neg.FFPE <- methview.qc:::plot.negative.FFPE(RnBSet = rnb.set)
+#' neg.FFPE <- methview.qc:::plot_negative_FFPE(RnBSet = rnb.set)
 #' #Save plot
 #' ggsave(filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
 #'        plot = neg.FFPE, device = "pdf", width = 11, height = 7.3,
 #'        path = "~/")
 #' @keywords internal
 
-plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
+plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
   #Set array type
-  if(get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
+  if(get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     #Create the data.table with quality control metadata
-    DT.QC.meta <- load.metharray.QC.meta(array.meta = "controlsEPIC")
+    DT.QC.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
     # Merge red and green channels intensities with QC metadata
-    QC.data <- methview.qc::merge.QC.intensities.and.meta(
+    QC.data <- methview.qc::mergeQC_intensities_and_meta(
       RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
     # Plot FFPE negative control prob 
-    methview.qc::plot.array.QC.probe(
+    methview.qc::plot_array_QCprobe(
       array.type = "EPIC", probe.ID = "36729435", QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, cohort = cohort)
-  } else if(get.platform(RnBSet = RnBSet) == "HM450K"){
+  } else if(get_platform(RnBSet = RnBSet) == "HM450K"){
     stop("No FFPE negative control probe identified yet in HM450K platform.")
   } else {
     stop(paste(
@@ -976,18 +976,18 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #'                     from the rest of the Negative QC probes (Warning: this is
 #'                     an experimental function; for more information about the
 #'                     FFPE negative control probe see
-#'                     \link{plot.negative.FFPE}).
+#'                     \link{plot_negative_FFPE}).
 #' @details
 #' The genotyping probes heatmap and the fluorescence deviation heatmap produced
-#' by \link{plot.all.qc} when \code{include.gp = TRUE} and 
+#' by \link{plot_all_qc} when \code{include.gp = TRUE} and 
 #' \code{include.ds = TRUE} respectively are automatic, non-custom heatmaps
-#' created using \link{snp.heatmap} and \link{devscore.heatmap} respectively.
-#' You can customize any of these heatmaps using directly \link{snp.heatmap} or
-#' \link{devscore.heatmap} outside \link{plot.all.qc}. This way, you can provide
+#' created using \link{snp_heatmap} and \link{devscore.heatmap} respectively.
+#' You can customize any of these heatmaps using directly \link{snp_heatmap} or
+#' \link{devscore.heatmap} outside \link{plot_all_qc}. This way, you can provide
 #' custom annotations to the top annotation bar, and personalized a lot more the
 #' different components of your plots.
 #' @author Yoann Pageaud.
-#' @export plot.all.qc
+#' @export plot_all_qc
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
@@ -998,19 +998,19 @@ plot.negative.FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
 #' rnb.options(identifiers.column = "barcode")
 #' #Draw all plots from the quality control data of rnb.set
-#' plot.all.qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
+#' plot_all_qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
 
-plot.all.qc <- function(
+plot_all_qc <- function(
   RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,
   include.ds = TRUE, include.ffpe = FALSE){
   #Set array type
-  if(get.platform(RnBSet = RnBSet) == "MethylationEPIC"){
+  if(get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     array.type <- "EPIC"
-    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controlsEPIC")
-  } else if(get.platform(RnBSet = RnBSet) == "HM450K"){
+  } else if(get_platform(RnBSet = RnBSet) == "HM450K"){
     array.type <- "HM450K"
-    DT.QC.meta <- methview.qc::load.metharray.QC.meta(
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controls450")
   } else {
     stop(paste(
@@ -1021,7 +1021,7 @@ plot.all.qc <- function(
   }
   
   #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc::merge.QC.intensities.and.meta(
+  QC.data <- methview.qc::mergeQC_intensities_and_meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   
   #Create graph directory
@@ -1064,7 +1064,7 @@ plot.all.qc <- function(
     invisible(mclapply(
       X = DT.QC.meta[Target == target]$ID, mc.cores = ncores, FUN = function(i){
         #Make QC barplots for every probe
-        qc.plot <- methview.qc::plot.array.QC.probe(
+        qc.plot <- methview.qc::plot_array_QCprobe(
           array.type = array.type, probe.ID = i, QC.data = QC.data,
           DT.QC.meta = DT.QC.meta, cohort = cohort)
         
@@ -1095,7 +1095,7 @@ plot.all.qc <- function(
         }
       }))
     #Create QC plots for the target type
-    target.plot <- methview.qc::plot.array.QC.target(
+    target.plot <- methview.qc::plot_array_QCtarget(
       array.type = array.type, target = target, QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, ncores = ncores, cohort = cohort)
     
@@ -1136,11 +1136,11 @@ plot.all.qc <- function(
   if(include.gp){
     cat("\tGenotyping probes heatmap\n")
     #Plot genotyping probes heatmap
-    snp.htmp <- methview.qc::snp.heatmap(RnBSet = RnBSet, draw = FALSE)
+    snp.htmp <- methview.qc::snp_heatmap(RnBSet = RnBSet, draw = FALSE)
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
       ggsave(
         filename = paste0(paste(
-          "Heatmap_genotyping_probes", cohort, get.platform(RnBSet = RnBSet),
+          "Heatmap_genotyping_probes", cohort, get_platform(RnBSet = RnBSet),
           sep = "_"), ".", frmt),
         plot = snp.htmp$result.grob, device = frmt, width = 11, height = 11,
         path = file.path(save.dir, "Genotyping_probes_heatmaps"))
@@ -1155,7 +1155,7 @@ plot.all.qc <- function(
       ggsave(
         filename = paste0(paste(
           "Heatmap_fluorescence_deviation", cohort,
-          get.platform(RnBSet = RnBSet), sep = "_"), ".", frmt), plot = ds.htmp,
+          get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt), plot = ds.htmp,
         device = frmt, width = 11, height = 11, path = file.path(
           save.dir, "Fluorescence_deviation_heatmaps"))
     }))
@@ -1163,7 +1163,7 @@ plot.all.qc <- function(
   if(include.ffpe){
     cat("\tFFPE Negative control probe\n")
     # Plot FFPE negative control probe
-    neg.FFPE <- methview.qc:::plot.negative.FFPE(
+    neg.FFPE <- methview.qc:::plot_negative_FFPE(
       RnBSet = RnBSet, cohort = cohort)
     ggsave(
       filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
@@ -1272,7 +1272,7 @@ devscore.heatmap <- function(
   if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
   if(is.null(target)){
     ls.dt.target <- lapply(
-      X = levels(load.metharray.QC.meta("controls450")$Target),
+      X = levels(load_metharray_QC_meta("controls450")$Target),
       FUN = function(t){ methview.qc::devscore.fluo(
         RnBSet = RnBSet, samples = samples, target = t, ncores = ncores)})
     DT.target <- data.table::rbindlist(ls.dt.target)

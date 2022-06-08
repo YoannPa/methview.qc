@@ -7,7 +7,7 @@ _**methview.qc** allows you to generate quality control plots from your methylat
 
 **Version: 0.0.29 (Beta)**  
 **R Compatibility: Version 4.0.5**  
-**Last Update: 29/10/2021**  
+**Last Update: 08/06/2022**  
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
 ## Content
@@ -15,15 +15,15 @@ Currently the package methview.qc contains **12 functions**:
 
 * `devscore.fluo()` - Computes a deviation score between samples fluorescence and an internal HM450K reference.  
 * `devscore.heatmap` - Plots QC deviation heatmaps based on samples fluorescence deviation score.  
-* `get.expected.intensity()` - Provides expected intensity for a given methylation array probe ID.  
-* `get.platform()` - Detects platform used to generate data in the RnBSet.  
-* `load.metharray.QC.meta()` - Loads methylation array QC metadata as a data.table.  
-* `merge.QC.intensities.and.meta()` - Merges red and green channels intensities with QC probes metadata.  
-* `plot.all.qc()` - Draws and saves all quality control plots available in methview.qc  
-* `plot.array.QC.probe()` - Plots fluorescence intensities barplots for a single QC methylation array probe.  
-* `plot.array.QC.target()` - Plots samples fluorescence intensities distribution for QC probes of a specific target type.  
+* `get_expected_intensity()` - Provides expected intensity for a given methylation array probe ID.  
+* `get_platform()` - Detects platform used to generate data in the RnBSet.  
+* `load_metharray_QC_meta()` - Loads methylation array QC metadata as a data.table.  
+* `mergeQC_intensities_and_meta()` - Merges red and green channels intensities with QC probes metadata.  
+* `plot_all_qc()` - Draws and saves all quality control plots available in methview.qc  
+* `plot_array_QCprobe()` - Plots fluorescence intensities barplots for a single QC methylation array probe.  
+* `plot_array_QCtarget()` - Plots samples fluorescence intensities distribution for QC probes of a specific target type.  
 * `sampleQC.biplot()` - Draws a customizable PCA biplots on samples methylation array QC data.  
-* `snp.heatmap()` - Draws a heatmap from methylation array genotyping probes.  
+* `snp_heatmap()` - Draws a heatmap from methylation array genotyping probes.  
 * `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
 
 ## Prerequisites
