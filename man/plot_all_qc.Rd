@@ -11,6 +11,7 @@ plot_all_qc(
   ncores = 1,
   include.gp = TRUE,
   include.ds = TRUE,
+  include.pca = TRUE,
   include.ffpe = FALSE
 )
 }
@@ -49,6 +50,11 @@ deviation heatmap should be plotted too (include.ds = TRUE)
 or not (include.ds = FALSE).\cr If you wish to customize
 your fluorescence deviatiom heatmap, include.ds must be set
 to FALSE. For more information see the details section.}
+
+\item{include.pca}{A \code{logical} to specify whether the PCA biplot
+computed on samples quality control data should be
+plotted or not.\cr If you wish to customize your QC PCA
+biplot, include.pca must be set to FALSE.}
 
 \item{include.ffpe}{A \code{logical} to specify whether the FFPE negative
 control probe should be plotted a second time separately

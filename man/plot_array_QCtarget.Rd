@@ -26,7 +26,7 @@ target = c("Bisulfite Conversion I",
 "Bisulfite Conversion II", "Extension", "Hybridization",
 "Negative", "Non-polymorphic", "Norm A", "Norm C", "Norm G",
 "Norm T", "Specificity I", "Specificity II", "Staining",
-"Target Removal").}
+"Target Removal", "Restoration").}
 
 \item{QC.data}{A \code{data.table} list matching QC metadata with green
 channel and red channel intensities, obtained with the
