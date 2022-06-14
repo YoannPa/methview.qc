@@ -1047,11 +1047,11 @@ plot_all_qc <- function(
     save.dir, "Genotyping_probes_heatmaps"))){
     dir.create(file.path(save.dir, "Genotyping_probes_heatmaps"))
   }
-  if(include.gp & !dir.exists(file.path(
+  if(include.pca & !dir.exists(file.path(
     save.dir, "Sample_QC_PCA_biplot"))){
     dir.create(file.path(save.dir, "Sample_QC_PCA_biplot"))
   }
-  if(include.ds & !dir.exists(file.path(
+  if(include.ds & array.type != "EPIC" & !dir.exists(file.path(
     save.dir, "Fluorescence_deviation_heatmaps"))){
     dir.create(file.path(save.dir, "Fluorescence_deviation_heatmaps"))
   }
