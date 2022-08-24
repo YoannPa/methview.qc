@@ -40,10 +40,11 @@ quality control plots should be saved.}
 be used to parallel-compute probes intensities.}
 
 \item{include.gp}{A \code{logical} to specify whether the genotyping probes
-heatmap should be plotted too (include.gp = TRUE) or not
-(include.gp = FALSE).\cr If you wish to customize your
-genotyping probes heatmap, include.gp must be set to FALSE.
-For more information see the details section.}
+heatmap and density map should be plotted too
+(include.gp = TRUE) or not (include.gp = FALSE).\cr If you
+wish to customize your genotyping probes heatmap, or your
+genotyping probes density map, include.gp must be set to
+FALSE. For more information see the details section.}
 
 \item{include.ds}{A \code{logical} to specify whether the fluorescence
 deviation heatmap should be plotted too (include.ds = TRUE)

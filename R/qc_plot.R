@@ -179,6 +179,125 @@ snp_heatmap <- function(
   return(snp.htmp)
 }
 
+#' Displays the distribution of genotyping probes values in a cohort.
+#' 
+#' @param RnB.set A \code{RnBSet} basic object for storing methylation array
+#'                data and experimental quality information (HM450K and
+#'                Bisulfite data not supported).
+#'                \itemize{
+#'                 \item{For more information about RnBSet object read
+#'                 \link[RnBeads]{RnBSet-class}.}
+#'                 \item{To create an RnBSet object run
+#'                 \link[RnBeads]{rnb.execute.import}.}
+#'                 \item{For additionnal options to import methylation array
+#'                 data in the RnBSet see options available in
+#'                 \link[RnBeads]{rnb.options}.}
+#'                }
+#' @return A \code{gg} plot of the results.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(
+#'   data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' # Draw the genotyping probes values offset plot
+#' methview.qc::cohort.gp.density(RnB.set = rnb.set)
+
+cohort.gp.density <- function(RnB.set){
+  rs.probes <- rownames(RnB.set@sites)[
+    grepl(pattern = "rs", x = rownames(RnB.set@sites))]
+  meth.mat <- RnBeads::meth(RnB.set, row.names = TRUE)
+  rs.meth.mat <- meth.mat[rs.probes, ]
+  array.type <- methview.qc::get_platform(RnBSet = RnB.set)
+  dt.rs <- data.table::data.table(rs.meth.mat, keep.rownames = "rs.probes")
+  dt.rs <- melt.data.table(
+    data = dt.rs, id.vars = "rs.probes", variable.name = "samples",
+    value.name = "genotype")
+  dt.rs[genotype >= 0 & genotype <= 0.25, allele := "Homozygous V1"]
+  dt.rs[genotype > 0.25 & genotype < 0.75, allele := "Heterozygous V1/V2"]
+  dt.rs[genotype >= 0.75 & genotype <= 1, allele := "Homozygous V2"]
+  dt.rs[, allele := as.factor(allele)]
+  dt.rs[, allele := factor(allele, levels = levels(allele)[c(2, 1, 3)])]
+  
+  gp.hist <- ggplot() +
+    geom_histogram(data = dt.rs, mapping = aes(x = genotype),
+                   color = "black", fill = "gold", alpha = 1,
+                   binwidth = 0.05, boundary = 0) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_continuous(expand = c(0, 0)) +
+    theme(
+      axis.text.y = element_text(size = 12, color = "black"),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.x = element_text(size = 12),
+      panel.background = element_blank(),
+      panel.grid.major.y = element_line(color = "grey"),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.major.x = element_line(color = "grey"),
+      panel.grid.minor.x = element_blank(),
+      plot.margin = margin(0.1,0.5,0.1,0.1, unit = "cm"),
+      plot.title = element_text(size = 15, hjust = 0.5)) +
+    labs(y = "Count", x = "Genotyping probes values distribution") +
+    ggtitle("Genotyping probes values offset")
+  
+  gp.density.map <- ggdensity_map(
+    m = rs.meth.mat, from = 0, to = 1, sort.fun = "base::mean") +
+    coord_flip() + theme(
+      axis.text.x = element_blank(),
+      axis.text.y = element_text(size = 11, color = "black"),
+      axis.title.x = element_text(size = 12),
+      axis.title.y = element_text(size = 14),
+      plot.margin = margin(0,0.5,0.1,0.1, unit = "cm"),
+      panel.ontop = TRUE,
+      panel.background = element_rect(fill = NA, color = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.x = element_line(color = "grey")) +
+    labs(
+      x = "Samples",
+      y = paste(array.type, "Genotyping probes density map"))
+  
+  allele.boxplot <- ggplot() +
+    geom_boxplot(
+      data = dt.rs,
+      mapping = aes(x = genotype, color = allele, group = allele),
+      position = position_dodge(0)) +
+    theme(
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(), 
+      axis.text.x = element_text(size = 12, color = "black"),
+      axis.title.x = element_blank(),
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.title = element_text(size = 12),
+      legend.text = element_text(size = 11),
+      legend.key = element_blank(),
+      panel.background = element_rect(fill = "white", color = "black"),
+      panel.grid.major.x = element_line(color = "grey"),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      plot.margin = margin(0,0.5,0.1,0.1, unit = "cm")) +
+    guides(color = guide_legend(
+      title.position = "top", title.hjust = 0.5,
+      label.position = "bottom")) +
+    scale_color_manual(values = c("#2166AC", "#E6C952", "#B2182B")) +
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 1)) +
+    scale_y_continuous(expand = c(0.01, 0.01)) +
+    labs(color = "Allele categories")
+  
+  gp.offset.plot <- egg::ggarrange(
+    gp.hist, gp.density.map, allele.boxplot, nrow = 3,
+    heights = c(2, 10, 1))
+  
+  return(gp.offset.plot)
+}
 
 #' Loads QC ggplot2 default theme.
 #'
@@ -965,10 +1084,11 @@ plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' @param ncores     An \code{integer} to specify the number of cores/threads to
 #'                   be used to parallel-compute probes intensities.
 #' @param include.gp A \code{logical} to specify whether the genotyping probes
-#'                   heatmap should be plotted too (include.gp = TRUE) or not
-#'                   (include.gp = FALSE).\cr If you wish to customize your
-#'                   genotyping probes heatmap, include.gp must be set to FALSE.
-#'                   For more information see the details section.
+#'                   heatmap and density map should be plotted too
+#'                   (include.gp = TRUE) or not (include.gp = FALSE).\cr If you
+#'                   wish to customize your genotyping probes heatmap, or your
+#'                   genotyping probes density map, include.gp must be set to
+#'                   FALSE. For more information see the details section.
 #' @param include.ds A \code{logical} to specify whether the fluorescence
 #'                   deviation heatmap should be plotted too (include.ds = TRUE)
 #'                   or not (include.ds = FALSE).\cr If you wish to customize
@@ -1154,6 +1274,16 @@ plot_all_qc <- function(
           "Heatmap_genotyping_probes", cohort, get_platform(RnBSet = RnBSet),
           sep = "_"), ".", frmt),
         plot = snp.htmp$result.grob, device = frmt, width = 11, height = 11,
+        path = file.path(save.dir, "Genotyping_probes_heatmaps"))
+    }))
+    #Plot genotyping probes values density
+    gp_density <- methview.qc::cohort.gp.density(RnB.set = RnBSet)
+    invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+      ggsave(
+        filename = paste0(paste(
+          "Density_genotyping_probes", cohort, get_platform(RnBSet = RnBSet),
+          sep = "_"), ".", frmt),
+        plot = gp_density, device = frmt, width = 11, height = 11,
         path = file.path(save.dir, "Genotyping_probes_heatmaps"))
     }))
   }

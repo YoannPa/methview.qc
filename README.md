@@ -5,14 +5,15 @@ _**methview.qc** allows you to generate quality control plots from your methylat
 **Contributors: RATHGEBER A.<sup>1</sup>**  
 **1-** [**DKFZ - Division of Applied Bioinformatics, Germany.**](https://www.dkfz.de/en/applied-bioinformatics/index.php)  
 
-**Version: 0.0.32 (Beta)**  
+**Version: 0.0.33 (Beta)**  
 **R Compatibility: Version 4.0.5**  
-**Last Update: 14/06/2022**  
+**Last Update: 24/08/2022**  
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
 ## Content
-Currently the package methview.qc contains **12 functions**:
+Currently the package methview.qc contains **13 functions**:
 
+* `cohort.gp.density()` - Displays the distribution of genotyping probes values in a cohort.
 * `devscore.fluo()` - Computes a deviation score between samples fluorescence and an internal HM450K reference.  
 * `devscore.heatmap` - Plots QC deviation heatmaps based on samples fluorescence deviation score.  
 * `get_expected_intensity()` - Provides expected intensity for a given methylation array probe ID.  
