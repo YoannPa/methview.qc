@@ -944,28 +944,6 @@ sampleQC.biplot <- function(
   ls_res <- methview.qc:::comp_RnB2PCA(RnBSet = RnBSet)
   pca_t.res <- ls_res$prcomp
   t.QC.dt <- ls_res$data
-  # if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
-  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-  #     array.meta = "controlsEPIC")
-  # } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
-  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-  #     array.meta = "controls450")
-  # }
-  # #Merge Red and Green intensities matrices with QC probes metadata
-  # QC.data <- methview.qc::mergeQC_intensities_and_meta(
-  #   RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
-  # QC.data <- data.table::rbindlist(
-  #   l = QC.data, use.names = TRUE, idcol = "Channel")
-  # QC.data[, Target := as.factor(Target)]
-  # melt.QC.dt <- data.table::melt(
-  #   QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
-  # t.QC.dt <- data.table::dcast(
-  #   melt.QC.dt, formula = Samples ~ Channel + Description)
-  # RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
-  # t.QC.dt <- data.table::merge.data.table(
-  #   x = RnBSet@pheno, y = t.QC.dt,by.x = colnames(RnBSet@pheno)[1],
-  #   by.y = "Samples", all.y = TRUE)
-  # pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   if(is.null(top.load.by.quad)){
     if(is.null(shape.data)){
       sample.biplot <- BiocompR::ggbipca(
@@ -1053,7 +1031,6 @@ sampleQC.biplot <- function(
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
-
 sampleQC_crossbi <- function(
   RnBSet, PCs = c(1:5), loadings = TRUE, loadings.col = "blue",
   point.size = 2.5, top.load.by.quad = NULL, color.data = "ID",
@@ -1062,27 +1039,6 @@ sampleQC_crossbi <- function(
   ls_res <- methview.qc:::comp_RnB2PCA(RnBSet = RnBSet)
   pca_t.res <- ls_res$prcomp
   t.QC.dt <- ls_res$data
-  # if (methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC") {
-  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-  #     array.meta = "controlsEPIC")
-  # } else if (methview.qc::get_platform(RnBSet = RnBSet) == "HM450K") {
-  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-  #     array.meta = "controls450")
-  # }
-  # QC.data <- methview.qc::mergeQC_intensities_and_meta(
-  #   RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
-  # QC.data <- data.table::rbindlist(
-  #   l = QC.data, use.names = TRUE, idcol = "Channel")
-  # QC.data[, `:=`(Target, as.factor(Target))]
-  # melt.QC.dt <- data.table::melt(
-  #   QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
-  # t.QC.dt <- data.table::dcast(
-  #   melt.QC.dt, formula = Samples ~ Channel + Description)
-  # RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
-  # t.QC.dt <- data.table::merge.data.table(
-  #   x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
-  #   by.y = "Samples", all.y = TRUE)
-  # pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   if (is.null(top.load.by.quad)) {
     if (is.null(shape.data)) {
       sample_crossbi <- BiocompR::cross.biplot(

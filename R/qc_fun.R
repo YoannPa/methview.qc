@@ -502,3 +502,99 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
   DT.target <- DT.target[, c(2:13, 16), ]
   return(DT.target)
 }
+
+
+#' Retrieves runinfo data from a methylation array sample's IDAT files.
+#' 
+#' @param sentrix_barcode A \code{character} string to specify the sample from
+#'                        which you wish to retrieve the runinfo (from both Red
+#'                        & Green IDAT files).
+#' @param IDATs_dir       A \code{character} specifying the directory where IDAT
+#'                        files are stored that will be search recursively for
+#'                        the files matching the sentrix barcode. 
+#' @param data_format     A \code{character} string to specify how much
+#'                        information you want from runinfo:
+#'                        \itemize{
+#'                         \item{'full': to get all details available from
+#'                         the sample's IDAT files runinfo.}
+#'                         \item{'short': to get a one line summary of runinfo
+#'                         data from the sample's IDAT files (Scan year,
+#'                         Decoding tool version & Scanning tool version).}
+#'                         \item{'both': the default value, to get both the full
+#'                         details and the one line summary of runinfo data from
+#'                         the sample's IDAT files in 2 separate data.tables.}
+#'                        }
+#' @return A \code{data.table} or a \code{list} of data.tables with the sample's
+#'         runinfo data.
+#' @author Yoann Pageaud.
+#' @export
+#' @references ML Smith, KA Baggerly, H Bengtsson, ME Ritchie & KD Hansen.
+#'             illuminaio: An open source IDAT parsing tool for Illumina
+#'             microarrays, F1000Research, (2013) 2:264.
+
+get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
+  files <- list.files(IDATs_dir, recursive = TRUE)
+  IDATs <- files[files %like% sentrix_barcode]
+  if(length(IDATs) != 2){
+    stop("There should be 2 IDAT files per sample ID.")
+  } else {
+    ls_content <- lapply(
+      X = file.path(IDATs_dir, IDATs), FUN = illuminaio::readIDAT)
+    if(all.equal(
+      target = ls_content[[1]]$RunInfo,
+      current = ls_content[[2]]$RunInfo)){
+      dt_scan_info <- as.data.table(ls_content[[1]]$RunInfo)
+      if(nrow(dt_scan_info) != 0){
+        dt_scan_info[, RunTime := as.POSIXct(
+          RunTime, format = "%m/%d/%Y %H:%M:%S")]
+        dt_scan_info[, Tool := paste(BlockCode, CodeVersion)]
+        if(data_format == 'short' | data_format == 'both'){
+          scan_year <- format(x = dt_scan_info$RunTime, "%Y")
+          if(length(unique(scan_year)) != 1){
+            scan_year <- unique(format(
+              x = dt_scan_info[BlockType == "Scan"]$RunTime,
+              "%Y"))
+            if(length(scan_year) != 1){
+              stop("All scans did not happened the same year.")
+            }
+          } else { scan_year <- unique(scan_year) }
+          
+          decoding <- dt_scan_info[BlockType == "Decoding"]$Tool
+          if(length(unique(decoding)) != 1){
+            stop("Decoding has been done with different tools or versions.")
+          } else { decoding <- unique(decoding) }
+          
+          scan_tool <- dt_scan_info[BlockType == "Scan"]$Tool
+          if(length(unique(scan_tool)) != 1){
+            stop("Scan has been done with different tools or versions.")
+          } else { scan_tool <- unique(scan_tool) }
+          dt_scan_simple <- data.table(
+            "Scan_year" = scan_year, "Decoding" = decoding,
+            "Scan" = scan_tool)
+        }
+        dt_scan_info <- dt_scan_info[, -c("Tool"), ]
+        
+      } else {
+        warning(
+          "The sample's IDAT files do not contain any runinfo data.")
+        class(dt_scan_info$RunTime) <- class(as.POSIXct(NA))
+        dt_scan_info <- rbind(
+          dt_scan_info, data.table(as.POSIXct(NA), NA, NA, NA, NA),
+          use.names = FALSE)
+        if(data_format == 'short' | data_format == 'both'){
+          dt_scan_simple <- data.table(
+            "Scan_year" = NA, "Decoding" = NA, "Scan" = NA)
+        }
+      }
+    } else { stop("Green and Red IDATs runinfos do not match.") }
+  }
+  if(data_format == 'short'){
+    return(dt_scan_simple)
+  } else if(data_format == 'full'){
+    return(dt_scan_info)
+  } else if(data_format == 'both'){
+    ls_both <- list(
+      "short_runinfo" = dt_scan_simple, "full_runinfo" = dt_scan_info)
+    return(ls_both)
+  }
+}
