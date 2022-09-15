@@ -879,7 +879,7 @@ target.biplot <- function(
 }
 
 
-#' Draws a customizable PCA biplots on samples methylation array QC data
+#' Draws a customizable PCA biplot on samples methylation array QC data
 #' 
 #' @param RnBSet           A \code{RnBSet} basic object for storing methylation
 #'                         array data and experimental quality information
@@ -940,29 +940,32 @@ target.biplot <- function(
 sampleQC.biplot <- function(
   RnBSet, PCx = 1, PCy = 2, loadings = TRUE, loadings.col = "blue",
   point.size = 2.5, top.load.by.quad = 5, color.data = "ID", shape.data = NULL){
-  if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
-    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-      array.meta = "controlsEPIC")
-  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
-    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-      array.meta = "controls450")
-  }
-  #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc::mergeQC_intensities_and_meta(
-    RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
-  QC.data <- data.table::rbindlist(
-    l = QC.data, use.names = TRUE, idcol = "Channel")
-  QC.data[, Target := as.factor(Target)]
-  melt.QC.dt <- data.table::melt(
-    QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
-  t.QC.dt <- data.table::dcast(
-    melt.QC.dt, formula = Samples ~ Channel + Description)
-  RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
-  t.QC.dt <- data.table::merge.data.table(
-    x = RnBSet@pheno, y = t.QC.dt,by.x = colnames(RnBSet@pheno)[1],
-    by.y = "Samples", all.y = TRUE)
-  
-  pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
+  # Compute PCA and format RnBSet data
+  ls_res <- methview.qc:::comp_RnB2PCA(RnBSet = RnBSet)
+  pca_t.res <- ls_res$prcomp
+  t.QC.dt <- ls_res$data
+  # if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+  #     array.meta = "controlsEPIC")
+  # } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
+  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+  #     array.meta = "controls450")
+  # }
+  # #Merge Red and Green intensities matrices with QC probes metadata
+  # QC.data <- methview.qc::mergeQC_intensities_and_meta(
+  #   RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+  # QC.data <- data.table::rbindlist(
+  #   l = QC.data, use.names = TRUE, idcol = "Channel")
+  # QC.data[, Target := as.factor(Target)]
+  # melt.QC.dt <- data.table::melt(
+  #   QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
+  # t.QC.dt <- data.table::dcast(
+  #   melt.QC.dt, formula = Samples ~ Channel + Description)
+  # RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+  # t.QC.dt <- data.table::merge.data.table(
+  #   x = RnBSet@pheno, y = t.QC.dt,by.x = colnames(RnBSet@pheno)[1],
+  #   by.y = "Samples", all.y = TRUE)
+  # pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   if(is.null(top.load.by.quad)){
     if(is.null(shape.data)){
       sample.biplot <- BiocompR::ggbipca(
@@ -994,6 +997,122 @@ sampleQC.biplot <- function(
   return(sample.biplot)
 }
 
+#' Draws a customizable PCA cross biplot on samples methylation array QC data
+#' 
+#' @param RnBSet           A \code{RnBSet} basic object for storing methylation
+#'                         array data and experimental quality information
+#'                         (Bisulfite data not supported).
+#'                         \itemize{
+#'                          \item{For more information about RnBSet object read
+#'                          \link[RnBeads]{RnBSet-class}.}
+#'                          \item{To create an RnBSet object run
+#'                          \link[RnBeads]{rnb.execute.import}.}
+#'                          \item{For additionnal options to import methylation
+#'                          array data in the RnBSet see options available in
+#'                          \link[RnBeads]{rnb.options}.}
+#'                         }
+#' @param PCs              An \code{integer} vector matching principal
+#'                         components to be used to generate the cross-biplot.
+#' @param point.size       A \code{double} specifying the size of points.
+#' @param loadings         A \code{logical} specifying whether the loadings
+#'                         should be displayed (TRUE) or not (FALSE).
+#' @param loadings.col     A \code{character} specifying a color to be used for
+#'                         loadings.
+#' @param top.load.by.quad An \code{integer} specifying the top n most important
+#'                         loadings to be displayed in the four quadrants of the
+#'                         biplot graph (by quadrants). This parameters allows
+#'                         to display only the most important loadings, and to
+#'                         hide the less important ones, to improve visibility
+#'                         when there is too many of them
+#'                         (Default: top.load.by.quad = 5).
+#' @param color.data       A \code{character} specifying the column name in
+#'                         'data' to be used to map colors to points. You can
+#'                         specify your own custom palette of colors using the
+#'                         'scale_color_manual()' function. For more information
+#'                         about how to use it see
+#'                         \link[ggplot2]{scale_color_manual}.
+#' @param shape.data       A \code{character} specifying the column name in
+#'                         'data' to be used to map shapes to points. You can
+#'                         specify your own custom set of point shapes using the
+#'                         'scale_shape_manual()' function. For more information
+#'                         about how to use it see
+#'                         \link[ggplot2]{scale_shape_manual}.
+#' @return A customizable \code{gg} object of samples PCA cross biplot.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' library(RnBeads)
+#' idat.dir <- "~/data/MethylationEPIC/"
+#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.options(identifiers.column = "barcode")
+#' #Draw samples biplot on quality control data
+#' sampleQC_crossbi(RnBSet = rnb.set)
+#' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
+#'             comparison.
+
+
+sampleQC_crossbi <- function(
+  RnBSet, PCs = c(1:5), loadings = TRUE, loadings.col = "blue",
+  point.size = 2.5, top.load.by.quad = NULL, color.data = "ID",
+  shape.data = NULL){
+  # Compute PCA and format RnBSet data
+  ls_res <- methview.qc:::comp_RnB2PCA(RnBSet = RnBSet)
+  pca_t.res <- ls_res$prcomp
+  t.QC.dt <- ls_res$data
+  # if (methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC") {
+  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+  #     array.meta = "controlsEPIC")
+  # } else if (methview.qc::get_platform(RnBSet = RnBSet) == "HM450K") {
+  #   DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+  #     array.meta = "controls450")
+  # }
+  # QC.data <- methview.qc::mergeQC_intensities_and_meta(
+  #   RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+  # QC.data <- data.table::rbindlist(
+  #   l = QC.data, use.names = TRUE, idcol = "Channel")
+  # QC.data[, `:=`(Target, as.factor(Target))]
+  # melt.QC.dt <- data.table::melt(
+  #   QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
+  # t.QC.dt <- data.table::dcast(
+  #   melt.QC.dt, formula = Samples ~ Channel + Description)
+  # RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+  # t.QC.dt <- data.table::merge.data.table(
+  #   x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
+  #   by.y = "Samples", all.y = TRUE)
+  # pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
+  if (is.null(top.load.by.quad)) {
+    if (is.null(shape.data)) {
+      sample_crossbi <- BiocompR::cross.biplot(
+        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        PCs = PCs, loadings = loadings, loadings.col = loadings.col,
+        point.size = point.size, color.data = color.data)
+    } else {
+      sample_crossbi <- BiocompR::cross.biplot(
+        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        PCs = PCs, loadings = loadings, loadings.col = loadings.col,
+        point.size = point.size, color.data = color.data,
+        shape.data = shape.data)
+    }
+  } else {
+    if (is.null(shape.data)) {
+      sample_crossbi <- BiocompR::cross.biplot(
+        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        PCs = PCs, loadings = loadings, loadings.col = loadings.col,
+        top.load.by.quad = top.load.by.quad, point.size = point.size,
+        color.data = color.data)
+    } else {
+      sample_crossbi <- BiocompR::cross.biplot(
+        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        PCs = PCs, loadings = loadings, loadings.col = loadings.col,
+        top.load.by.quad = top.load.by.quad, point.size = point.size,
+        color.data = color.data, shape.data = shape.data)
+    }
+  }
+  return(sample_crossbi)
+}
 
 #' Plots FFPE negative control probe fluorescence intensities barplots (WARNING: Experimental).
 #' 

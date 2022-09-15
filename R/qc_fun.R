@@ -366,6 +366,52 @@ update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   return(DT.target)
 }
 
+#' Computes a PCA from an RnBSet for PCA biplot and cross-biplot functions
+#' 
+#' @param RnBSet     An \code{RnBSet} basic object for storing methylation
+#'                   array DNA methylation and experimental quality information
+#'                   (Bisulfite data not supported).
+#'                   \itemize{
+#'                    \item{For more information about RnBSet object read
+#'                    \link[RnBeads]{RnBSet-class}.}
+#'                    \item{To create an RnBSet object run
+#'                    \link[RnBeads]{rnb.execute.import}.}
+#'                    \item{For additionnal options to import methylation array
+#'                    data in the RnBSet see options available in
+#'                    \link[RnBeads]{rnb.options}.}
+#'                   }
+#' @return A \code{list} containing a prcomp object with all results from the
+#'         PCA, and a data.table with all the RnBSet data.
+#' @author Yoann Pageaud.
+#' @keywords internal
+
+comp_RnB2PCA <- function(RnBSet){
+  if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+      array.meta = "controlsEPIC")
+  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+      array.meta = "controls450")
+  }
+  #Merge Red and Green intensities matrices with QC probes metadata
+  QC.data <- methview.qc::mergeQC_intensities_and_meta(
+    RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+  QC.data <- data.table::rbindlist(
+    l = QC.data, use.names = TRUE, idcol = "Channel")
+  QC.data[, Target := as.factor(Target)]
+  melt.QC.dt <- data.table::melt(
+    QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
+  t.QC.dt <- data.table::dcast(
+    melt.QC.dt, formula = Samples ~ Channel + Description)
+  RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+  t.QC.dt <- data.table::merge.data.table(
+    x = RnBSet@pheno, y = t.QC.dt,by.x = colnames(RnBSet@pheno)[1],
+    by.y = "Samples", all.y = TRUE)
+  pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
+  #Return the results of the PCA
+  ls_res <- list("prcomp" = pca_t.res, "data" = t.QC.dt)
+  return(ls_res)
+}
 
 #' Computes a deviation score between samples fluorescence and an internal
 #' HM450K reference.
