@@ -57,6 +57,18 @@ A \code{gg} plot.
 Draws association test results between annotations from an RnBSet and QC
 probes intensities.
 }
+\examples{
+# Create an RnBSet for Human Methylation 450K data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiData")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiData")
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+# Plot association test between annotations and QC probes intensities results
+plot_asso_annot_QC(RnBSet = rnb.set, cohort.name = "minfiData")
+}
 \author{
 Yoann Pageaud.
 }

@@ -32,16 +32,19 @@ Merges red and green channels intensities with QC probes metadata.
 }
 \examples{
 #Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 #Create the data.table with quality control metadata
 dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
-dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+dt.mrg <- mergeQC_intensities_and_meta(
+   RnBSet = rnb.set, DT.QC.meta = dt.meta)
 }
 \author{
 Yoann Pageaud.

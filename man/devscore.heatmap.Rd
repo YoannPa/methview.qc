@@ -115,15 +115,24 @@ For more information about how the fluorescence deviation score is
          \link{devscore.fluo}.
 }
 \examples{
-#Create an RnBSet for HM450K data
-library(RnBeads)
-idat.dir <- "~/data/my_idat_dir/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiData")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiData")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(
-  data.source = data.source, data.type = "idat.dir")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
 #Draw deviation score heatmaps for green and red channels
-dev.heatmap <- devscore.heatmap(RnBSet = rnb.set)
+dev.heatmap <- devscore.heatmap(
+    RnBSet = rnb.set, annot.grps = list( # To add annotation bars at the top
+        "Groups" = rnb.set@pheno$Sample_Group, "Sex" = rnb.set@pheno$sex),
+    annot.pal = list( # To map palettes to previously mentionned annotations
+        c("orange", "purple"), c("lightblue", "pink")),
+    show.annot = TRUE, # To make all top annotations visible
+    annot.size = 2, # Width of the annotation bars
+    theme_legend = theme(
+        legend.justification = c(0,1))) # To align all annotation legends
 #If 'draw' is set to FALSE you can plot heatmap as following
 grid::grid.newpage()
 grid::grid.draw(dev.heatmap)

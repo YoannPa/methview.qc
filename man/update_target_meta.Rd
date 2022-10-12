@@ -29,6 +29,20 @@ A \code{data.table} containing the updated metadata for a given
 Updates a target intensities metadata.
 }
 \examples{
+#Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
+#Create the data.table with quality control metadata
+dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
+# Merge red and green channels intensities with QC metadata
+dt.mrg <- mergeQC_intensities_and_meta(
+   RnBSet = rnb.set, DT.QC.meta = dt.meta)
 update_target_meta(QC.data = QC.data, target = "Hybridization")
 }
 \author{

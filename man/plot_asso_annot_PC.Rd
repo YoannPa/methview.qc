@@ -63,6 +63,22 @@ A \code{gg} plot.
 Draws association test results between annotations from an RnBSet and PCs
 from a prcomp object.
 }
+\examples{
+# Create an RnBSet for Human Methylation 450K data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiData")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiData")
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+# Compute PCA on QC probes from the RnBSet     
+pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
+# Plot association test between annotations and PCs from QC probes results
+plot_asso_annot_PC(
+    RnBSet = rnb.set, prcomp.res = pca_res$prcomp, PC_type.str = "QC probes",
+    cohort.name = "minfiData")
+}
 \author{
 Yoann Pageaud.
 }

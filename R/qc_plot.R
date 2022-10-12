@@ -94,21 +94,21 @@
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data.
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
-#' #Load scientific palette package ggsci.
-#' library(ggsci)
-#' #Plot heatmap of MethylationEPIC genotyping probes.
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
+#' # Plot heatmap of MethylationEPIC genotyping probes.
 #' snp.htmp <- snp_heatmap(
 #'   RnBSet = rnb.set,
 #'   annot.grps = list("Donors" = rnb.set@pheno[, 1]),
-#'   annot.pal = pal_npg("nrc", alpha = 1)(10))
-#' #Save heatmap in a PDF file.
+#'   annot.pal = ggsci::pal_npg(palette = "nrc", alpha = 1)(3))
+#' # Save heatmap in a PDF file.
 #' ggsave(
 #'   filename = "heatmap.pdf", plot = snp.htmp$result.grob, device = "pdf",
 #'   path = "~/")
@@ -197,16 +197,17 @@ snp_heatmap <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(
-#'   data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' # Draw the genotyping probes values offset plot
-#' methview.qc::cohort.gp.density(RnB.set = rnb.set)
+#' cohort.gp.density(RnB.set = rnb.set)
 
 cohort.gp.density <- function(RnB.set){
   rs.probes <- rownames(RnB.set@sites)[
@@ -304,9 +305,7 @@ cohort.gp.density <- function(RnB.set){
 #' @return A ggplot2 \code{theme} object used as a default theme for QC
 #'         plots.
 #' @author Yoann Pageaud.
-#' @export
-#' @examples theme_qc <- methview.qc::load_metharray_QCtheme()
-#' @references
+#' @examples theme_qc <- methview.qc:::load_metharray_QCtheme()
 #' @keywords internal
 
 load_metharray_QCtheme <- function(){
@@ -352,21 +351,24 @@ load_metharray_QCtheme <- function(){
 #' @export plot_array_QCprobe
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
 #' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
-#' dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg <- mergeQC_intensities_and_meta(
+#'     RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw probe specific QC plot for QC probe "21630339"
 #' probe.plot <- plot_array_QCprobe(
-#'   array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
-#'   DT.QC.meta = dt.meta)
+#'     array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
+#'     DT.QC.meta = dt.meta)
 #' #Save plot in a PDF file
 #' ggsave(filename = "QCprobe_21630339.pdf", plot = probe.plot, device = "pdf",
 #'        path = "~/")
@@ -385,7 +387,7 @@ plot_array_QCprobe <- function(
     variable.name = "Samples", value.name = "Cy5 intensity")[, c(
       "Samples", "Cy5 intensity"), ]
   #Load metharray Quality Control theme
-  theme_qc <- methview.qc::load_metharray_QCtheme()
+  theme_qc <- methview.qc:::load_metharray_QCtheme()
   #Check if any intensity equals to 0
   if(nrow(DT.probe.Cy3[`Cy3 intensity` == 0]) +
      nrow(DT.probe.Cy5[`Cy5 intensity` == 0]) > 0){
@@ -417,7 +419,7 @@ plot_array_QCprobe <- function(
     DT.probe.ratio <- data.table::merge.data.table(
       x = DT.probe.Cy3, y = DT.probe.Cy5, by = "Samples", all = TRUE)
     #Compute intensity ratio values.
-    DT.probe.ratio <- methview.qc::compute_intensity_ratio(
+    DT.probe.ratio <- methview.qc:::compute_intensity_ratio(
       DT.probe.ratio = DT.probe.ratio)
     
     #Create DT.expected.intensity
@@ -488,8 +490,9 @@ plot_array_QCprobe <- function(
 #' @param QC.data  A \code{data.table} list matching QC metadata with green
 #'                 channel and red channel intensities, obtained with the
 #'                 function \link{mergeQC_intensities_and_meta}.
-#' @param DT.QC.meta A \code{data.table} with methylation array quality control metadata
-#'                   obtained with the function \link{load_metharray_QC_meta}.
+#' @param DT.QC.meta A \code{data.table} with methylation array quality control
+#'                   metadata obtained with the function
+#'                   \link{load_metharray_QC_meta}.
 #' @param cohort   A \code{character} string to specify the name of the cohort
 #'                 to be displayed as part of the plot title
 #'                 (Default: cohort = "RnBSet").
@@ -523,17 +526,20 @@ plot_array_QCprobe <- function(
 #' @export plot_array_QCtarget
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
 #' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
-#' dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg <- mergeQC_intensities_and_meta(
+#'     RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' #Draw target specific QC plot for "Staining" QC probes
 #' target.plot <- plot_array_QCtarget(
 #'   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
@@ -546,9 +552,9 @@ plot_array_QCtarget <- function(
   array.type = "HM450K", target, QC.data, DT.QC.meta, cohort = "RnBSet",
   ncores = 1){
   #Load metharray Quality Control theme
-  theme_qc <- methview.qc::load_metharray_QCtheme()
+  theme_qc <- methview.qc:::load_metharray_QCtheme()
   #Update target metadata
-  DT.target <- methview.qc::update_target_meta(
+  DT.target <- methview.qc:::update_target_meta(
     QC.data = QC.data, DT.QC.meta = DT.QC.meta, target = target,ncores = ncores)
   #Plot intensities for probes by target type
   if(target %in% c(
@@ -822,13 +828,15 @@ plot_array_QCtarget <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Draw samples biplot on quality control data
 #' target.biplot(RnBSet = rnb.set)
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
@@ -925,15 +933,17 @@ target.biplot <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Draw samples biplot on quality control data
-#' sampleQC.biplot(RnBSet = rnb.set)
+#' sampleQC.biplot(RnBSet = rnb.set, color.data = "Sample_Name")
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
@@ -941,7 +951,7 @@ sampleQC.biplot <- function(
   RnBSet, PCx = 1, PCy = 2, loadings = TRUE, loadings.col = "blue",
   point.size = 2.5, top.load.by.quad = 5, color.data = "ID", shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc:::comp_RnB2PCA(RnBSet = RnBSet)
+  ls_res <- methview.qc:::comp_RnBqc2PCA(RnBSet = RnBSet)
   pca_t.res <- ls_res$prcomp
   t.QC.dt <- ls_res$data
   if(is.null(top.load.by.quad)){
@@ -1019,15 +1029,18 @@ sampleQC.biplot <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Draw samples biplot on quality control data
-#' sampleQC_crossbi(RnBSet = rnb.set)
+#' sampleQC_crossbi(
+#'     RnBSet = rnb.set, color.data = "Sample_Name", top.load.by.quad = 1)
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
@@ -1036,7 +1049,7 @@ sampleQC_crossbi <- function(
   point.size = 2.5, top.load.by.quad = NULL, color.data = "ID",
   shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc:::comp_RnB2PCA(RnBSet = RnBSet)
+  ls_res <- methview.qc:::comp_RnBqc2PCA(RnBSet = RnBSet)
   pca_t.res <- ls_res$prcomp
   t.QC.dt <- ls_res$data
   if (is.null(top.load.by.quad)) {
@@ -1097,17 +1110,20 @@ sampleQC_crossbi <- function(
 #' Negative quality control probe also exists in HM450K array, but have not yet
 #' identified one. 
 #' @author Yoann Pageaud.
-#' @export
+#' @importFrom data.table `:=`
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' # Plot FFPE negative control probe
-#' neg.FFPE <- methview.qc:::plot_negative_FFPE(RnBSet = rnb.set)
+#' neg.FFPE <- methview.qc:::plot_negative_FFPE(
+#'     RnBSet = rnb.set, cohort = "minfiDataEPIC")
 #' #Save plot
 #' ggsave(filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
 #'        plot = neg.FFPE, device = "pdf", width = 11, height = 7.3,
@@ -1192,15 +1208,17 @@ plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' @export plot_all_qc
 #' @export
 #' @examples
-#' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Draw all plots from the quality control data of rnb.set
-#' plot_all_qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
+#' plot_all_qc(RnBSet = rnb.set, save.dir = "~/minfiDataEPIC_QC", ncores = 2)
 
 plot_all_qc <- function(
   RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,
@@ -1484,15 +1502,24 @@ plot_all_qc <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for HM450K data
-#' library(RnBeads)
-#' idat.dir <- "~/data/my_idat_dir/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(
-#'   data.source = data.source, data.type = "idat.dir")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
 #' #Draw deviation score heatmaps for green and red channels
-#' dev.heatmap <- devscore.heatmap(RnBSet = rnb.set)
+#' dev.heatmap <- devscore.heatmap(
+#'     RnBSet = rnb.set, annot.grps = list( # To add annotation bars at the top
+#'         "Groups" = rnb.set@pheno$Sample_Group, "Sex" = rnb.set@pheno$sex),
+#'     annot.pal = list( # To map palettes to previously mentionned annotations
+#'         c("orange", "purple"), c("lightblue", "pink")),
+#'     show.annot = TRUE, # To make all top annotations visible
+#'     annot.size = 2, # Width of the annotation bars
+#'     theme_legend = theme(
+#'         legend.justification = c(0,1))) # To align all annotation legends
 #' #If 'draw' is set to FALSE you can plot heatmap as following
 #' grid::grid.newpage()
 #' grid::grid.draw(dev.heatmap)
@@ -1641,15 +1668,30 @@ devscore.heatmap <- function(
 #' @return A \code{gg} plot.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute PCA on QC probes from the RnBSet     
+#' pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
+#' # Plot association test between annotations and PCs from QC probes results
+#' plot_asso_annot_PC(
+#'     RnBSet = rnb.set, prcomp.res = pca_res$prcomp, PC_type.str = "QC probes",
+#'     cohort.name = "minfiData")
 
 plot_asso_annot_PC <- function(
   RnBSet, prcomp.res, perm.count = 10000, max.PCs = 8,
   PC_type.str = NULL, cohort.name = "dataset", verbose = FALSE){
   if(is.null(PC_type.str)){
     stop(paste(
-      "Please specify with a short string what kind of data the prcomp",
-      "object has been computed from.\ne.g. 'QC probes', 'methylation",
-      "probes', 'CpG islands', ..."))
+      "Please specify in 'PC_type.str' with a short string what kind of data",
+      "the prcomp object has been computed from.\ne.g. 'QC probes',",
+      "'methylation probes', 'CpG islands', ..."))
   }
   # Compute association tests between annotations and PCs
   asso_res <- rnb_test_asso_annot_PC(
@@ -1724,6 +1766,17 @@ plot_asso_annot_PC <- function(
 #' @return A \code{gg} plot.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Plot association test between annotations and QC probes intensities results
+#' plot_asso_annot_QC(RnBSet = rnb.set, cohort.name = "minfiData")
 
 plot_asso_annot_QC <- function(
   RnBSet, perm.count = 10000, max.QCprobes = 50, cohort.name = "dataset",
@@ -1795,6 +1848,17 @@ plot_asso_annot_QC <- function(
 #' @return A \code{gg} plot.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Plot association test between all annotations results
+#' plot_asso_all_annot(RnBSet = rnb.set, cohort.name = "minfiData")
 
 plot_asso_all_annot <- function(
   RnBSet, perm.count = 10000, cohort.name = "dataset", verbose = FALSE){

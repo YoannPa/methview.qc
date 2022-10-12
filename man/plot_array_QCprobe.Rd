@@ -42,21 +42,24 @@ A \code{gtable} barplot of the QC probe fluorescence
 Plots fluorescence intensities barplots for a single QC methylation array probe.
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 #Create the data.table with quality control metadata
 dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
-dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+dt.mrg <- mergeQC_intensities_and_meta(
+    RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #Draw probe specific QC plot for QC probe "21630339"
 probe.plot <- plot_array_QCprobe(
-  array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
-  DT.QC.meta = dt.meta)
+    array.type = "EPIC", probe.ID = "21630339", QC.data = dt.mrg,
+    DT.QC.meta = dt.meta)
 #Save plot in a PDF file
 ggsave(filename = "QCprobe_21630339.pdf", plot = probe.plot, device = "pdf",
        path = "~/")

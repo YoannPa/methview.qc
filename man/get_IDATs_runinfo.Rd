@@ -35,6 +35,12 @@ A \code{data.table} or a \code{list} of data.tables with the sample's
 \description{
 Retrieves runinfo data from a methylation array sample's IDAT files.
 }
+\examples{
+# Set IDAT directory
+idat.dir <- system.file("extdata", "idat", package = "IlluminaDataTestFiles")
+# Get runinfo data from a IDAT file name from within the directory
+get_IDATs_runinfo(sentrix_barcode = "4019585376_B_Red", IDATs_dir = idat.dir)
+}
 \references{
 ML Smith, KA Baggerly, H Bengtsson, ME Ritchie & KD Hansen.
             illuminaio: An open source IDAT parsing tool for Illumina

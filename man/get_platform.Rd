@@ -32,13 +32,15 @@ Detects platform used to generate data in the RnBSet.
 }
 \examples{
 #Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/my_idat_dir/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
 #Check platform used to generate the dataset.
-get_platform(my.rnbset)
+get_platform(rnb.set)
 }
 \author{
 Yoann Pageaud.

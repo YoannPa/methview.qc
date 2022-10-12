@@ -143,21 +143,21 @@ A \code{grob} of the heatmap created on methylation array
 Draws a heatmap from methylation array genotyping probes.
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data.
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
-#Load scientific palette package ggsci.
-library(ggsci)
-#Plot heatmap of MethylationEPIC genotyping probes.
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
+# Plot heatmap of MethylationEPIC genotyping probes.
 snp.htmp <- snp_heatmap(
   RnBSet = rnb.set,
   annot.grps = list("Donors" = rnb.set@pheno[, 1]),
-  annot.pal = pal_npg("nrc", alpha = 1)(10))
-#Save heatmap in a PDF file.
+  annot.pal = ggsci::pal_npg(palette = "nrc", alpha = 1)(3))
+# Save heatmap in a PDF file.
 ggsave(
   filename = "heatmap.pdf", plot = snp.htmp$result.grob, device = "pdf",
   path = "~/")

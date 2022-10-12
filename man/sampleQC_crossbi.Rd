@@ -69,15 +69,18 @@ A customizable \code{gg} object of samples PCA cross biplot.
 Draws a customizable PCA cross biplot on samples methylation array QC data
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 #Draw samples biplot on quality control data
-sampleQC_crossbi(RnBSet = rnb.set)
+sampleQC_crossbi(
+    RnBSet = rnb.set, color.data = "Sample_Name", top.load.by.quad = 1)
 }
 \references{
 Pageaud Y. et al., BiocompR - Advanced visualizations for data

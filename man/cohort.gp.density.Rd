@@ -27,16 +27,17 @@ A \code{gg} plot of the results.
 Displays the distribution of genotyping probes values in a cohort.
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(
-  data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 # Draw the genotyping probes values offset plot
-methview.qc::cohort.gp.density(RnB.set = rnb.set)
+cohort.gp.density(RnB.set = rnb.set)
 }
 \author{
 Yoann Pageaud.

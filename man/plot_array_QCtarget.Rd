@@ -32,8 +32,9 @@ target = c("Bisulfite Conversion I",
 channel and red channel intensities, obtained with the
 function \link{mergeQC_intensities_and_meta}.}
 
-\item{DT.QC.meta}{A \code{data.table} with methylation array quality control metadata
-obtained with the function \link{load_metharray_QC_meta}.}
+\item{DT.QC.meta}{A \code{data.table} with methylation array quality control
+metadata obtained with the function
+\link{load_metharray_QC_meta}.}
 
 \item{cohort}{A \code{character} string to specify the name of the cohort
 to be displayed as part of the plot title
@@ -73,17 +74,20 @@ Plots samples fluorescence intensities distribution for QC probes of a
 specific target type.
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 #Create the data.table with quality control metadata
 dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
-dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+dt.mrg <- mergeQC_intensities_and_meta(
+    RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #Draw target specific QC plot for "Staining" QC probes
 target.plot <- plot_array_QCtarget(
   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,

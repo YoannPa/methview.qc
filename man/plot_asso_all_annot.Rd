@@ -45,6 +45,18 @@ A \code{gg} plot.
 \description{
 Draws association test results between all annotations from an RnBSet.
 }
+\examples{
+# Create an RnBSet for Human Methylation 450K data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiData")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiData")
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+# Plot association test between all annotations results
+plot_asso_all_annot(RnBSet = rnb.set, cohort.name = "minfiData")
+}
 \author{
 Yoann Pageaud.
 }

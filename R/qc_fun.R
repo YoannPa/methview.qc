@@ -22,13 +22,15 @@
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/my_idat_dir/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
 #' #Check platform used to generate the dataset.
-#' get_platform(my.rnbset)
+#' get_platform(rnb.set)
 
 get_platform <- function(RnBSet){
   #Get the 65 or 59 genotyping (rs) probes
@@ -98,16 +100,19 @@ load_metharray_QC_meta <- function(array.meta){
 #' @export
 #' @examples
 #' #Create an RnBSet for MethylationEPIC data
-#' library(RnBeads)
-#' idat.dir <- "~/data/MethylationEPIC/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-#' rnb.options(identifiers.column = "barcode")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
 #' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
-#' dt.mrg <- mergeQC_intensities_and_meta(RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg <- mergeQC_intensities_and_meta(
+#'    RnBSet = rnb.set, DT.QC.meta = dt.meta)
 
 mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
   #Get sample IDs
@@ -164,7 +169,6 @@ mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
 #'  \item{column 7 "round.ratio" contains the rounded ratio values.}
 #' }
 #' @author Yoann Pageaud.
-#' @export
 #' @keywords internal
 
 compute_intensity_ratio <- function(DT.probe.ratio){
@@ -325,8 +329,21 @@ get_expected_intensity <- function(
 #' @return A \code{data.table} containing the updated metadata for a given
 #'         target step of a given quality control dataset.
 #' @author Yoann Pageaud.
-#' @export
 #' @examples
+#' #Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' RnBeads::rnb.options(identifiers.column = "barcode")
+#' #Create the data.table with quality control metadata
+#' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
+#' # Merge red and green channels intensities with QC metadata
+#' dt.mrg <- mergeQC_intensities_and_meta(
+#'    RnBSet = rnb.set, DT.QC.meta = dt.meta)
 #' update_target_meta(QC.data = QC.data, target = "Hybridization")
 #' @keywords internal
 
@@ -366,7 +383,7 @@ update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   return(DT.target)
 }
 
-#' Computes a PCA from an RnBSet for PCA biplot and cross-biplot functions
+#' Computes a PCA from an RnBSet on quality control probes intensities
 #' 
 #' @param RnBSet     An \code{RnBSet} basic object for storing methylation
 #'                   array DNA methylation and experimental quality information
@@ -383,9 +400,20 @@ update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
 #' @return A \code{list} containing a prcomp object with all results from the
 #'         PCA, and a data.table with all the RnBSet data.
 #' @author Yoann Pageaud.
-#' @keywords internal
+#' @export
+#' @examples
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute PCA on quality control probes intensities from the RnBSet
+#' comp_RnBqc2PCA(RnBSet = rnb.set)     
 
-comp_RnB2PCA <- function(RnBSet){
+comp_RnBqc2PCA <- function(RnBSet){
   if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controlsEPIC")
@@ -454,19 +482,22 @@ comp_RnB2PCA <- function(RnBSet){
 #'           be extracted from the resulting data.table in the column
 #'           'percent.diff.sqrt'.}
 #'          }
+#'          Formula: \eqn{(sqrt(sample_signal)/sqrt(ref_signal)) * 100 - 100}
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' #Create an RnBSet for HM450K data
-#' library(RnBeads)
-#' idat.dir <- "~/data/my_idat_dir/"
-#' sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
 #' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- rnb.execute.import(
-#'   data.source = data.source, data.type = "idat.dir")
-#' #Compute deviation score
-#' devscore.fluo(RnBSet = rnb.set, samples = c("13169","13947","14312","14359"),
-#'               target = "Hybridization")
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute deviation score on selected samples for hybridization QC probes
+#' devscore.fluo(
+#'     RnBSet = rnb.set, samples = c("GroupA_3","GroupA_2","GroupB_2"),
+#'     target = "Hybridization")
 
 devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
   #Check it is HM450K
@@ -483,7 +514,7 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
     i[, ..keep]
   })
   #Update target metadata
-  DT.target <- methview.qc::update_target_meta(
+  DT.target <- methview.qc:::update_target_meta(
     QC.data = QC.data, DT.QC.meta = DT.QC.meta, target = target,
     ncores = ncores)
   #Create unique combination cyanine & ID
@@ -502,7 +533,6 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
   DT.target <- DT.target[, c(2:13, 16), ]
   return(DT.target)
 }
-
 
 #' Retrieves runinfo data from a methylation array sample's IDAT files.
 #' 
@@ -528,6 +558,11 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
 #'         runinfo data.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Set IDAT directory
+#' idat.dir <- system.file("extdata", "idat", package = "IlluminaDataTestFiles")
+#' # Get runinfo data from a IDAT file name from within the directory
+#' get_IDATs_runinfo(sentrix_barcode = "4019585376_B_Red", IDATs_dir = idat.dir)
 #' @references ML Smith, KA Baggerly, H Bengtsson, ME Ritchie & KD Hansen.
 #'             illuminaio: An open source IDAT parsing tool for Illumina
 #'             microarrays, F1000Research, (2013) 2:264.
@@ -618,6 +653,17 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
 #' @return A \code{list} containing updated annotations, the number of
 #'         annotations available, and the RnBSet annotation table it contains.
 #' @author Yoann Pageaud.
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Prepare annotations before association tests
+#' methview.qc:::prepare_annot_asso(RnBSet = rnb.set)
 #' @keywords internal
 
 prepare_annot_asso <- function(RnBSet, verbose = FALSE){
@@ -808,6 +854,19 @@ test.annots <- function (x, y, perm.matrix = NULL){
 #' @return A \code{data.table} containing all association test results.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute PCA on QC probes from the RnBSet     
+#' pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
+#' # Compute association test between annotations and PCs from QC probes
+#' res <- rnb_test_asso_annot_PC(RnBSet = rnb.set, prcomp.res = pca_res$prcomp)
 
 rnb_test_asso_annot_PC <- function(
   RnBSet, prcomp.res, perm.count = 10000, max.PCs = 8, verbose = FALSE){
@@ -903,11 +962,24 @@ rnb_test_asso_annot_PC <- function(
 #' @return A \code{data.table} containing all association test results.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute association tests between annotations and QC probes intensities
+#' # (if ncores = 1 execution may take several minutes...)
+#' res <- rnb_test_asso_annot_QC(RnBSet = rnb.set)
 
 rnb_test_asso_annot_QC <- function(
   RnBSet, perm.count = 10000, max.QCprobes = 50, verbose = FALSE, ncores = 1){
   # Prepare the RnBset annotations
-  prep_res <- prepare_annot_asso(RnBSet = RnBSet, verbose = verbose)
+  prep_res <- methview.qc:::prepare_annot_asso(
+    RnBSet = RnBSet, verbose = verbose)
   annots <- prep_res$annotations
   n.annot <- prep_res$n.annot
   annot.table <- prep_res$annot.table
@@ -937,7 +1009,7 @@ rnb_test_asso_annot_QC <- function(
     warning("Cannot initialize the permutations matrix.")
     perm.matrix <- NULL
   }
-  if(all.equal(target = annot.table$ID, current = DTQC$ID)){
+  if(all.equal(target = annot.table[[1]], current = DTQC$ID)){
     # Test all annotations against QC probes intensities
     ls_allres <- lapply(X = seq(n.annot), FUN = function(i){
       if(verbose){ cat(
@@ -962,7 +1034,7 @@ rnb_test_asso_annot_QC <- function(
   } else { stop("ID columns in tables don't have the same order.") }
   # Get top significant QC probes
   dt_allres[, min_pval := min(pvalue, na.rm = TRUE), by = QC_probe]
-  top_probes <- head(
+  top_probes <- utils::head(
     x = unique(dt_allres, by = "QC_probe")[order(min_pval)],
     n = max.QCprobes)$QC_probe
   dt_allres <- dt_allres[QC_probe %in% top_probes]
@@ -997,6 +1069,17 @@ rnb_test_asso_annot_QC <- function(
 #' @return A \code{data.table} containing all association test results.
 #' @author Yoann Pageaud.
 #' @export
+#' @examples
+#' # Create an RnBSet for Human Methylation 450K data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute association tests between annotations and QC probes intensities
+#' res <- rnb_test_asso_all_annot(RnBSet = rnb.set)
 
 rnb_test_asso_all_annot <- function(
   RnBSet, perm.count = 10000, verbose = FALSE){

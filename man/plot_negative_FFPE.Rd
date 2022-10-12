@@ -40,15 +40,18 @@ Negative quality control probe also exists in HM450K array, but have not yet
 identified one.
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 # Plot FFPE negative control probe
-neg.FFPE <- methview.qc:::plot_negative_FFPE(RnBSet = rnb.set)
+neg.FFPE <- methview.qc:::plot_negative_FFPE(
+    RnBSet = rnb.set, cohort = "minfiDataEPIC")
 #Save plot
 ggsave(filename = "FFPE_negative_control_probe_MethylationEPIC.pdf",
        plot = neg.FFPE, device = "pdf", width = 11, height = 7.3,

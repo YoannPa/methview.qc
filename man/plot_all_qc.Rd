@@ -78,15 +78,17 @@ custom annotations to the top annotation bar, and personalized a lot more the
 different components of your plots.
 }
 \examples{
-#Create an RnBSet for MethylationEPIC data
-library(RnBeads)
-idat.dir <- "~/data/MethylationEPIC/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(data.source = data.source, data.type = "idat.dir")
-rnb.options(identifiers.column = "barcode")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+RnBeads::rnb.options(identifiers.column = "barcode")
 #Draw all plots from the quality control data of rnb.set
-plot_all_qc(RnBSet = rnb.set, save.dir = "~/", ncores = 2)
+plot_all_qc(RnBSet = rnb.set, save.dir = "~/minfiDataEPIC_QC", ncores = 2)
 }
 \author{
 Yoann Pageaud.

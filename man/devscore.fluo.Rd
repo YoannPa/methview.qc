@@ -57,18 +57,21 @@ The deviation score is calculated as following:
           be extracted from the resulting data.table in the column
           'percent.diff.sqrt'.}
          }
+         Formula: \eqn{(sqrt(sample_signal)/sqrt(ref_signal)) * 100 - 100}
 }
 \examples{
-#Create an RnBSet for HM450K data
-library(RnBeads)
-idat.dir <- "~/data/my_idat_dir/"
-sample.annotation <- "~/data/Annotations/sample_sheet.csv"
+# Create an RnBSet for Human Methylation 450K data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiData")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiData")
 data.source <- c(idat.dir, sample.annotation)
-rnb.set <- rnb.execute.import(
-  data.source = data.source, data.type = "idat.dir")
-#Compute deviation score
-devscore.fluo(RnBSet = rnb.set, samples = c("13169","13947","14312","14359"),
-              target = "Hybridization")
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+# Compute deviation score on selected samples for hybridization QC probes
+devscore.fluo(
+    RnBSet = rnb.set, samples = c("GroupA_3","GroupA_2","GroupB_2"),
+    target = "Hybridization")
 }
 \author{
 Yoann Pageaud.
