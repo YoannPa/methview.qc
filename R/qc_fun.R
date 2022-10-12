@@ -598,3 +598,450 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
     return(ls_both)
   }
 }
+
+#' Prepares annotations to be tested for associations.
+#'
+#' @param RnBSet  An \code{RnBSet} basic object for storing methylation array
+#'                DNA methylation and experimental quality information
+#'                (Bisulfite data not supported).
+#'                \itemize{
+#'                 \item{For more information about RnBSet object read
+#'                 \link[RnBeads]{RnBSet-class}.}
+#'                 \item{To create an RnBSet object run
+#'                 \link[RnBeads]{rnb.execute.import}.}
+#'                 \item{For additionnal options to import methylation array
+#'                 data in the RnBSet see options available in
+#'                 \link[RnBeads]{rnb.options}.}
+#'                }
+#' @param verbose A \code{logical} to display information about the step-by-step
+#'                processing of the data if TRUE (Default: verbose = FALSE).
+#' @return A \code{list} containing updated annotations, the number of
+#'         annotations available, and the RnBSet annotation table it contains.
+#' @author Yoann Pageaud.
+#' @keywords internal
+
+prepare_annot_asso <- function(RnBSet, verbose = FALSE){
+  annot.table <- pheno(RnBSet)
+  annots <- lapply(X = annot.table, FUN = function(x) {
+    # Exclude columns containing the same value for all rows
+    # (except when missing)
+    if(length(unique(na.omit(x))) < 2){ return(NULL) }
+    # Convert as factor character variables
+    if(is.character(x)){ x <- as.factor(x) }
+    # Convert as factor TRUE/FALSE variables
+    if(is.logical(x)){ x <- as.factor(x) }
+    if(is.factor(x)){ if(anyDuplicated(na.omit(x)) == 0) { return(NULL) } }
+    x
+  })
+  annots <- annots[!vapply(
+    X = annots, FUN = is.null, FUN.VALUE = logical(length = 1L))]
+  n.annot <- length(annots)
+  if(n.annot == 0){
+    stop("No suitable annotation found for association tests.")}
+  if(verbose){
+    cat(c("Testing the following annotations for associations:\n",
+          paste(names(annots), collapse = ", "), ".\n"))
+  }
+  res <- list(
+    "annotations" = annots, "n.annot" = n.annot,
+    "annot.table" = annot.table)
+  return(res)
+}
+
+#' Tests association of an annotation with another one or with a PC.
+#'
+#' @param x           A \code{vector} of numerics or factors containing data
+#'                    from one annotation.
+#' @param y           A \code{vector} of numerics or factors containing data
+#'                    from a PCA principal component or another annotation.
+#' @param perm.matrix A \code{matrix} containing permutations of the order of
+#'                    rows, as integers, based on annotations length. The
+#'                    permutation matrix can optionally be used to test the
+#'                    significance of a correlation value between 2 annotations
+#'                    or an annotation and a PCA principal component.
+#' @return A \code{data.table} containing all results from an association test
+#'         between x and y.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' # Most basic statistic test between 2 vectors of integers
+#' test.annots(x = 1:15, y = 24:10)
+
+test.annots <- function (x, y, perm.matrix = NULL){
+  # Set nominal parameter
+  nominal <- TRUE
+  #If annotation x or y is a date then convert it into integers
+  if(class(x) == "Date"){ x <- as.integer(x) }
+  if(class(y) == "Date"){ y <- as.integer(y) }
+  inds <- which(!(is.na(x) | is.na(y)))
+  if (length(inds) < 2) {
+    nominal <- FALSE
+    warning("Not enough common values.")
+  }
+  x <- x[inds]
+  if (is.factor(x)) {
+    x <- as.factor(as.character(x))
+    if (nlevels(x) < 2) {
+      nominal <- FALSE
+      warning("Not enough categories.")
+    }
+  }
+  y <- y[inds]
+  if (is.factor(y)) {
+    y <- as.factor(as.character(y))
+    if (nlevels(y) < 2) {
+      nominal <- FALSE
+      warning("Not enough categories.")
+    }
+  }
+  if(nominal){ # If a stat. test can be run
+    # Retrieve test p-value
+    get.p <- function(expr) {
+      tryCatch(suppressWarnings(expr$p.value), error = function(er){
+        as.double(NA)
+      })
+    }
+    if(is.factor(x)){
+      if(is.factor(y)) {
+        # If both vectors are factors do Non-parametric Fisher test with
+        # 50 000 replicates for Monte Carlo test.
+        simulate <- (nlevels(x) > 2 || nlevels(y) > 2)
+        dt.res <- data.table::data.table(
+          test = "Fisher", correlation = NA, pvalue = get.p(
+            fisher.test(
+              x, y, conf.int = FALSE, simulate.p.value = simulate,
+              B = 50000)))
+      } else if (nlevels(x) == 2) {
+        # If Y is a numeric vector and X has only 2 possible values do
+        # Non-parametric Wilcoxon–Mann–Whitney test
+        # aka Wilcoxon rank-sum test
+        values <- tapply(y, x, identity)
+        dt.res <- data.table::data.table(
+          test = "Wilcoxon-Mann-Whitney", correlation = NA,
+          pvalue = get.p(wilcox.test(
+            values[[1]], values[[2]], alternative = "two.sided"))
+        )
+      } else {
+        # If X has multiple levels & Y is a numeric vector do
+        # Non-parametric Kruskal-Wallis test
+        dt.res <- data.table::data.table(
+          test = "Kruskal-Wallis", correlation = NA, pvalue = get.p(
+            kruskal.test(y, x)))
+      }
+    } else if(is.factor(y)) {
+      if (nlevels(y) == 2) {
+        # If X is a numeric vector and Y has only 2 possible values do
+        # Non-parametric Wilcoxon–Mann–Whitney test
+        # aka Wilcoxon rank-sum test
+        values <- tapply(x, y, identity)
+        dt.res <- data.table::data.table(
+          test = "Wilcoxon-Mann-Whitney", correlation = NA,
+          pvalue = get.p(wilcox.test(
+            values[[1]], values[[2]], alternative = "two.sided")))
+      } else {
+        # If X is a numeric vector and Y has multiple levels do
+        # Non-parametric Kruskal-Wallis test
+        dt.res <- data.table::data.table(
+          test = "Kruskal-Wallis", correlation = NA, pvalue = get.p(
+            kruskal.test(x, y)))
+      }
+    } else {
+      # If both X & Y are numeric vectors do a correlation test
+      N <- length(inds)
+      if(is.null(perm.matrix)){
+        cor_res <- cor(x, y) # Calculate Pearson correlation
+        # Get T statistic
+        t_stat <- (cor_res*sqrt(N-2))/(sqrt(1-cor_res^2))
+        dt.res <- data.table::data.table(
+          test = "Pearson Corr.", correlation = cor_res,
+          pvalue = 2*pt(-abs(t_stat), N-2))
+      } else {
+        values <- apply(X = perm.matrix, MARGIN = 2, FUN = function(i){
+          cor(x[i[i <= N]], y)
+        })
+        abs_val <- abs(values)
+        # Correlation p-value here is the proportion of times where the
+        # 1st correlation value is inferior or equal to calculated
+        # correlations in all permutations. 10 000 permutations to make
+        # sure that 1 result out of 10 000 will be significant enough if
+        # correlated.
+        dt.res <- data.table::data.table(
+          test = "Pearson Corr.", correlation = values[1],
+          pvalue = mean(abs_val[1] <= abs_val))
+      }
+    }
+  } else { # Empty data.table result when no test possible
+    dt.res <- data.table::data.table(
+      test = NA, correlation = NA, pvalue = NA)
+  }
+  return(dt.res)
+}
+
+#' Tests associations between annotations from an RnBSet and PCs from a prcomp
+#' object.
+#'
+#' @param RnBSet     A \code{RnBSet} basic object for storing methylation array
+#'                   data and experimental quality information (Bisulfite data
+#'                   not supported).
+#'                   \itemize{
+#'                    \item{For more information about RnBSet object read
+#'                    \link[RnBeads]{RnBSet-class}.}
+#'                    \item{To create an RnBSet object run
+#'                    \link[RnBeads]{rnb.execute.import}.}
+#'                    \item{For additionnal options to import methylation array
+#'                    data in the RnBSet see options available in
+#'                    \link[RnBeads]{rnb.options}.}
+#'                   }
+#' @param prcomp.res A PCA result of classes \code{prcomp} or
+#'                   \code{irlba_prcomp} resulting from stats::prcomp() or
+#'                   irlba::prcomp_irlba().
+#' @param perm.count An \code{integer} specifying the number of permutations to
+#'                   realize on a vector, for the permutations matrix
+#'                   initialization, to be used for calculating the significance
+#'                   of a correlation test (Default: perm.count = 10000).
+#' @param max.PCs    An \code{integer} specifying the maximum number of
+#'                   principal components to consider for association tests with
+#'                   annotations (Default: max.PCs = 8).
+#' @param verbose    A \code{logical} to display information about the
+#'                   step-by-step processing of the data if TRUE
+#'                   (Default: verbose = FALSE).
+#' @return A \code{data.table} containing all association test results.
+#' @author Yoann Pageaud.
+#' @export
+
+rnb_test_asso_annot_PC <- function(
+  RnBSet, prcomp.res, perm.count = 10000, max.PCs = 8, verbose = FALSE){
+  # Prepare the RnBset annotations
+  prep_res <- prepare_annot_asso(RnBSet = RnBSet, verbose = verbose)
+  annots <- prep_res$annotations
+  n.annot <- prep_res$n.annot
+  annot.table <- prep_res$annot.table
+  
+  if(perm.count != 0 && (
+    (!is.null(prcomp.res)) || sum(!vapply(
+      X = annots, FUN = is.factor,
+      FUN.VALUE = logical(length = 1L))) >= 2)) {
+    # Create the random permutation matrix
+    perm.matrix <- mapply(
+      FUN = sample, rep(nrow(annot.table), times = perm.count))
+    perm.matrix[, 1] <- 1:nrow(perm.matrix)
+  } else {
+    warning("Cannot initialize the permutations matrix.")
+    perm.matrix <- NULL
+  }
+  
+  pc.association.count <- max.PCs
+  # Get PCs % variance explained
+  PCA_metrics <- BiocompR::prepare_pca_data(
+    prcomp.res = prcomp.res, dt.annot = annot.table, PCs = 1:max.PCs,
+    scale = 1)
+  dpoints <- prcomp.res$x
+  if (!is.null(dpoints)) {
+    if (ncol(dpoints) > pc.association.count) {
+      # Reduce principal components coordinates to the maximum number of
+      # dimensions wanted
+      dpoints <- dpoints[, 1:pc.association.count]
+    }
+    # Test all annotations against all PCs
+    ls_allres <- lapply(X = seq(n.annot), FUN = function(i){
+      if(verbose){ cat("Testing association of", names(annots)[i], "&\n") }
+      ls_tres <- lapply(X = seq(ncol(dpoints)), FUN = function(j){
+        if(verbose){ cat("\t", colnames(dpoints)[j], "\n") }
+        t.result <- test.annots(
+          x = annots[[i]], y = dpoints[, j],
+          perm.matrix = perm.matrix)
+        t.result[, c("annotation", "PC", "var.explained") := .(
+          names(annots)[i], colnames(dpoints)[j],
+          (PCA_metrics$var.explained*100)[j])]
+        t.result
+      })
+      data.table::rbindlist(l = ls_tres)
+    })
+    # Rbind all results
+    dt_allres <- data.table::rbindlist(l = ls_allres)
+    dt_allres[, log_trans_pval := -log10(pvalue)]
+    rm(ls_allres)
+    # Convert PC as factor to keep the right order
+    dt_allres[, PC := as.factor(x = PC)]
+    dt_allres[, PC := factor(
+      x = PC, levels = paste0("PC", seq(pc.association.count)))]
+  }
+  rm(dpoints)
+  # Return association test results
+  return(dt_allres)
+}
+
+#' Tests associations between annotations from an RnBSet and QC probes
+#' intensities.
+#'
+#' @param RnBSet       A \code{RnBSet} basic object for storing methylation
+#'                     array data and experimental quality information
+#'                     (Bisulfite data not supported).
+#'                     \itemize{
+#'                      \item{For more information about RnBSet object read
+#'                      \link[RnBeads]{RnBSet-class}.}
+#'                      \item{To create an RnBSet object run
+#'                      \link[RnBeads]{rnb.execute.import}.}
+#'                      \item{For additionnal options to import methylation
+#'                      array data in the RnBSet see options available in
+#'                      \link[RnBeads]{rnb.options}.}
+#'                     }
+#' @param perm.count   An \code{integer} specifying the number of permutations
+#'                     to realize on a vector, for the permutations matrix
+#'                     initialization, to be used for calculating the
+#'                     significance of a correlation test
+#'                     (Default: perm.count = 10000).
+#' @param max.QCprobes An \code{integer} specifying how many QC probes should be
+#'                     kept as the top QC probes associated with RnBSet
+#'                     annotations (Default: max.QCprobes = 50).
+#' @param verbose      A \code{logical} to display information about the
+#'                     step-by-step processing of the data if TRUE
+#'                     (Default: verbose = FALSE).
+#' @param ncores       An \code{integer} to specify the number of cores/threads
+#'                     to be used to parallel-compute association tests between
+#'                     annotations and QC probes intensities.
+#' @return A \code{data.table} containing all association test results.
+#' @author Yoann Pageaud.
+#' @export
+
+rnb_test_asso_annot_QC <- function(
+  RnBSet, perm.count = 10000, max.QCprobes = 50, verbose = FALSE, ncores = 1){
+  # Prepare the RnBset annotations
+  prep_res <- prepare_annot_asso(RnBSet = RnBSet, verbose = verbose)
+  annots <- prep_res$annotations
+  n.annot <- prep_res$n.annot
+  annot.table <- prep_res$annot.table
+  #Create the data.table with quality control metadata
+  if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
+    dt.meta <- load_metharray_QC_meta(array.meta = "controls450")
+  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+    dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
+  } else{ stop("Methylation array platform unknown.") }
+  # Merge red and green channels intensities with QC metadata
+  QC.data <- mergeQC_intensities_and_meta(
+    RnBSet = RnBSet, DT.QC.meta = dt.meta)
+  DTQC <- rbindlist(l = QC.data, idcol = "Channel")
+  DTQC[Channel == "Cy3 - Electric Lime Green", Channel := "Green"]
+  DTQC[Channel == "Cy5 - Dark Red", Channel := "Red"]
+  DTQC[, Probe_name := paste(Description, QC.probe.IDs, Channel, sep = "_")]
+  DTQC <- data.table::as.data.table(
+    x = t(as.matrix(DTQC[, -c(1:11), ], rownames = "Probe_name")),
+    keep.rownames = "ID")
+  if(perm.count != 0 && sum(!vapply(
+    X = annots, FUN = is.factor, FUN.VALUE = logical(length = 1L))) >= 2) {
+    # Create the random permutation matrix
+    perm.matrix <- mapply(
+      FUN = sample, rep(nrow(annot.table), times = perm.count))
+    perm.matrix[, 1] <- 1:nrow(perm.matrix)
+  } else {
+    warning("Cannot initialize the permutations matrix.")
+    perm.matrix <- NULL
+  }
+  if(all.equal(target = annot.table$ID, current = DTQC$ID)){
+    # Test all annotations against QC probes intensities
+    ls_allres <- lapply(X = seq(n.annot), FUN = function(i){
+      if(verbose){ cat(
+        "Testing association of", names(annots)[i],
+        "against all QC probes intensities...") }
+      ls_tres <- mclapply(
+        X = seq(2, ncol(DTQC)), mc.cores = ncores, FUN = function(j){
+          t.result <- test.annots(
+            x = annots[[i]], y = DTQC[[j]],
+            perm.matrix = perm.matrix)
+          t.result[, c("annotation", "QC_probe") := .(
+            names(annots)[i], colnames(DTQC)[j])]
+          t.result
+        })
+      if(verbose){ cat("Done.\n") }
+      data.table::rbindlist(l = ls_tres)
+    })
+    # Rbind all results
+    dt_allres <- data.table::rbindlist(l = ls_allres)
+    dt_allres[, log_trans_pval := -log10(pvalue)]
+    rm(ls_allres)
+  } else { stop("ID columns in tables don't have the same order.") }
+  # Get top significant QC probes
+  dt_allres[, min_pval := min(pvalue, na.rm = TRUE), by = QC_probe]
+  top_probes <- head(
+    x = unique(dt_allres, by = "QC_probe")[order(min_pval)],
+    n = max.QCprobes)$QC_probe
+  dt_allres <- dt_allres[QC_probe %in% top_probes]
+  # Convert PC as factor to keep the right order
+  dt_allres[, QC_probe := as.factor(x = QC_probe)]
+  dt_allres[, QC_probe := factor(x = QC_probe, levels = top_probes)]
+  return(dt_allres)
+}
+
+#' Tests associations between all annotations in a RnBSet.
+#'
+#' @param RnBSet       A \code{RnBSet} basic object for storing methylation
+#'                     array data and experimental quality information
+#'                     (Bisulfite data not supported).
+#'                     \itemize{
+#'                      \item{For more information about RnBSet object read
+#'                      \link[RnBeads]{RnBSet-class}.}
+#'                      \item{To create an RnBSet object run
+#'                      \link[RnBeads]{rnb.execute.import}.}
+#'                      \item{For additionnal options to import methylation
+#'                      array data in the RnBSet see options available in
+#'                      \link[RnBeads]{rnb.options}.}
+#'                     }
+#' @param perm.count   An \code{integer} specifying the number of permutations
+#'                     to realize on a vector, for the permutations matrix
+#'                     initialization, to be used for calculating the
+#'                     significance of a correlation test
+#'                     (Default: perm.count = 10000).
+#' @param verbose      A \code{logical} to display information about the
+#'                     step-by-step processing of the data if TRUE
+#'                     (Default: verbose = FALSE).
+#' @return A \code{data.table} containing all association test results.
+#' @author Yoann Pageaud.
+#' @export
+
+rnb_test_asso_all_annot <- function(
+  RnBSet, perm.count = 10000, verbose = FALSE){
+  
+  # Prepare the RnBset annotations
+  prep_res <- prepare_annot_asso(RnBSet = RnBSet, verbose = verbose)
+  annots <- prep_res$annotations
+  n.annot <- prep_res$n.annot
+  annot.table <- prep_res$annot.table
+  
+  if(perm.count != 0 && sum(!vapply(
+    X = annots, FUN = is.factor, FUN.VALUE = logical(length = 1L))) >= 2) {
+    # Create the random permutation matrix
+    perm.matrix <- mapply(
+      FUN = sample, rep(nrow(annot.table), times = perm.count))
+    perm.matrix[, 1] <- 1:nrow(perm.matrix)
+  } else {
+    warning("Cannot initialize the permutations matrix.")
+    perm.matrix <- NULL
+  }
+  
+  if (n.annot > 1) {
+    # Create matrix of tests combinations
+    test_matrix <- utils::combn(x = names(annots), m = 2)
+    # Test association between all annotations available
+    ls_annotres <- apply(X = test_matrix, MARGIN = 2, FUN = function(i){
+      if(verbose){ cat("Testing association of", i[1], "&", i[2], "\n") }
+      t.result <- test.annots(
+        x = annots[[i[1]]], y = annots[[i[2]]],
+        perm.matrix = perm.matrix)
+      t.result[, c("annotation1", "annotation2") := .(i[1], i[2])]
+    })
+    dt_annotres <- data.table::rbindlist(l = ls_annotres)
+    #Duplicate results for the full table
+    dt_annotres_bis <- data.table::copy(dt_annotres)
+    data.table::setnames(
+      x = dt_annotres_bis, old = "annotation1", new = "annotation2_new")
+    data.table::setnames(
+      x = dt_annotres_bis, old = "annotation2", new = "annotation1")
+    data.table::setnames(
+      x = dt_annotres_bis, old = "annotation2_new", new = "annotation2")
+    # Rbind all results
+    dt_annotres <- rbind(dt_annotres, dt_annotres_bis, use.names = TRUE)
+    rm(dt_annotres_bis, perm.matrix)
+    dt_annotres[, log_trans_pval := -log10(pvalue)]
+  }
+  return(dt_annotres)
+}

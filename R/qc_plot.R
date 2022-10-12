@@ -1601,3 +1601,229 @@ devscore.heatmap <- function(
   #Return Grob of the final heatmap
   return(res.htmp$result.grob)
 }
+
+#' Draws association test results between annotations from an RnBSet and PCs
+#' from a prcomp object.
+#'
+#' @param RnBSet      A \code{RnBSet} basic object for storing methylation array
+#'                    data and experimental quality information (Bisulfite data
+#'                    not supported).
+#'                    \itemize{
+#'                     \item{For more information about RnBSet object read
+#'                     \link[RnBeads]{RnBSet-class}.}
+#'                     \item{To create an RnBSet object run
+#'                     \link[RnBeads]{rnb.execute.import}.}
+#'                     \item{For additionnal options to import methylation array
+#'                     data in the RnBSet see options available in
+#'                     \link[RnBeads]{rnb.options}.}
+#'                    }
+#' @param prcomp.res  A PCA result of classes \code{prcomp} or
+#'                    \code{irlba_prcomp} resulting from stats::prcomp() or
+#'                    irlba::prcomp_irlba().
+#' @param perm.count  An \code{integer} specifying the number of permutations to
+#'                    realize on a vector, for the permutations matrix
+#'                    initialization, to be used for calculating the
+#'                    significance of a correlation test
+#'                    (Default: perm.count = 10000).
+#' @param max.PCs     An \code{integer} specifying the maximum number of
+#'                    principal components to consider for association tests
+#'                    with annotations (Default: max.PCs = 8).
+#' @param PC_type.str A \code{character} string specifying what kind of data the
+#'                    prcomp object has been computed from (e.g. 'QC probes',
+#'                    'methylation probes', 'CpG islands', ...) to be appended
+#'                    to the plot title.
+#' @param cohort.name A \code{character} string specifying the name you want to
+#'                    give to your dataset, that will be included in the plot
+#'                    title (Default: cohort.name = "dataset").
+#' @param verbose     A \code{logical} to display information about the
+#'                    step-by-step processing of the data if TRUE
+#'                    (Default: verbose = FALSE).
+#' @return A \code{gg} plot.
+#' @author Yoann Pageaud.
+#' @export
+
+plot_asso_annot_PC <- function(
+  RnBSet, prcomp.res, perm.count = 10000, max.PCs = 8,
+  PC_type.str = NULL, cohort.name = "dataset", verbose = FALSE){
+  if(is.null(PC_type.str)){
+    stop(paste(
+      "Please specify with a short string what kind of data the prcomp",
+      "object has been computed from.\ne.g. 'QC probes', 'methylation",
+      "probes', 'CpG islands', ..."))
+  }
+  # Compute association tests between annotations and PCs
+  asso_res <- rnb_test_asso_annot_PC(
+    RnBSet = RnBSet, prcomp.res = prcomp.res, perm.count = perm.count,
+    max.PCs = max.PCs, verbose = verbose)
+  # Plot association tests results
+  max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
+  asso_plot <- ggplot() +
+    geom_point(data = asso_res, mapping = aes(
+      x = PC, y = annotation, size = var.explained,
+      fill = log_trans_pval), shape = 21) +
+    facet_grid(rows = vars(test), scales = "free", space = "free") +
+    scale_size_continuous(
+      range = c(3, 20), limits = c(0, 500),
+      breaks = c(0, 20, 40, 60, 80, 100),
+      labels = paste0(seq(0,100, 20), "%")) +
+    scale_fill_gradient2(
+      low = "darkblue", mid = "white", high = "darkred",
+      midpoint = -log10(0.05), limits = c(
+        0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
+    theme(axis.text = element_text(size = 12, colour = "black"),
+          axis.title = element_text(size = 14),
+          panel.background = element_rect(fill = "white", colour = "black"),
+          panel.grid = element_line(colour = "black", size = 0.1),
+          legend.text = element_text(size = 11), legend.box.just = "left",
+          legend.key = element_blank(), legend.title.align = 0.5,
+          strip.background = element_rect(fill = "white", colour = "black"),
+          strip.text = element_text(size = 11),
+          plot.title = element_text(hjust = 0.5)) +
+    guides(fill = guide_colorbar(
+      ticks.colour = "black", frame.colour = "black")) +
+    labs(x = "Top principal components", y = "Annotations",
+         fill = "-Log10(P.value)", size = "PC variability\nexplained") +
+    ggtitle(paste(
+      "Associations between annotations and principal components from",
+      cohort.name, PC_type.str))
+  return(asso_plot)
+}
+
+#' Draws association test results between annotations from an RnBSet and QC
+#' probes intensities.
+#'
+#' @param RnBSet       A \code{RnBSet} basic object for storing methylation
+#'                     array data and experimental quality information
+#'                     (Bisulfite data not supported).
+#'                     \itemize{
+#'                      \item{For more information about RnBSet object read
+#'                      \link[RnBeads]{RnBSet-class}.}
+#'                      \item{To create an RnBSet object run
+#'                      \link[RnBeads]{rnb.execute.import}.}
+#'                      \item{For additionnal options to import methylation
+#'                      array data in the RnBSet see options available in
+#'                      \link[RnBeads]{rnb.options}.}
+#'                     }
+#' @param perm.count   An \code{integer} specifying the number of permutations
+#'                     to realize on a vector, for the permutations matrix
+#'                     initialization, to be used for calculating the
+#'                     significance of a correlation test
+#'                     (Default: perm.count = 10000).
+#' @param max.QCprobes An \code{integer} specifying how many QC probes should be
+#'                     kept as the top QC probes associated with RnBSet
+#'                     annotations (Default: max.QCprobes = 50).
+#' @param cohort.name  A \code{character} string specifying the name you want to
+#'                     give to your dataset, that will be included in the plot
+#'                     title (Default: cohort.name = "dataset").
+#' @param verbose      A \code{logical} to display information about the
+#'                     step-by-step processing of the data if TRUE
+#'                     (Default: verbose = FALSE).
+#' @param ncores       An \code{integer} to specify the number of cores/threads
+#'                     to be used to parallel-compute association tests between
+#'                     annotations and QC probes intensities.
+#' @return A \code{gg} plot.
+#' @author Yoann Pageaud.
+#' @export
+
+plot_asso_annot_QC <- function(
+  RnBSet, perm.count = 10000, max.QCprobes = 50, cohort.name = "dataset",
+  verbose = FALSE, ncores = 1){
+  # Compute association tests between annotations and QC probes intensities
+  asso_res <- rnb_test_asso_annot_QC(
+    RnBSet = RnBSet, perm.count = perm.count, max.QCprobes = max.QCprobes,
+    verbose = verbose, ncores = ncores)
+  if(!all(is.na(asso_res$pvalue))){
+    # Plot association tests results
+    max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
+    asso_plot <- ggplot(
+      data = asso_res, mapping = aes(
+        x = QC_probe, y = annotation, fill = log_trans_pval)) +
+      geom_tile(size = 1, width = 0.8, height = 0.9) +
+      facet_grid(rows = vars(test), scales = "free", space = "free") +
+      scale_fill_gradient2(
+        low = "darkblue", mid = "white", high = "darkred",
+        midpoint = -log10(0.05), limits = c(
+          0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
+      scale_y_discrete(expand = c(0, 0)) +
+      theme(axis.text = element_text(size = 11, colour = "black"),
+            axis.text.x = element_text(
+              size = 10, angle = 90, hjust = 1, vjust = 0.5),
+            axis.title = element_text(size = 14),
+            axis.ticks.y = element_blank(),
+            panel.background = element_rect(fill = NA, colour = NA),
+            panel.grid = element_blank(),
+            legend.text = element_text(size = 11), legend.box.just = "left",
+            strip.background = element_rect(fill = "white", colour = "black"),
+            strip.text = element_text(size = 11),
+            plot.title = element_text(hjust = 0.5)) +
+      guides(fill = guide_colorbar(
+        ticks.colour = "black", frame.colour = "black")) +
+      labs(x = "Top QC probes", y = "Annotations",
+           fill = "-Log10(P.value)") +
+      ggtitle(paste(
+        "Associations between annotations and Top", max.QCprobes,
+        "QC probes intensities from", cohort.name))
+  } else { asso_plot <- NULL }
+  return(asso_plot)
+}
+
+#' Draws association test results between all annotations from an RnBSet.
+#'
+#' @param RnBSet       A \code{RnBSet} basic object for storing methylation
+#'                     array data and experimental quality information
+#'                     (Bisulfite data not supported).
+#'                     \itemize{
+#'                      \item{For more information about RnBSet object read
+#'                      \link[RnBeads]{RnBSet-class}.}
+#'                      \item{To create an RnBSet object run
+#'                      \link[RnBeads]{rnb.execute.import}.}
+#'                      \item{For additionnal options to import methylation
+#'                      array data in the RnBSet see options available in
+#'                      \link[RnBeads]{rnb.options}.}
+#'                     }
+#' @param perm.count   An \code{integer} specifying the number of permutations
+#'                     to realize on a vector, for the permutations matrix
+#'                     initialization, to be used for calculating the
+#'                     significance of a correlation test
+#'                     (Default: perm.count = 10000).
+#' @param cohort.name  A \code{character} string specifying the name you want to
+#'                     give to your dataset, that will be included in the plot
+#'                     title (Default: cohort.name = "dataset").
+#' @param verbose      A \code{logical} to display information about the
+#'                     step-by-step processing of the data if TRUE
+#'                     (Default: verbose = FALSE).
+#' @return A \code{gg} plot.
+#' @author Yoann Pageaud.
+#' @export
+
+plot_asso_all_annot <- function(
+  RnBSet, perm.count = 10000, cohort.name = "dataset", verbose = FALSE){
+  # Compute association tests between all annotations
+  asso_res <- rnb_test_asso_all_annot(
+    RnBSet = RnBSet, perm.count = perm.count, verbose = verbose)
+  # Plot association tests results
+  max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
+  asso_plot <- ggplot(
+    data = asso_res, mapping = aes(
+      x = annotation1, y = annotation2, fill = log_trans_pval,
+      color = test, label = round(log_trans_pval, 1))) +
+    geom_tile(size = 1, width = 0.8, height = 0.8) +
+    geom_text(color = "black") +
+    scale_fill_gradient2(
+      low = "darkblue", mid = "white", high = "darkred",
+      midpoint = -log10(0.05), limits = c(
+        0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
+    theme(axis.text = element_text(size = 12, colour = "black"),
+          axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.1),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          panel.background = element_rect(fill = NA, colour = NA),
+          panel.grid = element_line(colour = "black", size = 0.5),
+          legend.text = element_text(size = 11), legend.box.just = "left",
+          plot.title = element_text(hjust = 0.5)) +
+    guides(fill = guide_colorbar(
+      ticks.colour = "black", frame.colour = "black")) +
+    labs(fill = "-Log10(P.value)", color = "Stat. test used") +
+    ggtitle(paste("Associations between all annotations from", cohort.name))
+  return(asso_plot)
+}
