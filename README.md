@@ -1,30 +1,46 @@
 # Visualize quality control data from methylation array dataset with methview.qc <img src="img/methview.qc_hexsticker.png" align="right" height="140" />  
+
+![GitHub repo size](https://img.shields.io/github/repo-size/YoannPa/methview.qc)
+![GitHub issues](https://img.shields.io/github/issues-raw/YoannPa/methview.qc)
+![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/YoannPa/methview.qc)  
+
 _**methview.qc** allows you to generate quality control plots from your methylation array dataset._  
 
 **Author: PAGEAUD Y.<sup>1</sup>**  
 **Contributors: RATHGEBER A.<sup>1</sup>**  
 **1-** [**DKFZ - Division of Applied Bioinformatics, Germany.**](https://www.dkfz.de/en/applied-bioinformatics/index.php)  
-
-**Version: 0.0.37 (Beta)**  
-**R Compatibility: Version 4.0.5**  
-**Last Update: 12/10/2022**  
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
-## Content
-Currently the package methview.qc contains **13 functions**:
+![GitHub R package version](https://img.shields.io/github/r-package/v/YoannPa/methview.qc?label=Package%20version&logo=RStudio&logoColor=white&style=for-the-badge)  
+<img src="https://img.shields.io/static/v1?label=compatibility&message=4.2.0&color=blue&logo=R&logoColor=white&style=for-the-badge" />  
+![GitHub last commit](https://img.shields.io/github/last-commit/YoannPa/methview.qc?logo=git&style=for-the-badge)  
+![GitHub](https://img.shields.io/github/license/YoannPa/methview.qc?color=brightgreen&style=for-the-badge) 
 
-* `cohort.gp.density()` - Displays the distribution of genotyping probes values in a cohort.
+## Content
+Currently the package methview.qc contains **23 functions**:
+
+* `cohort.gp.density()` - Displays the distribution of genotyping probes values in a cohort.  
+* `comp_RnBqc2PCA()` - Computes a PCA from an RnBSet on quality control probes intensities.  
 * `devscore.fluo()` - Computes a deviation score between samples fluorescence and an internal HM450K reference.  
 * `devscore.heatmap` - Plots QC deviation heatmaps based on samples fluorescence deviation score.  
 * `get_expected_intensity()` - Provides expected intensity for a given methylation array probe ID.  
+* `get_IDATs_runinfo()` - Retrieves runinfo data from a methylation array sample's IDAT files.  
 * `get_platform()` - Detects platform used to generate data in the RnBSet.  
 * `load_metharray_QC_meta()` - Loads methylation array QC metadata as a data.table.  
 * `mergeQC_intensities_and_meta()` - Merges red and green channels intensities with QC probes metadata.  
-* `plot_all_qc()` - Draws and saves all quality control plots available in methview.qc  
+* `plot_all_qc()` - Draws and saves all quality control plots available in methview.qc.  
 * `plot_array_QCprobe()` - Plots fluorescence intensities barplots for a single QC methylation array probe.  
 * `plot_array_QCtarget()` - Plots samples fluorescence intensities distribution for QC probes of a specific target type.  
+* `plot_asso_all_annot()` - Draws association test results between all annotations from an RnBSet.  
+* `plot_asso_annot_PC()` - Draws association test results between annotations from an RnBSet and PCs from a prcomp object.  
+* `plot_asso_annot_QC()` - Draws association test results between annotations from an RnBSet and QC probes intensities.  
+* `rnb_test_asso_all_annot()` - Tests associations between all annotations in a RnBSet.  
+* `rnb_test_asso_annot_PC()` - Tests associations between annotations from an RnBSet and PCs from a prcomp object.  
+* `rnb_test_asso_annot_QC()` - Tests associations between annotations from an RnBSet and QC probes intensities.  
 * `sampleQC.biplot()` - Draws a customizable PCA biplots on samples methylation array QC data.  
+* `sampleQC_crossbi()` - Draws a customizable PCA cross biplot on samples methylation array QC data.  
 * `snp_heatmap()` - Draws a heatmap from methylation array genotyping probes.  
+* `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
 * `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
 
 ## Prerequisites
@@ -33,46 +49,28 @@ In R do:
 ```R
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-
-BiocManager::install("RnBeads")
+BiocManager::install(pkgs = c("RnBeads", "RnBeads.hg19", "minfiData", "minfiDataEPIC", "IlluminaDataTestFiles"))
 ```
 ### Install CRAN dependencies
+In R do:
 ```R
-inst.pkgs = c('ggplot2', 'data.table', 'parallel', 'RColorBrewer', 'grDevices')
-install.packages(inst.pkgs)
+install.packages(c('ggplot2', 'data.table', 'parallel', 'RColorBrewer', 'grDevices'))
 ```
-
 ### Install the [BiocompR](https://github.com/YoannPa/BiocompR) package
-The git repository of BiocompR is currently private.  
-If you want to get access to it, please send a message at [**y.pageaud@dkfz.de**](y.pageaud@dkfz.de) with your Github username. Once you have accepted the invitation, the link in this section's title link should work.
-1. In the Git repository click on "Clone or Download".
-2. Copy the HTTPS link.
-3. Open a terminal and type:
-```bash
-git clone https://github.com/YoannPa/BiocompR.git
-```
-4. Open the folder BiocompR/ and open the "BiocompR.Rproj" file in RStudio.
-5. In the RStudio console, type:
+In R do:
 ```R
-devtools::install()
+devtools::install_github("YoannPa/BiocompR")
 ```
-If no error is displayed BiocompR should be installed now.  
 
-## Installing
-1. In the Git repository click on "Clone or Download".
-2. Copy the HTTPS link.
-3. Open a terminal and type:
-```bash
-git clone https://github.com/YoannPa/methview.qc.git
-```
-4. Open the folder methview.qc and open the "methview.qc.Rproj" file in RStudio.
-5. In the RStudio console, type:
+## Installing Methview.qc
+In R do:
 ```R
-devtools::install()
+devtools::install_github("YoannPa/methview.qc")
 ```
 
 ## Problems ? / I need help !
-For any questions **Not related to bugs or development** please check the section "**Known Issues**" available below. If the issue you experience is not adressed in the known issues you can write me at [y.pageaud@dkfz.de](y.pageaud@dkfz.de).  
+For any questions related to bugs please check the section "**Known Issues**" available below.  
+If the issue you experience is not adressed in the known issues please check if an existing issue adresses your point [here](https://github.com/YoannPa/methview.qc/issues/). If not, create a [new issue here](https://github.com/YoannPa/methview.qc/issues/new).
 
 ### Known Issues
 **❎  Error: C++14 standard requested but CXX14 is not defined**  
@@ -115,14 +113,12 @@ Using the command usually fix packages incompatibilities, and solve the issue.
 If you still have this error after reinstalling these packages, feel free to
 create an issue.  
 
-## Technical questions / Development / Feature request
-If you encounters issues or if a feature you would expect is not available in a methview.qc function, please check if an existing issue adresses your point [here](https://github.com/YoannPa/methview.qc/issues/). If not, create a [new issue here](https://github.com/YoannPa/methview.qc/issues/new).  
+## Development & Feature requests
+If you wish to contribute to the development of this package, or if you would like me to add a new feature that would be useful in Methview.qc, please write me at [y.pageaud@dkfz.de](y.pageaud@dkfz.de).
 
 ## References
 1. [_Assenov, Y. et al. Comprehensive analysis of DNA methylation data with RnBeads. **Nature Methods 11, 1138–1140** (2014)._](https://www.nature.com/articles/nmeth.3115)  
-2. _Pageaud Y. et al., BiocompR - Advanced visualizations for data comparison._  
+2. [_Pageaud Y. et al., BiocompR - Advanced visualizations for data comparison._](https://github.com/YoannPa/BiocompR)  
 
 ## Licence
 The repository methview.qc is currently under the GPL-3.0 licence.  
-
-
