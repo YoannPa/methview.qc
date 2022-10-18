@@ -1,7 +1,7 @@
 Package: methview.qc
 Title: Visualize quality control data from methylation array dataset with
        methview.qc
-Version: 0.0.40
+Version: 0.0.41
 Authors@R: 
     person(given = "Yoann",
            family = "Pageaud",

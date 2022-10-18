@@ -247,7 +247,7 @@ cohort.gp.density <- function(RnB.set){
     labs(y = "Count", x = "Genotyping probes values distribution") +
     ggtitle("Genotyping probes values offset")
   
-  gp.density.map <- ggdensity_map(
+  gp.density.map <- BiocompR::ggdensity_map(
     m = rs.meth.mat, from = 0, to = 1, sort.fun = "base::mean") +
     coord_flip() + theme(
       axis.text.x = element_blank(),
