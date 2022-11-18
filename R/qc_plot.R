@@ -214,6 +214,9 @@ cohort.gp.density <- function(RnB.set){
     grepl(pattern = "rs", x = rownames(RnB.set@sites))]
   meth.mat <- RnBeads::meth(RnB.set, row.names = TRUE)
   rs.meth.mat <- meth.mat[rs.probes, ]
+  if(any(na.omit(rs.meth.mat) < 0 | na.omit(rs.meth.mat) > 1)){ stop(paste(
+    "Genotyping probes' values out of range. Genotyping probes offset",
+    "assessment not applicable.")) }
   array.type <- methview.qc::get_platform(RnBSet = RnB.set)
   dt.rs <- data.table::data.table(rs.meth.mat, keep.rownames = "rs.probes")
   dt.rs <- melt.data.table(
