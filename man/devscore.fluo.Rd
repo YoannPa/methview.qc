@@ -10,7 +10,7 @@ devscore.fluo(RnBSet, samples, target, ncores = 1)
 \arguments{
 \item{RnBSet}{An \code{RnBSet} basic object for storing HM450K DNA
 methylation and experimental quality information (Bisulfite
-data  and MethylationEPIC data not supported).
+data are not supported).
 \itemize{
  \item{For more information about RnBSet object read
  \link[RnBeads]{RnBSet-class}.}
@@ -57,7 +57,7 @@ The deviation score is calculated as following:
           be extracted from the resulting data.table in the column
           'percent.diff.sqrt'.}
          }
-         Formula: \eqn{(sqrt(sample_signal)/sqrt(ref_signal)) * 100 - 100}
+         Formula: \eqn{(sqrt(sample\_signal)/sqrt(ref\_signal)) * 100 - 100}
 }
 \examples{
 # Create an RnBSet for Human Methylation 450K data

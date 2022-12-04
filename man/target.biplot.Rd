@@ -56,7 +56,7 @@ A \code{gg} object of targets PCA biplot.
 Draws a PCA biplots on methylation array quality control targets
 }
 \examples{
-# Create an RnBSet for MethylationEPIC data
+# Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 require(Biobase)
 idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 sample.annotation <- system.file(

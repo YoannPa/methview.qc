@@ -64,7 +64,7 @@ Draws association test results between annotations from an RnBSet and PCs
 from a prcomp object.
 }
 \examples{
-# Create an RnBSet for Human Methylation 450K data
+# Create an RnBSet for Human Methylation 450K data (May take up to 1 minute)
 require(Biobase)
 idat.dir <- system.file("extdata", package = "minfiData")
 sample.annotation <- system.file(

@@ -42,7 +42,7 @@ A \code{gtable} barplot of the QC probe fluorescence
 Plots fluorescence intensities barplots for a single QC methylation array probe.
 }
 \examples{
-# Create an RnBSet for MethylationEPIC data
+# Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 require(Biobase)
 idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 sample.annotation <- system.file(

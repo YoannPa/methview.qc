@@ -69,7 +69,7 @@ A customizable \code{gg} object of samples PCA cross biplot.
 Draws a customizable PCA cross biplot on samples methylation array QC data
 }
 \examples{
-# Create an RnBSet for MethylationEPIC data
+# Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 require(Biobase)
 idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 sample.annotation <- system.file(

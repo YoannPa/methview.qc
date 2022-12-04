@@ -41,10 +41,10 @@ methods. Supported values:
 target = c("Bisulfite Conversion I",
 "Bisulfite Conversion II", "Extension", "Hybridization",
 "Negative", "Non-polymorphic", "Norm A", "Norm C",
-"Norm G", "Norm T", "Specificity I", "Specificity II",
-"Staining", "Target Removal", NULL). If target is NULL,
-quality control probes from all targets will be considered
-(Default: target = NULL).}
+"Norm G", "Norm T", "Restoration", "Specificity I",
+"Specificity II", "Staining", "Target Removal", NULL). If
+target is NULL, quality control probes from all targets
+will be considered (Default: target = NULL).}
 
 \item{samples}{A \code{character} vector specifying the samples to include
 for the deviation score calculation. You can catch the
@@ -115,7 +115,7 @@ For more information about how the fluorescence deviation score is
          \link{devscore.fluo}.
 }
 \examples{
-# Create an RnBSet for MethylationEPIC data
+# Create an RnBSet for HM450K data (May take up to 1 minute)
 require(Biobase)
 idat.dir <- system.file("extdata", package = "minfiData")
 sample.annotation <- system.file(
@@ -136,6 +136,19 @@ dev.heatmap <- devscore.heatmap(
 #If 'draw' is set to FALSE you can plot heatmap as following
 grid::grid.newpage()
 grid::grid.draw(dev.heatmap)
+
+# The function also work with MethylationEPIC data
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+dev.heatmap <- devscore.heatmap(
+    RnBSet = rnb.set,
+    annot.grps = list("Groups" = rnb.set@pheno$Sample_Group),
+    annot.pal = list(c("orange", "purple", "pink")), show.annot = TRUE)
 }
 \author{
 Yoann Pageaud.

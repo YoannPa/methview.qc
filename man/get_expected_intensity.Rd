@@ -7,7 +7,7 @@
 get_expected_intensity(
   DT.QC.meta,
   probe.id,
-  channel.names = c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")
+  channel.names = c("Cy3 - Green", "Cy5 - Red")
 )
 }
 \arguments{
@@ -21,8 +21,7 @@ probe ID listed in 'DT.QC.meta'.}
 \item{channel.names}{A \code{character} vector specifying the names of the 2
 color channels to use for creating the data.table of
 expected intensity (Default:
-channel.names = c("Cy3 - Electric Lime Green",
-"Cy5 - Dark Red")).}
+channel.names = c("Cy3 - Green", "Cy5 - Red")).}
 }
 \value{
 A \code{data.table} with a 'Channel' column and an

@@ -115,8 +115,17 @@ load_metharray_QC_meta <- function(array.meta){
 #'    RnBSet = rnb.set, DT.QC.meta = dt.meta)
 
 mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
-  #Get sample IDs
-  column.names <- RnBSet@pheno[, 1]
+  # Get sample IDs
+  if(is.null(rnb.options()$identifiers.column)){
+    column.names <- RnBSet@pheno[, 1]
+  } else { column.names <- RnBSet@pheno[, rnb.options()$identifiers.column] }
+  # Check that all identifiers provided are unique
+  if(any(duplicated(column.names))){
+    stop(paste(
+      "Identifiers column of the RnBSet contains duplicated elements.",
+      "Please specify a column with unique identifiers using",
+      "RnBeads::rnb.options(identifiers.column = 'barcode')"))
+  }
   #Get QC data
   qc.data <- RnBeads::qc(RnBSet) #Cy3 is Green; Cy5 is Red.
   
@@ -144,7 +153,7 @@ mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
     data.table::setnames(x = DT.QC, old = "ID", new = "QC.probe.IDs")
     DT.QC
   })
-  names(QC.data) <- c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")
+  names(QC.data) <- c("Cy3 - Green", "Cy5 - Red")
   #Return QC.data
   return(QC.data)
 }
@@ -236,8 +245,7 @@ compute_intensity_ratio <- function(DT.probe.ratio){
 #' @param channel.names A \code{character} vector specifying the names of the 2
 #'                      color channels to use for creating the data.table of
 #'                      expected intensity (Default:
-#'                      channel.names = c("Cy3 - Electric Lime Green",
-#'                      "Cy5 - Dark Red")).
+#'                      channel.names = c("Cy3 - Green", "Cy5 - Red")).
 #' @return A \code{data.table} with a 'Channel' column and an
 #'         'Expected intensity' column providing the probe intensity expected
 #'         for green and red channels.
@@ -251,7 +259,7 @@ compute_intensity_ratio <- function(DT.probe.ratio){
 
 get_expected_intensity <- function(
   DT.QC.meta, probe.id,
-  channel.names = c("Cy3 - Electric Lime Green", "Cy5 - Dark Red")){
+  channel.names = c("Cy3 - Green", "Cy5 - Red")){
   #Create DT.expected.intensity
   if(DT.QC.meta[ID == probe.id]$`Evaluate Green` == "+" &
      DT.QC.meta[ID == probe.id]$`Evaluate Red` == "-" &
@@ -350,12 +358,12 @@ get_expected_intensity <- function(
 update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   #Melt Green & Red QC data
   DT.target.Cy3 <- data.table::melt.data.table(
-    data = QC.data$`Cy3 - Electric Lime Green`[Target == target],
-    measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
+    data = QC.data$`Cy3 - Green`[Target == target],
+    measure.vars = colnames(QC.data$`Cy3 - Green`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy3 intensity")
   DT.target.Cy5 <- data.table::melt.data.table(
-    data = QC.data$`Cy5 - Dark Red`[Target == target],
-    measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
+    data = QC.data$`Cy5 - Red`[Target == target],
+    measure.vars = colnames(QC.data$`Cy5 - Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")
   #Rbind data.tables
   ls.dt.target <- list(DT.target.Cy3, DT.target.Cy5)
@@ -446,7 +454,7 @@ comp_RnBqc2PCA <- function(RnBSet){
 #'
 #' @param RnBSet  An \code{RnBSet} basic object for storing HM450K DNA
 #'                methylation and experimental quality information (Bisulfite
-#'                data  and MethylationEPIC data not supported).
+#'                data are not supported).
 #'                \itemize{
 #'                 \item{For more information about RnBSet object read
 #'                 \link[RnBeads]{RnBSet-class}.}
@@ -482,7 +490,7 @@ comp_RnBqc2PCA <- function(RnBSet){
 #'           be extracted from the resulting data.table in the column
 #'           'percent.diff.sqrt'.}
 #'          }
-#'          Formula: \eqn{(sqrt(sample_signal)/sqrt(ref_signal)) * 100 - 100}
+#'          Formula: \eqn{(sqrt(sample\_signal)/sqrt(ref\_signal)) * 100 - 100}
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
@@ -500,12 +508,15 @@ comp_RnBqc2PCA <- function(RnBSet){
 #'     target = "Hybridization")
 
 devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
+  platform <- methview.qc::get_platform(RnBSet = RnBSet)
   #Check it is HM450K
-  if(methview.qc::get_platform(RnBSet = RnBSet) != "HM450K"){
-    stop("devscore.fluo() only supports HM450K data for now.")
-  }
-  #Load quality control metadata for Human Methylation 450K array
-  DT.QC.meta <- methview.qc::load_metharray_QC_meta(array.meta = "controls450")
+  if(platform == "HM450K"){
+    #Load quality control metadata for Human Methylation 450K array
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(array.meta = "controls450")
+  } else if(platform == "MethylationEPIC"){
+    #Load quality control metadata for Methylation EPIC array
+    DT.QC.meta <- methview.qc::load_metharray_QC_meta(array.meta = "controlsEPIC")
+  } else { stop("devscore.fluo() only supports HM450K and EPIC data.") }
   QC.data <- methview.qc::mergeQC_intensities_and_meta(
     RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
   #Keep only samples requested
@@ -519,16 +530,29 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
     ncores = ncores)
   #Create unique combination cyanine & ID
   DT.target[, Cyanine.probe.ID := paste(Cyanine, QC.probe.IDs, sep = ".")]
-  hm450ref <- methview.qc:::sysdata[Target == target]
-  hm450ref[, Cyanine.probe.ID := paste(Channel, QC.probe.IDs, sep = ".")]
-  #Map HM450K reference fluorescence to DT.target
-  DT.target <- data.table::merge.data.table(
-    x = DT.target,
-    y = hm450ref[, c("Cyanine.probe.ID", "PCAWG.avg.intensity"), ],
-    by = "Cyanine.probe.ID", all.x = TRUE)
-  #Compute percentage difference of the square root of fluorescence intensities
-  DT.target[, percent.diff.sqrt := (
-    (sqrt(`Cy3 intensity`)/sqrt(PCAWG.avg.intensity))*100) - 100]
+  if(platform == "HM450K"){
+    hm450ref <- methview.qc:::HM450K_sysdata[Target == target]
+    hm450ref[, Cyanine.probe.ID := paste(Channel, QC.probe.IDs, sep = ".")]
+    #Map HM450K reference fluorescence to DT.target
+    DT.target <- data.table::merge.data.table(
+      x = DT.target,
+      y = hm450ref[, c("Cyanine.probe.ID", "PCAWG.avg.intensity"), ],
+      by = "Cyanine.probe.ID", all.x = TRUE)
+    #Compute percentage difference of the square root of fluorescence intensities
+    DT.target[, percent.diff.sqrt := (
+      (sqrt(`Cy3 intensity`)/sqrt(PCAWG.avg.intensity))*100) - 100]
+  } else if(platform == "MethylationEPIC"){
+    epicref <- methview.qc:::EPIC_sysdata[Target == target]
+    epicref[, Cyanine.probe.ID := paste(Channel, QC.probe.IDs, sep = ".")]
+    #Map HM450K reference fluorescence to DT.target
+    DT.target <- data.table::merge.data.table(
+      x = DT.target,
+      y = epicref[, c("Cyanine.probe.ID", "GSE197678.avg.intensity"), ],
+      by = "Cyanine.probe.ID", all.x = TRUE)
+    #Compute percentage difference of the square root of fluorescence intensities
+    DT.target[, percent.diff.sqrt := (
+      (sqrt(`Cy3 intensity`)/sqrt(GSE197678.avg.intensity))*100) - 100]
+  }
   #Make percentage difference table
   DT.target <- DT.target[, c(2:13, 16), ]
   return(DT.target)
@@ -993,8 +1017,8 @@ rnb_test_asso_annot_QC <- function(
   QC.data <- mergeQC_intensities_and_meta(
     RnBSet = RnBSet, DT.QC.meta = dt.meta)
   DTQC <- rbindlist(l = QC.data, idcol = "Channel")
-  DTQC[Channel == "Cy3 - Electric Lime Green", Channel := "Green"]
-  DTQC[Channel == "Cy5 - Dark Red", Channel := "Red"]
+  DTQC[Channel == "Cy3 - Green", Channel := "Green"]
+  DTQC[Channel == "Cy5 - Red", Channel := "Red"]
   DTQC[, Probe_name := paste(Description, QC.probe.IDs, Channel, sep = "_")]
   DTQC <- data.table::as.data.table(
     x = t(as.matrix(DTQC[, -c(1:11), ], rownames = "Probe_name")),

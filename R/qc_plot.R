@@ -94,7 +94,7 @@
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -172,10 +172,10 @@ snp_heatmap <- function(
     theme_annot = theme(
       axis.text.y.right = anno.text.y.right,
       axis.ticks.y.right = anno.ticks.y.right,
-      plot.margin = margin(0, 0.5, 0.1, 0, unit = "cm")), show.annot = show.annot,
-    theme_legend = theme_legend, 
-    y.axis.right = TRUE, lgd.space.width = lgd.space.width,
-    lgd.space.height = lgd.space.height, draw = draw)
+      plot.margin = margin(0, 0.5, 0.1, 0, unit = "cm")),
+    show.annot = show.annot, theme_legend = theme_legend, y.axis.right = TRUE,
+    lgd.space.width = lgd.space.width, lgd.space.height = lgd.space.height,
+    draw = draw)
   return(snp.htmp)
 }
 
@@ -197,7 +197,7 @@ snp_heatmap <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -207,7 +207,7 @@ snp_heatmap <- function(
 #'     data.source = data.source, data.type = "idat.dir")
 #' RnBeads::rnb.options(identifiers.column = "barcode")
 #' # Draw the genotyping probes values offset plot
-#' cohort.gp.density(RnB.set = rnb.set)
+#' gp_density <- cohort.gp.density(RnB.set = rnb.set)
 
 cohort.gp.density <- function(RnB.set){
   rs.probes <- rownames(RnB.set@sites)[
@@ -282,6 +282,8 @@ cohort.gp.density <- function(RnB.set){
       legend.title = element_text(size = 12),
       legend.text = element_text(size = 11),
       legend.key = element_blank(),
+      legend.key.height = unit(2, "cm"),
+      legend.spacing.x = unit(1, "cm"),
       panel.background = element_rect(fill = "white", color = "black"),
       panel.grid.major.x = element_line(color = "grey"),
       panel.grid.minor.x = element_blank(),
@@ -289,8 +291,7 @@ cohort.gp.density <- function(RnB.set){
       panel.grid.minor.y = element_blank(),
       plot.margin = margin(0,0.5,0.1,0.1, unit = "cm")) +
     guides(color = guide_legend(
-      title.position = "top", title.hjust = 0.5,
-      label.position = "bottom")) +
+      title.position = "top", title.hjust = 0.5)) +
     scale_color_manual(values = c("#2166AC", "#E6C952", "#B2182B")) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 1)) +
     scale_y_continuous(expand = c(0.01, 0.01)) +
@@ -354,7 +355,7 @@ load_metharray_QCtheme <- function(){
 #' @export plot_array_QCprobe
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -380,13 +381,13 @@ plot_array_QCprobe <- function(
   array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
   #Melt Cy3 & Cy5 data.tables
   DT.probe.Cy3 <- data.table::melt.data.table(
-    data = QC.data$`Cy3 - Electric Lime Green`[QC.probe.IDs == probe.ID],
-    measure.vars = colnames(QC.data$`Cy3 - Electric Lime Green`)[-c(1:10)],
+    data = QC.data$`Cy3 - Green`[QC.probe.IDs == probe.ID],
+    measure.vars = colnames(QC.data$`Cy3 - Green`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy3 intensity")[, c(
       "Samples", "Cy3 intensity"), ]
-  DT.probe.Cy5 <- data.table::melt.data.table(data = QC.data$`Cy5 - Dark Red`[
+  DT.probe.Cy5 <- data.table::melt.data.table(data = QC.data$`Cy5 - Red`[
     QC.probe.IDs == probe.ID],
-    measure.vars = colnames(QC.data$`Cy5 - Dark Red`)[-c(1:10)],
+    measure.vars = colnames(QC.data$`Cy5 - Red`)[-c(1:10)],
     variable.name = "Samples", value.name = "Cy5 intensity")[, c(
       "Samples", "Cy5 intensity"), ]
   #Load metharray Quality Control theme
@@ -464,12 +465,12 @@ plot_array_QCprobe <- function(
         grid::textGrob("Measured intensities"),
         grid::textGrob("Expected intensity"),
         ls.qc.grobs$cy3grob, grid::textGrob(label = DT.expected.intensity[
-          Channel == "Cy3 - Electric Lime Green"]$`Expected intensity`),
+          Channel == "Cy3 - Green"]$`Expected intensity`),
         ls.qc.grobs$cy5grob, grid::textGrob(label = DT.expected.intensity[
-          Channel == "Cy5 - Dark Red"]$`Expected intensity`),
+          Channel == "Cy5 - Red"]$`Expected intensity`),
         ls.qc.grobs$ratiogrob),
       nrow = 4, ncol = 2, heights = c(0.2, 1, 1, 2),
-      widths = c(1, 8/ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ])))
+      widths = c(1, 8/ncol(QC.data$`Cy5 - Red`[, -c(1:10), ])))
     #Return final plot
     gridExtra::grid.arrange(qc.plot)
     return(qc.plot)
@@ -529,7 +530,7 @@ plot_array_QCprobe <- function(
 #' @export plot_array_QCtarget
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -831,7 +832,7 @@ plot_array_QCtarget <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -936,7 +937,7 @@ target.biplot <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -1032,7 +1033,7 @@ sampleQC.biplot <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -1115,7 +1116,7 @@ sampleQC_crossbi <- function(
 #' @author Yoann Pageaud.
 #' @importFrom data.table `:=`
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -1211,7 +1212,7 @@ plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' @export plot_all_qc
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 #' sample.annotation <- system.file(
@@ -1296,18 +1297,18 @@ plot_all_qc <- function(
           DT.QC.meta = DT.QC.meta, cohort = cohort)
         
         #Check if none of the values are missing
-        if(!(all(is.na(unlist(QC.data$`Cy3 - Electric Lime Green`[
+        if(!(all(is.na(unlist(QC.data$`Cy3 - Green`[
           QC.probe.IDs == i, -c(1:10), ]))) &
-          all(is.na(unlist(QC.data$`Cy5 - Dark Red`[
+          all(is.na(unlist(QC.data$`Cy5 - Red`[
             QC.probe.IDs == i, -c(1:10), ])))
         )){
-          if(ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) > 40 &
-             ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) < 70){
+          if(ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) > 40 &
+             ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) < 70){
             width.plot <- 45
-          } else if(ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) >= 70 &
-                    ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) < 110){
+          } else if(ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) >= 70 &
+                    ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) < 110){
             width.plot <- 65
-          } else if(ncol(QC.data$`Cy5 - Dark Red`[, -c(1:10), ]) >= 110){
+          } else if(ncol(QC.data$`Cy5 - Cy5 - Red`[, -c(1:10), ]) >= 110){
             width.plot <- 135
           } else { width.plot <- 25 }
           #Save plot
@@ -1449,10 +1450,10 @@ plot_all_qc <- function(
 #'                   target = c("Bisulfite Conversion I",
 #'                   "Bisulfite Conversion II", "Extension", "Hybridization",
 #'                   "Negative", "Non-polymorphic", "Norm A", "Norm C",
-#'                   "Norm G", "Norm T", "Specificity I", "Specificity II",
-#'                   "Staining", "Target Removal", NULL). If target is NULL,
-#'                   quality control probes from all targets will be considered
-#'                   (Default: target = NULL).
+#'                   "Norm G", "Norm T", "Restoration", "Specificity I",
+#'                   "Specificity II", "Staining", "Target Removal", NULL). If
+#'                   target is NULL, quality control probes from all targets
+#'                   will be considered (Default: target = NULL).
 #' @param samples    A \code{character} vector specifying the samples to include
 #'                   for the deviation score calculation. You can catch the
 #'                   sample IDs you wish to evaluate running
@@ -1505,7 +1506,7 @@ plot_all_qc <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for MethylationEPIC data
+#' # Create an RnBSet for HM450K data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiData")
 #' sample.annotation <- system.file(
@@ -1526,6 +1527,19 @@ plot_all_qc <- function(
 #' #If 'draw' is set to FALSE you can plot heatmap as following
 #' grid::grid.newpage()
 #' grid::grid.draw(dev.heatmap)
+#' 
+#' # The function also work with MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' dev.heatmap <- devscore.heatmap(
+#'     RnBSet = rnb.set,
+#'     annot.grps = list("Groups" = rnb.set@pheno$Sample_Group),
+#'     annot.pal = list(c("orange", "purple", "pink")), show.annot = TRUE)
 
 devscore.heatmap <- function(
   RnBSet, target = NULL, samples = NULL, dist.col = "manhattan",
@@ -1535,9 +1549,14 @@ devscore.heatmap <- function(
   #If no specific samples provided take them all
   if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
   if(is.null(target)){
-    ls.dt.target <- lapply(
-      X = levels(load_metharray_QC_meta("controls450")$Target),
-      FUN = function(t){ methview.qc::devscore.fluo(
+    # Get target list following platform
+    if(get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+      target_list <- levels(load_metharray_QC_meta("controlsEPIC")$Target)
+    } else if(get_platform(RnBSet = RnBSet) == "HM450K"){
+      target_list <- levels(load_metharray_QC_meta("controls450")$Target)
+    } else { stop("Unknown platform.") }
+    ls.dt.target <- lapply(X = target_list, FUN = function(t){
+      methview.qc::devscore.fluo(
         RnBSet = RnBSet, samples = samples, target = t, ncores = ncores)})
     DT.target <- data.table::rbindlist(ls.dt.target)
   } else {
@@ -1672,7 +1691,7 @@ devscore.heatmap <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for Human Methylation 450K data
+#' # Create an RnBSet for Human Methylation 450K data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiData")
 #' sample.annotation <- system.file(
@@ -1770,7 +1789,7 @@ plot_asso_annot_PC <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for Human Methylation 450K data
+#' # Create an RnBSet for Human Methylation 450K data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiData")
 #' sample.annotation <- system.file(
@@ -1852,7 +1871,7 @@ plot_asso_annot_QC <- function(
 #' @author Yoann Pageaud.
 #' @export
 #' @examples
-#' # Create an RnBSet for Human Methylation 450K data
+#' # Create an RnBSet for Human Methylation 450K data (May take up to 1 minute)
 #' require(Biobase)
 #' idat.dir <- system.file("extdata", package = "minfiData")
 #' sample.annotation <- system.file(

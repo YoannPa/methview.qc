@@ -143,7 +143,7 @@ A \code{grob} of the heatmap created on methylation array
 Draws a heatmap from methylation array genotyping probes.
 }
 \examples{
-# Create an RnBSet for MethylationEPIC data
+# Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
 require(Biobase)
 idat.dir <- system.file("extdata", package = "minfiDataEPIC")
 sample.annotation <- system.file(
