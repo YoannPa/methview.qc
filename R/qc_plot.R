@@ -271,7 +271,7 @@ cohort.gp.density <- function(RnB.set){
     geom_boxplot(
       data = dt.rs,
       mapping = aes(x = genotype, color = allele, group = allele),
-      position = position_dodge(0)) +
+      position = position_dodge(0), key_glyph = draw_key_boxplot2) +
     theme(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(), 
@@ -282,7 +282,7 @@ cohort.gp.density <- function(RnB.set){
       legend.title = element_text(size = 12),
       legend.text = element_text(size = 11),
       legend.key = element_blank(),
-      legend.key.height = unit(2, "cm"),
+      legend.key.height = unit(0.5, "cm"),
       legend.spacing.x = unit(1, "cm"),
       panel.background = element_rect(fill = "white", color = "black"),
       panel.grid.major.x = element_line(color = "grey"),
@@ -291,7 +291,7 @@ cohort.gp.density <- function(RnB.set){
       panel.grid.minor.y = element_blank(),
       plot.margin = margin(0,0.5,0.1,0.1, unit = "cm")) +
     guides(color = guide_legend(
-      title.position = "top", title.hjust = 0.5)) +
+      title.position = "top", title.hjust = 0.5, label.position = "bottom")) +
     scale_color_manual(values = c("#2166AC", "#E6C952", "#B2182B")) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 1)) +
     scale_y_continuous(expand = c(0.01, 0.01)) +

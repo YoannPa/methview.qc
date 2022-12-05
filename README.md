@@ -22,7 +22,7 @@ Currently the package methview.qc contains **23 functions**:
 * `cohort.gp.density()` - Displays the distribution of genotyping probes values in a cohort.  
 * `comp_RnBqc2PCA()` - Computes a PCA from an RnBSet on quality control probes intensities.  
 * `devscore.fluo()` - Computes a deviation score between samples fluorescence and an internal HM450K reference.  
-* `devscore.heatmap` - Plots QC deviation heatmaps based on samples fluorescence deviation score.  
+* `devscore.heatmap()` - Plots QC deviation heatmaps based on samples fluorescence deviation score.  
 * `get_expected_intensity()` - Provides expected intensity for a given methylation array probe ID.  
 * `get_IDATs_runinfo()` - Retrieves runinfo data from a methylation array sample's IDAT files.  
 * `get_platform()` - Detects platform used to generate data in the RnBSet.  
@@ -41,7 +41,7 @@ Currently the package methview.qc contains **23 functions**:
 * `sampleQC_crossbi()` - Draws a customizable PCA cross biplot on samples methylation array QC data.  
 * `snp_heatmap()` - Draws a heatmap from methylation array genotyping probes.  
 * `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
-* `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
+* `test.annots()` - Tests association of an annotation with another one or with a PC.  
 
 ## Prerequisites
 ### Install Bioconductor dependencies
@@ -61,13 +61,11 @@ In R do:
 ```R
 devtools::install_github("YoannPa/BiocompR")
 ```
-
 ## Installing Methview.qc
 In R do:
 ```R
 devtools::install_github("YoannPa/methview.qc")
 ```
-
 ## Problems ? / I need help !
 For any questions related to bugs please check the section "**Known Issues**" available below.  
 If the issue you experience is not adressed in the known issues please check if an existing issue adresses your point [here](https://github.com/YoannPa/methview.qc/issues/). If not, create a [new issue here](https://github.com/YoannPa/methview.qc/issues/new).
