@@ -9,7 +9,8 @@ plot_array_QCprobe(
   probe.ID,
   QC.data,
   DT.QC.meta,
-  cohort = "RnBSet"
+  cohort = "RnBSet",
+  draw = TRUE
 )
 }
 \arguments{
@@ -33,6 +34,10 @@ metadata obtained with the function
 \item{cohort}{A \code{character} string to specify the name of the cohort
 to be displayed as part of the plot title
 (Default: cohort = "RnBSet").}
+
+\item{draw}{A \code{logical} specifying whether the result plot should
+be automatically displayed (Default: draw = TRUE) or not
+(draw = FALSE).}
 }
 \value{
 A \code{gtable} barplot of the QC probe fluorescence

@@ -209,7 +209,7 @@ snp_heatmap <- function(
 #' # Draw the genotyping probes values offset plot
 #' gp_density <- cohort.gp.density(RnB.set = rnb.set)
 
-cohort.gp.density <- function(RnB.set){
+cohort.gp.density <- function(RnB.set, draw = TRUE){
   rs.probes <- rownames(RnB.set@sites)[
     grepl(pattern = "rs", x = rownames(RnB.set@sites))]
   meth.mat <- RnBeads::meth(RnB.set, row.names = TRUE)
@@ -297,10 +297,15 @@ cohort.gp.density <- function(RnB.set){
     scale_y_continuous(expand = c(0.01, 0.01)) +
     labs(color = "Allele categories")
   
-  gp.offset.plot <- egg::ggarrange(
-    gp.hist, gp.density.map, allele.boxplot, nrow = 3,
-    heights = c(2, 10, 1))
-  
+  if(draw){
+    gp.offset.plot <- egg::ggarrange(
+      gp.hist, gp.density.map, allele.boxplot, nrow = 3,
+      heights = c(2, 10, 1))
+  } else {
+    gp.offset.plot <- R.devices::suppressGraphics(egg::ggarrange(
+      gp.hist, gp.density.map, allele.boxplot, nrow = 3,
+      heights = c(2, 10, 1)))
+  }
   return(gp.offset.plot)
 }
 
@@ -349,6 +354,9 @@ load_metharray_QCtheme <- function(){
 #' @param cohort     A \code{character} string to specify the name of the cohort
 #'                   to be displayed as part of the plot title
 #'                   (Default: cohort = "RnBSet").
+#' @param draw       A \code{logical} specifying whether the result plot should
+#'                   be automatically displayed (Default: draw = TRUE) or not
+#'                   (draw = FALSE).
 #' @return A \code{gtable} barplot of the QC probe fluorescence
 #'         intensities.
 #' @author Yoann Pageaud.
@@ -378,7 +386,8 @@ load_metharray_QCtheme <- function(){
 #'        path = "~/")
 
 plot_array_QCprobe <- function(
-  array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet"){
+  array.type = "HM450K", probe.ID, QC.data, DT.QC.meta, cohort = "RnBSet",
+  draw = TRUE){
   #Melt Cy3 & Cy5 data.tables
   DT.probe.Cy3 <- data.table::melt.data.table(
     data = QC.data$`Cy3 - Green`[QC.probe.IDs == probe.ID],
@@ -447,9 +456,13 @@ plot_array_QCprobe <- function(
         axis.title.x = ggplot2::element_text(size = 14))
     
     #Convert ggplots in grobs
-    cy3grob <- ggplot2::ggplotGrob(cy3plot)
-    cy5grob <- ggplot2::ggplotGrob(cy5plot)
-    ratiogrob <- ggplot2::ggplotGrob(ratioplot)
+    cy3grob <- R.devices::suppressGraphics(ggplot2::ggplotGrob(cy3plot))
+    cy5grob <- R.devices::suppressGraphics(ggplot2::ggplotGrob(cy5plot))
+    ratiogrob <- R.devices::suppressGraphics(ggplot2::ggplotGrob(ratioplot))
+    # cy3grob <- ggplot2::ggplotGrob(cy3plot)
+    # cy5grob <- ggplot2::ggplotGrob(cy5plot)
+    # ratiogrob <- ggplot2::ggplotGrob(ratioplot)
+    
     #Resize based on widths
     ls.qc.grobs <- BiocompR::resize.grobs(ls.grobs = list(
       'cy3grob'= cy3grob, 'cy5grob' = cy5grob, 'ratiogrob' = ratiogrob),
@@ -472,7 +485,7 @@ plot_array_QCprobe <- function(
       nrow = 4, ncol = 2, heights = c(0.2, 1, 1, 2),
       widths = c(1, 8/ncol(QC.data$`Cy5 - Red`[, -c(1:10), ])))
     #Return final plot
-    gridExtra::grid.arrange(qc.plot)
+    if(draw){ gridExtra::grid.arrange(qc.plot) }
     return(qc.plot)
   }
 }
@@ -590,7 +603,7 @@ plot_array_QCtarget <- function(
         strip.text.y = ggplot2::element_text(
           size = 13, angle = 0, color = "black"),
         strip.background = ggplot2::element_rect(
-          color = "black", size = 0.5, fill = "white"),
+          color = "black", linewidth = 0.5, fill = "white"),
         panel.grid.major.x = ggplot2::element_blank(),
         panel.spacing.x = grid::unit(0, "cm")) +
       ggplot2::labs(
@@ -704,7 +717,7 @@ plot_array_QCtarget <- function(
             strip.text.y = ggplot2::element_text(
               size = 13, angle = 90, color = "black"),
             strip.background = ggplot2::element_rect(
-              color = "black", size = 0.5, fill = "white"),
+              color = "black", linewidth = 0.5, fill = "white"),
             panel.grid.major.x = ggplot2::element_blank(),
             panel.spacing.x = grid::unit(0, "cm")) +
           ggplot2::labs(
@@ -766,7 +779,7 @@ plot_array_QCtarget <- function(
           strip.text.y = ggplot2::element_text(
             size = 13, angle = 90, color = "black"),
           strip.background = ggplot2::element_rect(
-            color = "black", size = 0.5, fill = "white"),
+            color = "black", linewidth = 0.5, fill = "white"),
           panel.grid.major.x = ggplot2::element_blank(),
           panel.spacing.x = grid::unit(0, "cm")) +
         ggplot2::labs(
@@ -1143,9 +1156,10 @@ plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
     QC.data <- methview.qc::mergeQC_intensities_and_meta(
       RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
     # Plot FFPE negative control prob 
-    methview.qc::plot_array_QCprobe(
+    qc.plot <- methview.qc::plot_array_QCprobe(
       array.type = "EPIC", probe.ID = "36729435", QC.data = QC.data,
       DT.QC.meta = DT.QC.meta, cohort = cohort)
+    return(qc.plot)
   } else if(get_platform(RnBSet = RnBSet) == "HM450K"){
     stop("No FFPE negative control probe identified yet in HM450K platform.")
   } else {
@@ -1268,7 +1282,7 @@ plot_all_qc <- function(
     save.dir, "Sample_QC_PCA_biplot"))){
     dir.create(file.path(save.dir, "Sample_QC_PCA_biplot"))
   }
-  if(include.ds & array.type != "EPIC" & !dir.exists(file.path(
+  if(include.ds & !dir.exists(file.path(
     save.dir, "Fluorescence_deviation_heatmaps"))){
     dir.create(file.path(save.dir, "Fluorescence_deviation_heatmaps"))
   }
@@ -1294,7 +1308,7 @@ plot_all_qc <- function(
         #Make QC barplots for every probe
         qc.plot <- methview.qc::plot_array_QCprobe(
           array.type = array.type, probe.ID = i, QC.data = QC.data,
-          DT.QC.meta = DT.QC.meta, cohort = cohort)
+          DT.QC.meta = DT.QC.meta, cohort = cohort, draw = FALSE)
         
         #Check if none of the values are missing
         if(!(all(is.na(unlist(QC.data$`Cy3 - Green`[
@@ -1308,7 +1322,7 @@ plot_all_qc <- function(
           } else if(ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) >= 70 &
                     ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) < 110){
             width.plot <- 65
-          } else if(ncol(QC.data$`Cy5 - Cy5 - Red`[, -c(1:10), ]) >= 110){
+          } else if(ncol(QC.data$`Cy5 - Red`[, -c(1:10), ]) >= 110){
             width.plot <- 135
           } else { width.plot <- 25 }
           #Save plot
@@ -1374,7 +1388,7 @@ plot_all_qc <- function(
         path = file.path(save.dir, "Genotyping_probes_heatmaps"))
     }))
     #Plot genotyping probes values density
-    gp_density <- methview.qc::cohort.gp.density(RnB.set = RnBSet)
+    gp_density <- methview.qc::cohort.gp.density(RnB.set = RnBSet, draw = FALSE)
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
       ggsave(
         filename = paste0(paste(
@@ -1386,21 +1400,32 @@ plot_all_qc <- function(
   }
   if(include.ds){
     cat("\tFluorescence deviation score heatmap\n")
-    if(array.type == "EPIC"){
-      warning("Deviation score heatmap is not yet supported in Methview.QC and will be skipped.")
-    } else {
-      #Plot fluorescence deviation score heatmap
-      ds.htmp <- methview.qc::devscore.heatmap(
-        RnBSet = RnBSet, ncores = ncores, draw = FALSE)
-      invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-        ggsave(
-          filename = paste0(paste(
-            "Heatmap_fluorescence_deviation", cohort,
-            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
-          plot = ds.htmp, device = frmt, width = 11, height = 11,
-          path = file.path(save.dir, "Fluorescence_deviation_heatmaps"))
-      })) 
-    }
+    #Plot fluorescence deviation score heatmap
+    ds.htmp <- methview.qc::devscore.heatmap(
+      RnBSet = RnBSet, ncores = ncores, draw = FALSE)
+    invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+      ggsave(
+        filename = paste0(paste(
+          "Heatmap_fluorescence_deviation", cohort,
+          get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+        plot = ds.htmp, device = frmt, width = 11, height = 11,
+        path = file.path(save.dir, "Fluorescence_deviation_heatmaps"))
+    }))
+    # if(array.type == "EPIC"){
+    #   warning("Deviation score heatmap is not yet supported in Methview.QC and will be skipped.")
+    # } else {
+    #   #Plot fluorescence deviation score heatmap
+    #   ds.htmp <- methview.qc::devscore.heatmap(
+    #     RnBSet = RnBSet, ncores = ncores, draw = FALSE)
+    #   invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+    #     ggsave(
+    #       filename = paste0(paste(
+    #         "Heatmap_fluorescence_deviation", cohort,
+    #         get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+    #       plot = ds.htmp, device = frmt, width = 11, height = 11,
+    #       path = file.path(save.dir, "Fluorescence_deviation_heatmaps"))
+    #   }))
+    # }
   }
   if(include.pca){
     cat("\tSample QC PCA biplot\n")
@@ -1547,7 +1572,14 @@ devscore.heatmap <- function(
   dend.size = 1, theme_legend = NULL, lgd.width = 1, ncores = 1, draw = TRUE,
   verbose = FALSE){
   #If no specific samples provided take them all
-  if(is.null(samples)){ samples <- as.character(RnBSet@pheno[, 1]) }
+  if(is.null(samples)){
+    if(is.null(rnb.options()$identifiers.column)){
+      samples <- as.character(RnBSet@pheno[, 1])
+    } else {
+      samples <- as.character(RnBSet@pheno[, rnb.options()$identifiers.column])
+    }
+    # samples <- as.character(RnBSet@pheno[, 1])
+  }
   if(is.null(target)){
     # Get target list following platform
     if(get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
@@ -1555,9 +1587,9 @@ devscore.heatmap <- function(
     } else if(get_platform(RnBSet = RnBSet) == "HM450K"){
       target_list <- levels(load_metharray_QC_meta("controls450")$Target)
     } else { stop("Unknown platform.") }
-    ls.dt.target <- lapply(X = target_list, FUN = function(t){
+    ls.dt.target <- lapply(X = target_list, FUN = function(targ){
       methview.qc::devscore.fluo(
-        RnBSet = RnBSet, samples = samples, target = t, ncores = ncores)})
+        RnBSet = RnBSet, samples = samples, target = targ, ncores = ncores)})
     DT.target <- data.table::rbindlist(ls.dt.target)
   } else {
     #Compute deviation score of fluorescence
@@ -1596,7 +1628,7 @@ devscore.heatmap <- function(
       axis.text.x = element_text(
         size = 8, angle = 90, hjust = 0, vjust = 0.5, colour = "black"),
       strip.text.y = element_text(size = 14),
-      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
       plot.margin = margin(0, 0, 0, 0.1, unit = "cm"))
   } else if(target %in% c("Norm A", "Norm G")){
     plot_theme = theme(
@@ -1607,7 +1639,7 @@ devscore.heatmap <- function(
       axis.text.x = element_text(
         size = 8, angle = 90, hjust = 0, vjust = 0.5, colour = "black"),
       strip.text.y = element_text(size = 14),
-      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
       plot.margin = margin(0, 0, 0, 0.1, unit = "cm"))
   } else if(target %in% c("Norm C", "Norm T", "Negative", "All")){
     plot_theme = theme(
@@ -1618,7 +1650,7 @@ devscore.heatmap <- function(
       axis.text.x = element_text(
         size = 8, angle = 90, hjust = 0, vjust = 0.5, colour = "black"),
       strip.text.y = element_text(size = 14),
-      panel.border = element_rect(color = "black", fill = NA, size = 1),
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
       plot.margin = margin(0, 0, 0, 0.1, unit = "cm"))
   }
   #Row string

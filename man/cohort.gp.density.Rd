@@ -4,7 +4,7 @@
 \alias{cohort.gp.density}
 \title{Displays the distribution of genotyping probes values in a cohort.}
 \usage{
-cohort.gp.density(RnB.set)
+cohort.gp.density(RnB.set, draw = TRUE)
 }
 \arguments{
 \item{RnB.set}{A \code{RnBSet} basic object for storing methylation array

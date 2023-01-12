@@ -117,8 +117,11 @@ load_metharray_QC_meta <- function(array.meta){
 mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
   # Get sample IDs
   if(is.null(rnb.options()$identifiers.column)){
-    column.names <- RnBSet@pheno[, 1]
-  } else { column.names <- RnBSet@pheno[, rnb.options()$identifiers.column] }
+    column.names <- as.character(RnBSet@pheno[, 1])
+  } else {
+    column.names <- as.character(
+      RnBSet@pheno[, rnb.options()$identifiers.column])
+  }
   # Check that all identifiers provided are unique
   if(any(duplicated(column.names))){
     stop(paste(
@@ -439,10 +442,23 @@ comp_RnBqc2PCA <- function(RnBSet){
     QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
   t.QC.dt <- data.table::dcast(
     melt.QC.dt, formula = Samples ~ Channel + Description)
-  RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
-  t.QC.dt <- data.table::merge.data.table(
-    x = RnBSet@pheno, y = t.QC.dt,by.x = colnames(RnBSet@pheno)[1],
-    by.y = "Samples", all.y = TRUE)
+  
+  if(is.null(rnb.options()$identifiers.column)){
+    RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+    t.QC.dt <- data.table::merge.data.table(
+      x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
+      by.y = "Samples", all.y = TRUE)
+  } else {
+    RnBSet@pheno[, rnb.options()$identifiers.column] <- as.factor(
+      RnBSet@pheno[, rnb.options()$identifiers.column])
+    t.QC.dt <- data.table::merge.data.table(
+      x = RnBSet@pheno, y = t.QC.dt, by.x = rnb.options()$identifiers.column,
+      by.y = "Samples", all.y = TRUE)
+  }
+  # RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+  # t.QC.dt <- data.table::merge.data.table(
+  #   x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
+  #   by.y = "Samples", all.y = TRUE)
   pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   #Return the results of the PCA
   ls_res <- list("prcomp" = pca_t.res, "data" = t.QC.dt)
