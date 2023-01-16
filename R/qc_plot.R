@@ -459,9 +459,6 @@ plot_array_QCprobe <- function(
     cy3grob <- R.devices::suppressGraphics(ggplot2::ggplotGrob(cy3plot))
     cy5grob <- R.devices::suppressGraphics(ggplot2::ggplotGrob(cy5plot))
     ratiogrob <- R.devices::suppressGraphics(ggplot2::ggplotGrob(ratioplot))
-    # cy3grob <- ggplot2::ggplotGrob(cy3plot)
-    # cy5grob <- ggplot2::ggplotGrob(cy5plot)
-    # ratiogrob <- ggplot2::ggplotGrob(ratioplot)
     
     #Resize based on widths
     ls.qc.grobs <- BiocompR::resize.grobs(ls.grobs = list(
@@ -1411,21 +1408,6 @@ plot_all_qc <- function(
         plot = ds.htmp, device = frmt, width = 11, height = 11,
         path = file.path(save.dir, "Fluorescence_deviation_heatmaps"))
     }))
-    # if(array.type == "EPIC"){
-    #   warning("Deviation score heatmap is not yet supported in Methview.QC and will be skipped.")
-    # } else {
-    #   #Plot fluorescence deviation score heatmap
-    #   ds.htmp <- methview.qc::devscore.heatmap(
-    #     RnBSet = RnBSet, ncores = ncores, draw = FALSE)
-    #   invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-    #     ggsave(
-    #       filename = paste0(paste(
-    #         "Heatmap_fluorescence_deviation", cohort,
-    #         get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
-    #       plot = ds.htmp, device = frmt, width = 11, height = 11,
-    #       path = file.path(save.dir, "Fluorescence_deviation_heatmaps"))
-    #   }))
-    # }
   }
   if(include.pca){
     cat("\tSample QC PCA biplot\n")
@@ -1734,54 +1716,61 @@ devscore.heatmap <- function(
 #' # Compute PCA on QC probes from the RnBSet     
 #' pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
 #' # Plot association test between annotations and PCs from QC probes results
-#' plot_asso_annot_PC(
+#' plot_asso_annot_PC_fromRnB(
 #'     RnBSet = rnb.set, prcomp.res = pca_res$prcomp, PC_type.str = "QC probes",
 #'     cohort.name = "minfiData")
 
-plot_asso_annot_PC <- function(
+plot_asso_annot_PC_fromRnB <- function(
   RnBSet, prcomp.res, perm.count = 10000, max.PCs = 8,
   PC_type.str = NULL, cohort.name = "dataset", verbose = FALSE){
   if(is.null(PC_type.str)){
     stop(paste(
-      "Please specify in 'PC_type.str' with a short string what kind of data",
+      "Please specify 'PC_type.str' with a short string what kind of data",
       "the prcomp object has been computed from.\ne.g. 'QC probes',",
       "'methylation probes', 'CpG islands', ..."))
   }
-  # Compute association tests between annotations and PCs
-  asso_res <- rnb_test_asso_annot_PC(
-    RnBSet = RnBSet, prcomp.res = prcomp.res, perm.count = perm.count,
-    max.PCs = max.PCs, verbose = verbose)
-  # Plot association tests results
-  max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
-  asso_plot <- ggplot() +
-    geom_point(data = asso_res, mapping = aes(
-      x = PC, y = annotation, size = var.explained,
-      fill = log_trans_pval), shape = 21) +
-    facet_grid(rows = vars(test), scales = "free", space = "free") +
-    scale_size_continuous(
-      range = c(3, 20), limits = c(0, 500),
-      breaks = c(0, 20, 40, 60, 80, 100),
-      labels = paste0(seq(0,100, 20), "%")) +
-    scale_fill_gradient2(
-      low = "darkblue", mid = "white", high = "darkred",
-      midpoint = -log10(0.05), limits = c(
-        0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
-    theme(axis.text = element_text(size = 12, colour = "black"),
-          axis.title = element_text(size = 14),
-          panel.background = element_rect(fill = "white", colour = "black"),
-          panel.grid = element_line(colour = "black", size = 0.1),
-          legend.text = element_text(size = 11), legend.box.just = "left",
-          legend.key = element_blank(), legend.title.align = 0.5,
-          strip.background = element_rect(fill = "white", colour = "black"),
-          strip.text = element_text(size = 11),
-          plot.title = element_text(hjust = 0.5)) +
-    guides(fill = guide_colorbar(
-      ticks.colour = "black", frame.colour = "black")) +
-    labs(x = "Top principal components", y = "Annotations",
-         fill = "-Log10(P.value)", size = "PC variability\nexplained") +
-    ggtitle(paste(
-      "Associations between annotations and principal components from",
-      cohort.name, PC_type.str))
+  # Get RnBSet annotation table
+  rnb_annot_table <- pheno(RnBSet)
+  # Compute & plot association tests results
+  asso_plot <- BiocompR::plot_asso_annot_PC(
+      annot.table = rnb_annot_table, prcomp.res = prcomp.res,
+      perm.count = perm.count, max.PCs = max.PCs, dataset.name = cohort.name,
+      PC.origin = PC_type.str, verbose = verbose)
+  # # Compute association tests between annotations and PCs
+  # asso_res <- rnb_test_asso_annot_PC(
+  #   RnBSet = RnBSet, prcomp.res = prcomp.res, perm.count = perm.count,
+  #   max.PCs = max.PCs, verbose = verbose)
+  # # Plot association tests results
+  # max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
+  # asso_plot <- ggplot() +
+  #   geom_point(data = asso_res, mapping = aes(
+  #     x = PC, y = annotation, size = var.explained,
+  #     fill = log_trans_pval), shape = 21) +
+  #   facet_grid(rows = vars(test), scales = "free", space = "free") +
+  #   scale_size_continuous(
+  #     range = c(3, 20), limits = c(0, 500),
+  #     breaks = c(0, 20, 40, 60, 80, 100),
+  #     labels = paste0(seq(0,100, 20), "%")) +
+  #   scale_fill_gradient2(
+  #     low = "darkblue", mid = "white", high = "darkred",
+  #     midpoint = -log10(0.05), limits = c(
+  #       0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
+  #   theme(axis.text = element_text(size = 12, colour = "black"),
+  #         axis.title = element_text(size = 14),
+  #         panel.background = element_rect(fill = "white", colour = "black"),
+  #         panel.grid = element_line(colour = "black", size = 0.1),
+  #         legend.text = element_text(size = 11), legend.box.just = "left",
+  #         legend.key = element_blank(), legend.title.align = 0.5,
+  #         strip.background = element_rect(fill = "white", colour = "black"),
+  #         strip.text = element_text(size = 11),
+  #         plot.title = element_text(hjust = 0.5)) +
+  #   guides(fill = guide_colorbar(
+  #     ticks.colour = "black", frame.colour = "black")) +
+  #   labs(x = "Top principal components", y = "Annotations",
+  #        fill = "-Log10(P.value)", size = "PC variability\nexplained") +
+  #   ggtitle(paste(
+  #     "Associations between annotations and principal components from",
+  #     cohort.name, PC_type.str))
   return(asso_plot)
 }
 
