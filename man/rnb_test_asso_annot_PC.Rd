@@ -61,7 +61,7 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 # Compute PCA on QC probes from the RnBSet     
-pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
+pca_res <- RnB2PCA(RnBSet = rnb.set)
 # Compute association test between annotations and PCs from QC probes
 res <- rnb_test_asso_annot_PC(RnBSet = rnb.set, prcomp.res = pca_res$prcomp)
 }

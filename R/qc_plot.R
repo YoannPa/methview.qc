@@ -965,7 +965,7 @@ sampleQC.biplot <- function(
   RnBSet, PCx = 1, PCy = 2, loadings = TRUE, loadings.col = "blue",
   point.size = 2.5, top.load.by.quad = 5, color.data = "ID", shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc:::comp_RnBqc2PCA(RnBSet = RnBSet)
+  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = "qc")
   pca_t.res <- ls_res$prcomp
   t.QC.dt <- ls_res$data
   if(is.null(top.load.by.quad)){
@@ -1063,7 +1063,7 @@ sampleQC_crossbi <- function(
   point.size = 2.5, top.load.by.quad = NULL, color.data = "ID",
   shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc:::comp_RnBqc2PCA(RnBSet = RnBSet)
+  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = "qc")
   pca_t.res <- ls_res$prcomp
   t.QC.dt <- ls_res$data
   if (is.null(top.load.by.quad)) {
@@ -1713,14 +1713,16 @@ devscore.heatmap <- function(
 #' data.source <- c(idat.dir, sample.annotation)
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
-#' # Compute PCA on QC probes from the RnBSet     
-#' pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
-#' # Plot association test between annotations and PCs from QC probes results
-#' plot_asso_annot_PC_fromRnB(
-#'     RnBSet = rnb.set, prcomp.res = pca_res$prcomp, PC_type.str = "QC probes",
+#' # Define the column containing identifiers for the samples
+#' rnb.options(identifiers.column = 'barcode')
+#' # Compute PCA on CG methylation probes from the RnBSet     
+#' pca_res <- RnB2PCA(RnBSet = rnb.set, probe.type = "cg")
+#' # Plot association test between annotations and PCs from CG probes results
+#' plot_asso_annot_PC(
+#'     RnBSet = rnb.set, prcomp.res = pca_res$prcomp, PC_type.str = "CG probes",
 #'     cohort.name = "minfiData")
 
-plot_asso_annot_PC_fromRnB <- function(
+plot_asso_annot_PC <- function(
   RnBSet, prcomp.res, perm.count = 10000, max.PCs = 8,
   PC_type.str = NULL, cohort.name = "dataset", verbose = FALSE){
   if(is.null(PC_type.str)){
@@ -1736,41 +1738,6 @@ plot_asso_annot_PC_fromRnB <- function(
       annot.table = rnb_annot_table, prcomp.res = prcomp.res,
       perm.count = perm.count, max.PCs = max.PCs, dataset.name = cohort.name,
       PC.origin = PC_type.str, verbose = verbose)
-  # # Compute association tests between annotations and PCs
-  # asso_res <- rnb_test_asso_annot_PC(
-  #   RnBSet = RnBSet, prcomp.res = prcomp.res, perm.count = perm.count,
-  #   max.PCs = max.PCs, verbose = verbose)
-  # # Plot association tests results
-  # max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
-  # asso_plot <- ggplot() +
-  #   geom_point(data = asso_res, mapping = aes(
-  #     x = PC, y = annotation, size = var.explained,
-  #     fill = log_trans_pval), shape = 21) +
-  #   facet_grid(rows = vars(test), scales = "free", space = "free") +
-  #   scale_size_continuous(
-  #     range = c(3, 20), limits = c(0, 500),
-  #     breaks = c(0, 20, 40, 60, 80, 100),
-  #     labels = paste0(seq(0,100, 20), "%")) +
-  #   scale_fill_gradient2(
-  #     low = "darkblue", mid = "white", high = "darkred",
-  #     midpoint = -log10(0.05), limits = c(
-  #       0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
-  #   theme(axis.text = element_text(size = 12, colour = "black"),
-  #         axis.title = element_text(size = 14),
-  #         panel.background = element_rect(fill = "white", colour = "black"),
-  #         panel.grid = element_line(colour = "black", size = 0.1),
-  #         legend.text = element_text(size = 11), legend.box.just = "left",
-  #         legend.key = element_blank(), legend.title.align = 0.5,
-  #         strip.background = element_rect(fill = "white", colour = "black"),
-  #         strip.text = element_text(size = 11),
-  #         plot.title = element_text(hjust = 0.5)) +
-  #   guides(fill = guide_colorbar(
-  #     ticks.colour = "black", frame.colour = "black")) +
-  #   labs(x = "Top principal components", y = "Annotations",
-  #        fill = "-Log10(P.value)", size = "PC variability\nexplained") +
-  #   ggtitle(paste(
-  #     "Associations between annotations and principal components from",
-  #     cohort.name, PC_type.str))
   return(asso_plot)
 }
 

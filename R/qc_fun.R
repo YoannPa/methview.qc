@@ -422,9 +422,9 @@ update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' # Compute PCA on quality control probes intensities from the RnBSet
-#' comp_RnBqc2PCA(RnBSet = rnb.set)     
+#' RnBqc2PCA(RnBSet = rnb.set)     
 
-comp_RnBqc2PCA <- function(RnBSet){
+RnBqc2PCA <- function(RnBSet){
   if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     DT.QC.meta <- methview.qc::load_metharray_QC_meta(
       array.meta = "controlsEPIC")
@@ -459,9 +459,119 @@ comp_RnBqc2PCA <- function(RnBSet){
   # t.QC.dt <- data.table::merge.data.table(
   #   x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
   #   by.y = "Samples", all.y = TRUE)
-  pca_t.res <- prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
+  pca_t.res <- stats::prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
   #Return the results of the PCA
   ls_res <- list("prcomp" = pca_t.res, "data" = t.QC.dt)
+  return(ls_res)
+}
+
+#' Computes a PCA from an RnBSet on a subset of selected probes.
+#' 
+#' @param RnBSet     An \code{RnBSet} basic object for storing methylation
+#'                   array DNA methylation and experimental quality information
+#'                   (Bisulfite data not supported).
+#'                   \itemize{
+#'                    \item{For more information about RnBSet object read
+#'                    \link[RnBeads]{RnBSet-class}.}
+#'                    \item{To create an RnBSet object run
+#'                    \link[RnBeads]{rnb.execute.import}.}
+#'                    \item{For additionnal options to import methylation array
+#'                    data in the RnBSet see options available in
+#'                    \link[RnBeads]{rnb.options}.}
+#'                   }
+#' @param probe.type A \code{character} to specify the type of probes on which
+#'                   the principal component should be computed
+#'                   (Default: probe.type = 'cg';
+#'                   Supported: probe.type = c('cg', 'ch', 'rs', 'qc')).
+#'                   \itemize{
+#'                    \item{cg - CpG methylation probes beta values.}
+#'                    \item{ch - CpH (Cytosine di-/tri-nucleotide) methylation
+#'                          probes beta values.}
+#'                    \item{rs - SNPs genotyping probes allelic version.}
+#'                    \item{qc - Quality control probes fluorescence
+#'                          intensities.}
+#'                   }
+#' @param nPCs       An \code{integer} specifying the number of principal
+#'                   components you wish to compute on your RnBSet
+#'                   (Default: nPCs = NULL will compute all principal
+#'                   components).
+#' @return A \code{list} containing a prcomp object with all results from the
+#'         PCA, and a data.table with all the RnBSet data.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Compute PCA on CG methylation probes intensities from the RnBSet
+#' RnB2PCA(RnBSet = rnb.set) # By default computes only top 10 PCs  
+
+RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
+  if(probe.type %in%  c("cg", "ch", "rs")){
+    probes.mat <- RnBeads::meth(object = RnBSet, row.names = TRUE)
+    probes.mat <- probes.mat[rownames(probes.mat) %like% probe.type, ]
+    probes.mat <- probes.mat[complete.cases(probes.mat), ]
+    if(is.null(nPCs)){
+      PCA_res <- stats::prcomp(x = t(probes.mat), scale. = scaling)
+    } else {
+      if(ncol(probes.mat) < nPCs){
+        PCA_res <- stats::prcomp(x = t(probes.mat), scale. = scaling)
+      } else {
+        PCA_res <- irlba::prcomp_irlba(
+          x = t(probes.mat), n = nPCs, scale. = scaling)
+      }
+    }
+    data <- data.table::as.data.table(
+      x = t(probes.mat), keep.rownames = "Samples")
+  } else if(probe.type == "qc"){
+    if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
+      DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+        array.meta = "controlsEPIC")
+    } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
+      DT.QC.meta <- methview.qc::load_metharray_QC_meta(
+        array.meta = "controls450")
+    }
+    #Merge Red and Green intensities matrices with QC probes metadata
+    QC.data <- methview.qc::mergeQC_intensities_and_meta(
+      RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
+    QC.data <- data.table::rbindlist(
+      l = QC.data, use.names = TRUE, idcol = "Channel")
+    QC.data[, Target := as.factor(Target)]
+    melt.QC.dt <- data.table::melt(
+      QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
+    data <- data.table::dcast(
+      melt.QC.dt, formula = Samples ~ Channel + Description)
+    if(is.null(nPCs)){
+      PCA_res <- stats::prcomp(data[, -1], scale. = scaling)
+    } else {
+      if(nrow(data) < nPCs){
+        PCA_res <- stats::prcomp(data[, -1], scale. = scaling)
+      } else {
+        PCA_res <- irlba::prcomp_irlba(data[, -1], n = nPCs, scale. = scaling)
+      }
+    }
+  } else { stop("Unsupported probe type.") }
+  
+  if(is.null(rnb.options()$identifiers.column)){
+    RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
+    data <- data.table::merge.data.table(
+      x = RnBSet@pheno, y = data, by.x = colnames(RnBSet@pheno)[1],
+      by.y = "Samples", all.y = TRUE)
+  } else {
+    RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column] <- as.factor(
+      RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
+    data <- data.table::merge.data.table(
+      x = RnBSet@pheno, y = data,
+      by.x = RnBeads::rnb.options()$identifiers.column, by.y = "Samples",
+      all.y = TRUE)
+  }
+  #Return the results of the PCA
+  ls_res <- list("prcomp" = PCA_res, "data" = data)
   return(ls_res)
 }
 
@@ -754,7 +864,7 @@ prep_annot_asso_fromRnB <- function(RnBSet, verbose = FALSE){
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' # Compute PCA on QC probes from the RnBSet     
-#' pca_res <- comp_RnBqc2PCA(RnBSet = rnb.set)
+#' pca_res <- RnB2PCA(RnBSet = rnb.set)
 #' # Compute association test between annotations and PCs from QC probes
 #' res <- rnb_test_asso_annot_PC(RnBSet = rnb.set, prcomp.res = pca_res$prcomp)
 
