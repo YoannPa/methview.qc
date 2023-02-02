@@ -54,8 +54,14 @@ sample.annotation <- system.file(
 data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
+# Specify the column containing samples identifiers (sentrix barcodes).
+RnBeads::rnb.options(identifiers.column = "barcode")
 # Compute PCA on CG methylation probes intensities from the RnBSet
-RnB2PCA(RnBSet = rnb.set) # By default computes only top 10 PCs  
+res_pca <- RnB2PCA(RnBSet = rnb.set) # By default computes all PCs.
+# Access PCA results
+res_pca$prcomp
+# Access 15 first columns of associated data
+res_pca$data[, 1:15]
 }
 \author{
 Yoann Pageaud.

@@ -19,13 +19,12 @@ _**methview.qc** allows you to generate quality control plots from your methylat
 ## Content
 Currently the package methview.qc contains **23 functions**:
 
-* `cohort.gp.density()` - Displays the distribution of genotyping probes values in a cohort.  
-* `comp_RnBqc2PCA()` - Computes a PCA from an RnBSet on quality control probes intensities.  
-* `devscore.fluo()` - Computes a deviation score between samples fluorescence and an internal HM450K reference.  
+* `devscore.fluo()` - Computes a deviation score between samples fluorescence and an internal HM450K or MethylationEPIC reference.  
 * `devscore.heatmap()` - Plots QC deviation heatmaps based on samples fluorescence deviation score.  
 * `get_expected_intensity()` - Provides expected intensity for a given methylation array probe ID.  
 * `get_IDATs_runinfo()` - Retrieves runinfo data from a methylation array sample's IDAT files.  
-* `get_platform()` - Detects platform used to generate data in the RnBSet.  
+* `get_platform()` - Detects platform used to generate data in the RnBSet.
+* `gp_density_map()` - Displays the distribution of genotyping probes values in a cohort.
 * `load_metharray_QC_meta()` - Loads methylation array QC metadata as a data.table.  
 * `mergeQC_intensities_and_meta()` - Merges red and green channels intensities with QC probes metadata.  
 * `plot_all_qc()` - Draws and saves all quality control plots available in methview.qc.  
@@ -33,7 +32,9 @@ Currently the package methview.qc contains **23 functions**:
 * `plot_array_QCtarget()` - Plots samples fluorescence intensities distribution for QC probes of a specific target type.  
 * `plot_asso_all_annot()` - Draws association test results between all annotations from an RnBSet.  
 * `plot_asso_annot_PC()` - Draws association test results between annotations from an RnBSet and PCs from a prcomp object.  
-* `plot_asso_annot_QC()` - Draws association test results between annotations from an RnBSet and QC probes intensities.  
+* `plot_asso_annot_QC()` - Draws association test results between annotations from an RnBSet and QC probes intensities.
+* `RnB2PCA()`	- Computes a PCA from an RnBSet on a subset of selected probes.
+* `rnb_add_runinfo()`	- Adds IDATs runinfo to an RnBSet pheno table.
 * `rnb_test_asso_all_annot()` - Tests associations between all annotations in a RnBSet.  
 * `rnb_test_asso_annot_PC()` - Tests associations between annotations from an RnBSet and PCs from a prcomp object.  
 * `rnb_test_asso_annot_QC()` - Tests associations between annotations from an RnBSet and QC probes intensities.  
@@ -41,7 +42,6 @@ Currently the package methview.qc contains **23 functions**:
 * `sampleQC_crossbi()` - Draws a customizable PCA cross biplot on samples methylation array QC data.  
 * `snp_heatmap()` - Draws a heatmap from methylation array genotyping probes.  
 * `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
-* `test.annots()` - Tests association of an annotation with another one or with a PC.  
 
 ## Prerequisites
 ### Install Bioconductor dependencies

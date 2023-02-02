@@ -107,6 +107,7 @@ load_metharray_QC_meta <- function(array.meta){
 #' data.source <- c(idat.dir, sample.annotation)
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
+#' # Specify the column containing samples identifiers (sentrix barcodes).
 #' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
 #' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
@@ -349,6 +350,7 @@ get_expected_intensity <- function(
 #' data.source <- c(idat.dir, sample.annotation)
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
+#' # Specify the column containing samples identifiers (sentrix barcodes).
 #' RnBeads::rnb.options(identifiers.column = "barcode")
 #' #Create the data.table with quality control metadata
 #' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
@@ -394,77 +396,6 @@ update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
   return(DT.target)
 }
 
-#' Computes a PCA from an RnBSet on quality control probes intensities
-#' 
-#' @param RnBSet     An \code{RnBSet} basic object for storing methylation
-#'                   array DNA methylation and experimental quality information
-#'                   (Bisulfite data not supported).
-#'                   \itemize{
-#'                    \item{For more information about RnBSet object read
-#'                    \link[RnBeads]{RnBSet-class}.}
-#'                    \item{To create an RnBSet object run
-#'                    \link[RnBeads]{rnb.execute.import}.}
-#'                    \item{For additionnal options to import methylation array
-#'                    data in the RnBSet see options available in
-#'                    \link[RnBeads]{rnb.options}.}
-#'                   }
-#' @return A \code{list} containing a prcomp object with all results from the
-#'         PCA, and a data.table with all the RnBSet data.
-#' @author Yoann Pageaud.
-#' @export
-#' @examples
-#' # Create an RnBSet for MethylationEPIC data
-#' require(Biobase)
-#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
-#' sample.annotation <- system.file(
-#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
-#' data.source <- c(idat.dir, sample.annotation)
-#' rnb.set <- RnBeads::rnb.execute.import(
-#'     data.source = data.source, data.type = "idat.dir")
-#' # Compute PCA on quality control probes intensities from the RnBSet
-#' RnBqc2PCA(RnBSet = rnb.set)     
-
-RnBqc2PCA <- function(RnBSet){
-  if(methview.qc::get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
-    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-      array.meta = "controlsEPIC")
-  } else if(methview.qc::get_platform(RnBSet = RnBSet) == "HM450K"){
-    DT.QC.meta <- methview.qc::load_metharray_QC_meta(
-      array.meta = "controls450")
-  }
-  #Merge Red and Green intensities matrices with QC probes metadata
-  QC.data <- methview.qc::mergeQC_intensities_and_meta(
-    RnBSet = RnBSet, DT.QC.meta = DT.QC.meta)
-  QC.data <- data.table::rbindlist(
-    l = QC.data, use.names = TRUE, idcol = "Channel")
-  QC.data[, Target := as.factor(Target)]
-  melt.QC.dt <- data.table::melt(
-    QC.data, id.vars = colnames(QC.data)[1:11], variable.name = "Samples")
-  t.QC.dt <- data.table::dcast(
-    melt.QC.dt, formula = Samples ~ Channel + Description)
-  
-  if(is.null(rnb.options()$identifiers.column)){
-    RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
-    t.QC.dt <- data.table::merge.data.table(
-      x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
-      by.y = "Samples", all.y = TRUE)
-  } else {
-    RnBSet@pheno[, rnb.options()$identifiers.column] <- as.factor(
-      RnBSet@pheno[, rnb.options()$identifiers.column])
-    t.QC.dt <- data.table::merge.data.table(
-      x = RnBSet@pheno, y = t.QC.dt, by.x = rnb.options()$identifiers.column,
-      by.y = "Samples", all.y = TRUE)
-  }
-  # RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
-  # t.QC.dt <- data.table::merge.data.table(
-  #   x = RnBSet@pheno, y = t.QC.dt, by.x = colnames(RnBSet@pheno)[1],
-  #   by.y = "Samples", all.y = TRUE)
-  pca_t.res <- stats::prcomp(t.QC.dt[, -c(1:ncol(RnBSet@pheno)), ], scale. = FALSE)
-  #Return the results of the PCA
-  ls_res <- list("prcomp" = pca_t.res, "data" = t.QC.dt)
-  return(ls_res)
-}
-
 #' Computes a PCA from an RnBSet on a subset of selected probes.
 #' 
 #' @param RnBSet     An \code{RnBSet} basic object for storing methylation
@@ -508,8 +439,14 @@ RnBqc2PCA <- function(RnBSet){
 #' data.source <- c(idat.dir, sample.annotation)
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
+#' # Specify the column containing samples identifiers (sentrix barcodes).
+#' RnBeads::rnb.options(identifiers.column = "barcode")
 #' # Compute PCA on CG methylation probes intensities from the RnBSet
-#' RnB2PCA(RnBSet = rnb.set) # By default computes only top 10 PCs  
+#' res_pca <- RnB2PCA(RnBSet = rnb.set) # By default computes all PCs.
+#' # Access PCA results
+#' res_pca$prcomp
+#' # Access 15 first columns of associated data
+#' res_pca$data[, 1:15]
 
 RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
   if(probe.type %in%  c("cg", "ch", "rs")){
@@ -576,7 +513,7 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
 }
 
 #' Computes a deviation score between samples fluorescence and an internal
-#' HM450K reference.
+#' HM450K or MethylationEPIC reference.
 #'
 #' @param RnBSet  An \code{RnBSet} basic object for storing HM450K DNA
 #'                methylation and experimental quality information (Bisulfite
@@ -782,6 +719,97 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
       "short_runinfo" = dt_scan_simple, "full_runinfo" = dt_scan_info)
     return(ls_both)
   }
+}
+
+#' Adds IDATs runinfo to an RnBSet pheno table.
+#' 
+#' @param IDATs_dir       A \code{character} specifying the directory where IDAT
+#'                        files are stored that will be search recursively for
+#'                        the files matching the sentrix barcode.
+#' @param RnBSet  An \code{RnBSet} basic object for storing HM450K DNA
+#'                methylation and experimental quality information (Bisulfite
+#'                data are not supported).
+#'                \itemize{
+#'                 \item{For more information about RnBSet object read
+#'                 \link[RnBeads]{RnBSet-class}.}
+#'                 \item{To create an RnBSet object run
+#'                 \link[RnBeads]{rnb.execute.import}.}
+#'                 \item{For additionnal options to import methylation array
+#'                 data in the RnBSet see options available in
+#'                 \link[RnBeads]{rnb.options}.}
+#'                }
+#' @return An \code{RnBSet} with an updated annotation table containing runinfo
+#'         data.
+#' @author Yoann Pageaud.
+#' @export
+#' @examples
+#' # Create an RnBSet for MethylationEPIC data
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiDataEPIC")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiDataEPIC")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Specify the column containing samples identifiers (sentrix barcodes).
+#' rnb.options(identifiers.column = 'barcode')
+#' # Print RnBSet annotation table
+#' pheno(rnb.set)
+#' # Add runinfo data from the IDAT files to the RnBSet annotation table
+#' rnb.set <- rnb_add_runinfo(IDATs_dir = idat.dir, RnBSet = rnb.set)
+#' # Print RnBSet updated annotation table with runinfo data
+#' pheno(rnb.set)
+#' @references ML Smith, KA Baggerly, H Bengtsson, ME Ritchie & KD Hansen.
+#'             illuminaio: An open source IDAT parsing tool for Illumina
+#'             microarrays, F1000Research, (2013) 2:264.
+
+rnb_add_runinfo <- function(IDATs_dir, RnBSet){
+  # Get sentrix barcode from RnBSet annotation
+  if(is.null(rnb.options()$identifiers.column)){
+    stop(paste(
+      "identifiers column missing. Please explicitly set the name of the",
+      "column containing your samples' sentrix barcodes in your annotation",
+      "table as the identifiers column using",
+      "RnBeads::rnb.options(identifiers.column =",
+      "'your_sentrix_barcode_colname')"))
+  } else {
+    sentrix_col <- rnb.options()$identifiers.column
+    sentrix_barcodes <- as.character(
+      RnBSet@pheno[, rnb.options()$identifiers.column])
+  }
+  # Check that the identifiers column specified match sentrix barcode string
+  # pattern
+  if(all(grepl(
+    pattern = "\\d{12}_R\\d{2}C\\d{2}$", x = sentrix_barcodes)) == FALSE){
+    stop(paste(
+      "unsupported sentrix barcode format. Please check that the identifiers",
+      "column in rnb.options()$identifiers.column contains IDAT sentrix",
+      "barcodes correctly formated (e.g. '200144450018_R04C01',",
+      "'GSM1606879_200144450018_R04C01', 'RANDOM200144450018_R04C01')."))
+  }
+  # Get runinfo data from all sentrix barcodes
+  ls_runinfo <- lapply(X = sentrix_barcodes, FUN = function(s){
+    dt_runinfo <- get_IDATs_runinfo(
+      sentrix_barcode = s, IDATs_dir = IDATs_dir, data_format = "short")
+    dt_runinfo[, sentrix_barcode := s]
+    dt_runinfo
+  })
+  dt_runinfo <- rbindlist(ls_runinfo)
+  setnames(x = dt_runinfo, old = "sentrix_barcode", new = sentrix_col)
+  new_pheno <- merge(x = pheno(RnBSet), y = dt_runinfo, by = sentrix_col)
+  if(nrow(new_pheno) == 0){
+    stop(paste(
+      "colname matching failed. Please explicitly set the name of the column",
+      "containing your samples' sentrix barcodes in your annotation table as",
+      "the identifiers column using RnBeads::rnb.options(identifiers.column =",
+      "'your_sentrix_barcode_colname')"))
+  }
+  # Keep original order of rows if merging change it
+  new_pheno <- new_pheno[
+    order(match(new_pheno$barcode, pheno(RnBSet)$barcode)), ]
+  # Replace the pheno table and return the new RnBSet
+  RnBSet@pheno <- new_pheno
+  return(RnBSet)
 }
 
 #' Prepares annotations to be tested for associations.

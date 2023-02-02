@@ -39,6 +39,7 @@ sample.annotation <- system.file(
 data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
+# Specify the column containing samples identifiers (sentrix barcodes).
 RnBeads::rnb.options(identifiers.column = "barcode")
 #Create the data.table with quality control metadata
 dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")

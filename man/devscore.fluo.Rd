@@ -3,7 +3,7 @@
 \name{devscore.fluo}
 \alias{devscore.fluo}
 \title{Computes a deviation score between samples fluorescence and an internal
-HM450K reference.}
+HM450K or MethylationEPIC reference.}
 \usage{
 devscore.fluo(RnBSet, samples, target, ncores = 1)
 }
@@ -37,7 +37,7 @@ A \code{data.table} with probes data and samples computed deviation
 }
 \description{
 Computes a deviation score between samples fluorescence and an internal
-HM450K reference.
+HM450K or MethylationEPIC reference.
 }
 \details{
 The deviation score is calculated as following:

@@ -193,6 +193,13 @@ snp_heatmap <- function(
 #'                 data in the RnBSet see options available in
 #'                 \link[RnBeads]{rnb.options}.}
 #'                }
+#' @param show.sampleIDs A \code{logical} to specify whether the sample IDs
+#'                       should be displayed on the Y axis
+#'                       (Default: show.sampleIDs = TRUE) or hidden
+#'                       (show.sampleIDs = FALSE).
+#' @param draw           A \code{logical} specifying whether the result plot
+#'                       should be automatically displayed
+#'                       (Default: draw = TRUE) or not (draw = FALSE).
 #' @return A \code{gg} plot of the results.
 #' @author Yoann Pageaud.
 #' @export
@@ -207,9 +214,9 @@ snp_heatmap <- function(
 #'     data.source = data.source, data.type = "idat.dir")
 #' RnBeads::rnb.options(identifiers.column = "barcode")
 #' # Draw the genotyping probes values offset plot
-#' gp_density <- cohort.gp.density(RnB.set = rnb.set)
+#' gp_density <- gp_density_map(RnB.set = rnb.set)
 
-cohort.gp.density <- function(RnB.set, draw = TRUE){
+gp_density_map <- function(RnB.set, show.sampleIDs = TRUE, draw = TRUE){
   rs.probes <- rownames(RnB.set@sites)[
     grepl(pattern = "rs", x = rownames(RnB.set@sites))]
   meth.mat <- RnBeads::meth(RnB.set, row.names = TRUE)
@@ -266,12 +273,17 @@ cohort.gp.density <- function(RnB.set, draw = TRUE){
     labs(
       x = "Samples",
       y = paste(array.type, "Genotyping probes density map"))
+  if(show.sampleIDs == FALSE){
+    gp.density.map <- gp.density.map + theme(
+      axis.text.y = element_blank(), axis.ticks.y = element_blank())
+  }
   
   allele.boxplot <- ggplot() +
     geom_boxplot(
       data = dt.rs,
       mapping = aes(x = genotype, color = allele, group = allele),
-      position = position_dodge(0), key_glyph = draw_key_boxplot2) +
+      position = position_dodge(0),
+      key_glyph = methview.qc:::draw_key_boxplot2) +
     theme(
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(), 
@@ -1385,7 +1397,7 @@ plot_all_qc <- function(
         path = file.path(save.dir, "Genotyping_probes_heatmaps"))
     }))
     #Plot genotyping probes values density
-    gp_density <- methview.qc::cohort.gp.density(RnB.set = RnBSet, draw = FALSE)
+    gp_density <- methview.qc::gp_density_map(RnB.set = RnBSet, draw = FALSE)
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
       ggsave(
         filename = paste0(paste(
