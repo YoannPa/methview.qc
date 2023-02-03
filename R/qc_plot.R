@@ -122,13 +122,13 @@ snp_heatmap <- function(
   heatmap.pal = c("#2166AC", "#4393C3", "#92C5DE", "#D1E5F0","#FDDBC7",
                   "#F4A582", "#D6604D", "#B2182B"),
   x.lab = "Samples", plot.title = NULL,
-  htmp.text.x = element_text(
+  htmp.text.x = ggplot2::element_text(
     size = 10, angle = -45, hjust = 0, vjust = 0.5, color = "black"),
   htmp.text.y.right = ggplot2::element_text(size = 7, color = "black"),
   htmp.title.y.right = ggplot2::element_text(size = 12),
   anno.text.y.right = ggplot2::element_text(size = 12, color = "black"),
   anno.ticks.y.right = ggplot2::element_line(color = "black"),
-  theme_legend = theme(legend.text = ggplot2::element_text(size = 10)),
+  theme_legend = ggplot2::theme(legend.text = ggplot2::element_text(size = 10)),
   lgd.space.width = 1,
   lgd.space.height = 26, show.annot = FALSE, annot.size = 1,
   dend.size = c(0, 2), draw = TRUE){
@@ -973,22 +973,23 @@ target.biplot <- function(
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
-sampleQC.biplot <- function(
-  RnBSet, PCx = 1, PCy = 2, loadings = TRUE, loadings.col = "blue",
-  point.size = 2.5, top.load.by.quad = 5, color.data = "ID", shape.data = NULL){
+rnb_biplot <- function(
+  RnBSet, probe.type = "cg", PCx = 1, PCy = 2, loadings = TRUE,
+  loadings.col = "blue", point.size = 2.5, top.load.by.quad = 5,
+  color.data = rnb.options()$identifiers.column, shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = "qc")
-  pca_t.res <- ls_res$prcomp
-  t.QC.dt <- ls_res$data
+  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = probe.type)
+  pca_res <- ls_res$prcomp
+  pca_data <- ls_res$data
   if(is.null(top.load.by.quad)){
     if(is.null(shape.data)){
       sample.biplot <- BiocompR::ggbipca(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data)
     } else {
       sample.biplot <- BiocompR::ggbipca(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data,
         shape.data = shape.data)
@@ -996,13 +997,13 @@ sampleQC.biplot <- function(
   } else {
     if(is.null(shape.data)){
       sample.biplot <- BiocompR::ggbipca(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
         color.data = color.data)
     } else {
       sample.biplot <- BiocompR::ggbipca(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCx = PCx, PCy = PCy, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
         color.data = color.data, shape.data = shape.data)
@@ -1070,23 +1071,23 @@ sampleQC.biplot <- function(
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
-sampleQC_crossbi <- function(
-  RnBSet, PCs = c(1:5), loadings = TRUE, loadings.col = "blue",
-  point.size = 2.5, top.load.by.quad = NULL, color.data = "ID",
-  shape.data = NULL){
+rnb_crossbiplot <- function(
+  RnBSet, probe.type = "cg", PCs = c(1:5), loadings = TRUE,
+  loadings.col = "blue", point.size = 2.5, top.load.by.quad = 2,
+  color.data = rnb.options()$identifiers.column, shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = "qc")
-  pca_t.res <- ls_res$prcomp
-  t.QC.dt <- ls_res$data
+  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = probe.type)
+  pca_res <- ls_res$prcomp
+  pca_data <- ls_res$data
   if (is.null(top.load.by.quad)) {
     if (is.null(shape.data)) {
       sample_crossbi <- BiocompR::cross.biplot(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data)
     } else {
       sample_crossbi <- BiocompR::cross.biplot(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data,
         shape.data = shape.data)
@@ -1094,13 +1095,13 @@ sampleQC_crossbi <- function(
   } else {
     if (is.null(shape.data)) {
       sample_crossbi <- BiocompR::cross.biplot(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
         color.data = color.data)
     } else {
       sample_crossbi <- BiocompR::cross.biplot(
-        prcomp.res = pca_t.res, data = t.QC.dt[, 1:ncol(RnBSet@pheno)],
+        prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
         color.data = color.data, shape.data = shape.data)
@@ -1244,12 +1245,34 @@ plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' RnBeads::rnb.options(identifiers.column = "barcode")
-#' #Draw all plots from the quality control data of rnb.set
-#' plot_all_qc(RnBSet = rnb.set, save.dir = "~/minfiDataEPIC_QC", ncores = 2)
+#' # Feel free to add runinfo data to the RnBSet (optionnal)
+#' rnb.set <- rnb_add_runinfo(IDATs_dir = idat.dir, RnBSet = rnb.set)
+#' # Draw all quality control plots on EPIC data (Warning: takes some time)
+#' plot_all_qc(
+#'     RnBSet = rnb.set, save.dir = "~/methview_results", ncores = 2,
+#'     cohort = "minfiDataEPIC")
+#'     
+#' # Same goes with Human Methylation 450K
+#' require(Biobase)
+#' idat.dir <- system.file("extdata", package = "minfiData")
+#' sample.annotation <- system.file(
+#'     "extdata", "SampleSheet.csv", package = "minfiData")
+#' data.source <- c(idat.dir, sample.annotation)
+#' rnb.set <- RnBeads::rnb.execute.import(
+#'     data.source = data.source, data.type = "idat.dir")
+#' # Define the column containing identifiers for the samples
+#' RnBeads::rnb.options(identifiers.column = 'barcode')
+#' plot_all_qc(
+#'     RnBSet = rnb.set, save.dir = "~/methview_results", ncores = 2,
+#'     cohort = "minfiDataHM450K")
+
+
+
+
 
 plot_all_qc <- function(
   RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,
-  include.ds = TRUE, include.pca = TRUE, include.ffpe = FALSE){
+  include.ds = TRUE, include.pca = TRUE, include.asso = TRUE, include.ffpe = FALSE){
   #Set array type
   if(get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     array.type <- "EPIC"
@@ -1287,13 +1310,15 @@ plot_all_qc <- function(
     save.dir, "Genotyping_probes_heatmaps"))){
     dir.create(file.path(save.dir, "Genotyping_probes_heatmaps"))
   }
-  if(include.pca & !dir.exists(file.path(
-    save.dir, "Sample_QC_PCA_biplot"))){
-    dir.create(file.path(save.dir, "Sample_QC_PCA_biplot"))
+  if(include.pca & !dir.exists(file.path(save.dir, "Sample_PCA_biplot"))){
+    dir.create(file.path(save.dir, "Sample_PCA_biplot"))
   }
   if(include.ds & !dir.exists(file.path(
     save.dir, "Fluorescence_deviation_heatmaps"))){
     dir.create(file.path(save.dir, "Fluorescence_deviation_heatmaps"))
+  }
+  if(include.asso & !dir.exists(file.path(save.dir, "Association_plots"))){
+    dir.create(file.path(save.dir, "Association_plots"))
   }
   cat("Plotting...\n")
   #Loop over probes target types
@@ -1422,17 +1447,83 @@ plot_all_qc <- function(
     }))
   }
   if(include.pca){
-    cat("\tSample QC PCA biplot\n")
-    #Plot sample QC PCA biplot
-    qc.biplot <- methview.qc::sampleQC.biplot(
-      RnBSet = RnBSet, color.data = NULL, top.load.by.quad = 4)
+    # Plot sample PCA biplot
+    cat("\tPCA biplots\n")
+    # Keep only colnames containing non-missing data 
+    non_empty_cols <- colnames(pheno(RnBSet)[, colSums(is.na(pheno(
+      RnBSet))) != nrow(pheno(RnBSet))])
+    # Generate all PCA biplots
+    invisible(lapply(X = non_empty_cols, FUN = function(annot){
+      invisible(lapply(
+        X = c("cg", "ch", "rs", "qc"), FUN = function(p_type){
+          pca_biplot <- rnb_biplot(
+            RnBSet = RnBSet, probe.type = p_type, color.data = annot,
+            top.load.by.quad = 4)
+          invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+            ggsave(
+              filename = paste0(paste(
+                annot, p_type, "PCA_biplot", cohort,
+                get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+              plot = pca_biplot, device = frmt, width = 11, height = 11,
+              path = file.path(save.dir, "Sample_PCA_biplot"))
+          }))
+          pca_cross <- rnb_crossbiplot(
+            RnBSet = RnBSet, probe.type = p_type, color.data = annot,
+            top.load.by.quad = 2)
+          invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+            ggsave(
+              filename = paste0(paste(
+                annot, p_type, "PCA_cross_biplot", cohort,
+                get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+              plot = pca_cross, device = frmt, width = 13, height = 11,
+              path = file.path(save.dir, "Sample_PCA_biplot"))
+          }))
+        }))
+    }))
+  }
+  if(include.asso){
+    cat("\tAssociation plots\n")
+    # Draw association plots
+    prep_res <- methview.qc:::prep_annot_asso_fromRnB(RnBSet = RnBSet)
+    if(prep_res$n.annot > 1){
+      asso_annot_plot <- plot_asso_all_annot(
+        RnBSet = RnBSet, cohort.name = cohort)
+      invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+        ggsave(
+          filename = paste0(paste(
+            "Annotations_association_plot", cohort,
+            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+          plot = asso_annot_plot, device = frmt, width = 8, height = 6,
+          path = file.path(save.dir, "Association_plots"))
+      }))
+    } else {
+      warning(paste(
+        "Cannot draw association plot for annotations. Only 1 annotation",
+        "usable."))
+    }
+    invisible(lapply(
+      X = c("cg", "ch", "rs", "qc"), FUN = function(p_type){
+        pca_res <- RnB2PCA(RnBSet = RnBSet, probe.type = p_type)
+        asso_pc_plot <- plot_asso_annot_PC(
+          RnBSet = RnBSet, prcomp.res = pca_res$prcomp, cohort.name = cohort,
+          PC_type.str = paste(toupper(p_type), "probes"))
+        invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+          ggsave(
+            filename = paste0(paste(toupper(p_type), "PCs_association_plot", cohort,
+                                    get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+            plot = asso_pc_plot, device = frmt, width = 8, height = 6,
+            path = file.path(save.dir, "Association_plots"))
+        }))
+      }))
+    asso_qc_plot <- plot_asso_annot_QC(
+      RnBSet = RnBSet, cohort.name = cohort, ncores = ncores)
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
       ggsave(
         filename = paste0(paste(
-          "Sample_QC_PCA_biplot", cohort, get_platform(RnBSet = RnBSet),
+          "QC_association_plot", cohort, get_platform(RnBSet = RnBSet),
           sep = "_"), ".", frmt),
-        plot = qc.biplot, device = frmt, width = 11, height = 11,
-        path = file.path(save.dir, "Sample_QC_PCA_biplot"))
+        plot = asso_qc_plot, device = frmt, width = 12, height = 8,
+        path = file.path(save.dir, "Association_plots"))
     }))
   }
   if(include.ffpe){
@@ -1567,10 +1658,10 @@ devscore.heatmap <- function(
   verbose = FALSE){
   #If no specific samples provided take them all
   if(is.null(samples)){
-    if(is.null(rnb.options()$identifiers.column)){
+    if(is.null(RnBeads::rnb.options()$identifiers.column)){
       samples <- as.character(RnBSet@pheno[, 1])
     } else {
-      samples <- as.character(RnBSet@pheno[, rnb.options()$identifiers.column])
+      samples <- as.character(RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
     }
     # samples <- as.character(RnBSet@pheno[, 1])
   }
@@ -1726,7 +1817,7 @@ devscore.heatmap <- function(
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' # Define the column containing identifiers for the samples
-#' rnb.options(identifiers.column = 'barcode')
+#' RnBeads::rnb.options(identifiers.column = 'barcode')
 #' # Compute PCA on CG methylation probes from the RnBSet     
 #' pca_res <- RnB2PCA(RnBSet = rnb.set, probe.type = "cg")
 #' # Plot association test between annotations and PCs from CG probes results
@@ -1747,9 +1838,9 @@ plot_asso_annot_PC <- function(
   rnb_annot_table <- pheno(RnBSet)
   # Compute & plot association tests results
   asso_plot <- BiocompR::plot_asso_annot_PC(
-      annot.table = rnb_annot_table, prcomp.res = prcomp.res,
-      perm.count = perm.count, max.PCs = max.PCs, dataset.name = cohort.name,
-      PC.origin = PC_type.str, verbose = verbose)
+    annot.table = rnb_annot_table, prcomp.res = prcomp.res,
+    perm.count = perm.count, max.PCs = max.PCs, dataset.name = cohort.name,
+    PC.origin = PC_type.str, verbose = verbose)
   return(asso_plot)
 }
 
@@ -1904,7 +1995,7 @@ plot_asso_all_annot <- function(
           axis.title = element_blank(),
           axis.ticks = element_blank(),
           panel.background = element_rect(fill = NA, colour = NA),
-          panel.grid = element_line(colour = "black", size = 0.5),
+          panel.grid = element_line(colour = "black", linewidth = 0.5),
           legend.text = element_text(size = 11), legend.box.just = "left",
           plot.title = element_text(hjust = 0.5)) +
     guides(fill = guide_colorbar(

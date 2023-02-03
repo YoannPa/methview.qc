@@ -12,6 +12,7 @@ plot_all_qc(
   include.gp = TRUE,
   include.ds = TRUE,
   include.pca = TRUE,
+  include.asso = TRUE,
   include.ffpe = FALSE
 )
 }
@@ -87,8 +88,26 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 RnBeads::rnb.options(identifiers.column = "barcode")
-#Draw all plots from the quality control data of rnb.set
-plot_all_qc(RnBSet = rnb.set, save.dir = "~/minfiDataEPIC_QC", ncores = 2)
+# Feel free to add runinfo data to the RnBSet (optionnal)
+rnb.set <- rnb_add_runinfo(IDATs_dir = idat.dir, RnBSet = rnb.set)
+# Draw all quality control plots on EPIC data (Warning: takes some time)
+plot_all_qc(
+    RnBSet = rnb.set, save.dir = "~/methview_results", ncores = 2,
+    cohort = "minfiDataEPIC")
+    
+# Same goes with Human Methylation 450K
+require(Biobase)
+idat.dir <- system.file("extdata", package = "minfiData")
+sample.annotation <- system.file(
+    "extdata", "SampleSheet.csv", package = "minfiData")
+data.source <- c(idat.dir, sample.annotation)
+rnb.set <- RnBeads::rnb.execute.import(
+    data.source = data.source, data.type = "idat.dir")
+# Define the column containing identifiers for the samples
+RnBeads::rnb.options(identifiers.column = 'barcode')
+plot_all_qc(
+    RnBSet = rnb.set, save.dir = "~/methview_results", ncores = 2,
+    cohort = "minfiDataHM450K")
 }
 \author{
 Yoann Pageaud.

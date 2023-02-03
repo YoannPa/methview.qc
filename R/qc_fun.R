@@ -780,7 +780,7 @@ rnb_add_runinfo <- function(IDATs_dir, RnBSet){
   # Check that the identifiers column specified match sentrix barcode string
   # pattern
   if(all(grepl(
-    pattern = "\\d{12}_R\\d{2}C\\d{2}$", x = sentrix_barcodes)) == FALSE){
+    pattern = "\\d{10}\\d*\\d*_R\\d{2}C\\d{2}$", x = sentrix_barcodes)) == FALSE){
     stop(paste(
       "unsupported sentrix barcode format. Please check that the identifiers",
       "column in rnb.options()$identifiers.column contains IDAT sentrix",
@@ -1022,8 +1022,7 @@ rnb_test_asso_annot_QC <- function(
     dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
   } else{ stop("Methylation array platform unknown.") }
   # Merge red and green channels intensities with QC metadata
-  QC.data <- mergeQC_intensities_and_meta(
-    RnBSet = RnBSet, DT.QC.meta = dt.meta)
+  QC.data <- mergeQC_intensities_and_meta(RnBSet = RnBSet, DT.QC.meta = dt.meta)
   DTQC <- rbindlist(l = QC.data, idcol = "Channel")
   DTQC[Channel == "Cy3 - Green", Channel := "Green"]
   DTQC[Channel == "Cy5 - Red", Channel := "Red"]
@@ -1031,6 +1030,17 @@ rnb_test_asso_annot_QC <- function(
   DTQC <- data.table::as.data.table(
     x = t(as.matrix(DTQC[, -c(1:11), ], rownames = "Probe_name")),
     keep.rownames = "ID")
+  if (is.null(rnb.options()$identifiers.column)) {
+    data.table::setnames(x = DTQC, old = "ID", new = colnames(annot.table)[1])
+    alleq_res <- all.equal(target = annot.table[[1]], current = DTQC[[1]])
+  } else {
+    data.table::setnames(
+      x = DTQC, old = "ID", new = rnb.options()$identifiers.column)
+    alleq_res <- all.equal(
+      target = annot.table[[rnb.options()$identifiers.column]],
+      current = DTQC[[rnb.options()$identifiers.column]])
+  }
+  
   if(perm.count != 0 && sum(!vapply(
     X = annots, FUN = is.factor, FUN.VALUE = logical(length = 1L))) >= 2) {
     # Create the random permutation matrix
@@ -1041,7 +1051,8 @@ rnb_test_asso_annot_QC <- function(
     warning("Cannot initialize the permutations matrix.")
     perm.matrix <- NULL
   }
-  if(all.equal(target = annot.table[[1]], current = DTQC$ID)){
+  
+  if(alleq_res == TRUE){
     # Test all annotations against QC probes intensities
     ls_allres <- lapply(X = seq(n.annot), FUN = function(i){
       if(verbose){ cat(
@@ -1117,7 +1128,8 @@ rnb_test_asso_all_annot <- function(
   RnBSet, perm.count = 10000, verbose = FALSE){
   
   # Prepare the RnBset annotations
-  prep_res <- prep_annot_asso_fromRnB(RnBSet = RnBSet, verbose = verbose)
+  prep_res <- methview.qc:::prep_annot_asso_fromRnB(
+    RnBSet = RnBSet, verbose = verbose)
   annots <- prep_res$annotations
   n.annot <- prep_res$n.annot
   annot.table <- prep_res$annot.table
@@ -1157,6 +1169,10 @@ rnb_test_asso_all_annot <- function(
     dt_annotres <- rbind(dt_annotres, dt_annotres_bis, use.names = TRUE)
     rm(dt_annotres_bis, perm.matrix)
     dt_annotres[, log_trans_pval := -log10(pvalue)]
+  } else {
+    stop(paste(
+      "only 1 annotation usable. Cannot compute association of an annotation",
+      "against itself alone."))
   }
   return(dt_annotres)
 }

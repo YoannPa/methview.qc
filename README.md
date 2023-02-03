@@ -35,11 +35,11 @@ Currently the package methview.qc contains **23 functions**:
 * `plot_asso_annot_QC()` - Draws association test results between annotations from an RnBSet and QC probes intensities.
 * `RnB2PCA()`	- Computes a PCA from an RnBSet on a subset of selected probes.
 * `rnb_add_runinfo()`	- Adds IDATs runinfo to an RnBSet pheno table.
+* `rnb_biplot()` - Draws a customizable PCA biplots on samples methylation array QC data.  
+* `rnb_crossbiplot()` - Draws a customizable PCA cross biplot on samples methylation array QC data.  
 * `rnb_test_asso_all_annot()` - Tests associations between all annotations in a RnBSet.  
 * `rnb_test_asso_annot_PC()` - Tests associations between annotations from an RnBSet and PCs from a prcomp object.  
 * `rnb_test_asso_annot_QC()` - Tests associations between annotations from an RnBSet and QC probes intensities.  
-* `sampleQC.biplot()` - Draws a customizable PCA biplots on samples methylation array QC data.  
-* `sampleQC_crossbi()` - Draws a customizable PCA cross biplot on samples methylation array QC data.  
 * `snp_heatmap()` - Draws a heatmap from methylation array genotyping probes.  
 * `target.biplot()` - Draws a PCA biplots on methylation array quality control targets.  
 

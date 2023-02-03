@@ -73,7 +73,7 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 # Define the column containing identifiers for the samples
-rnb.options(identifiers.column = 'barcode')
+RnBeads::rnb.options(identifiers.column = 'barcode')
 # Compute PCA on CG methylation probes from the RnBSet     
 pca_res <- RnB2PCA(RnBSet = rnb.set, probe.type = "cg")
 # Plot association test between annotations and PCs from CG probes results
