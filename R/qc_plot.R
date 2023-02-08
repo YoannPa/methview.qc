@@ -1266,13 +1266,10 @@ plot_negative_FFPE <- function(RnBSet, cohort = "RnBSet"){
 #'     RnBSet = rnb.set, save.dir = "~/methview_results", ncores = 2,
 #'     cohort = "minfiDataHM450K")
 
-
-
-
-
 plot_all_qc <- function(
   RnBSet, cohort = "RnBSet", save.dir, ncores = 1, include.gp = TRUE,
-  include.ds = TRUE, include.pca = TRUE, include.asso = TRUE, include.ffpe = FALSE){
+  include.ds = TRUE, include.pca = TRUE, include.asso = TRUE,
+  include.ffpe = FALSE){
   #Set array type
   if(get_platform(RnBSet = RnBSet) == "MethylationEPIC"){
     array.type <- "EPIC"
@@ -1452,49 +1449,77 @@ plot_all_qc <- function(
     # Keep only colnames containing non-missing data 
     non_empty_cols <- colnames(pheno(RnBSet)[, colSums(is.na(pheno(
       RnBSet))) != nrow(pheno(RnBSet))])
+    #Create cohort, biplot, and cross-biplot directories
+    if(!dir.exists(file.path(save.dir, "Sample_PCA_biplot", cohort))){
+      dir.create(path = file.path(save.dir, "Sample_PCA_biplot", cohort))
+    }
+    if(!dir.exists(file.path(
+      save.dir, "Sample_PCA_biplot", cohort, "PCA_biplots"))){
+      dir.create(path = file.path(
+        save.dir, "Sample_PCA_biplot", cohort, "PCA_biplots"))
+    }
+    if(!dir.exists(file.path(
+      save.dir, "Sample_PCA_biplot", cohort, "PCA_cross_biplots"))){
+      dir.create(path = file.path(
+        save.dir, "Sample_PCA_biplot", cohort, "PCA_cross_biplots"))
+    }
     # Generate all PCA biplots
     invisible(lapply(X = non_empty_cols, FUN = function(annot){
-      invisible(lapply(
-        X = c("cg", "ch", "rs", "qc"), FUN = function(p_type){
+      ls_biplot <- parallel::mclapply(
+        X = c("cg", "ch", "rs", "qc"), mc.cores = ncores,
+        FUN = function(p_type){
           pca_biplot <- rnb_biplot(
             RnBSet = RnBSet, probe.type = p_type, color.data = annot,
             top.load.by.quad = 4)
-          invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-            ggsave(
-              filename = paste0(paste(
-                annot, p_type, "PCA_biplot", cohort,
-                get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
-              plot = pca_biplot, device = frmt, width = 11, height = 11,
-              path = file.path(save.dir, "Sample_PCA_biplot"))
-          }))
+        })
+      names(ls_biplot) <- c("cg", "ch", "rs", "qc")
+      invisible(lapply(X = seq_along(ls_biplot), FUN = function(i){
+        invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+          ggsave(filename = paste0(paste(
+            annot, names(ls_biplot)[i], "PCA_biplot",
+            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+            plot = ls_biplot[[i]], device = frmt, width = 11, height = 11,
+            path = file.path(
+              save.dir, "Sample_PCA_biplot", cohort, "PCA_biplots"))
+        }))
+      }))
+      ls_cross <- parallel::mclapply(
+        X = c("cg", "ch", "rs", "qc"), mc.cores = ncores,
+        FUN = function(p_type){
           pca_cross <- rnb_crossbiplot(
             RnBSet = RnBSet, probe.type = p_type, color.data = annot,
             top.load.by.quad = 2)
-          invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-            ggsave(
-              filename = paste0(paste(
-                annot, p_type, "PCA_cross_biplot", cohort,
-                get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
-              plot = pca_cross, device = frmt, width = 13, height = 11,
-              path = file.path(save.dir, "Sample_PCA_biplot"))
-          }))
+        })
+      names(ls_cross) <- c("cg", "ch", "rs", "qc")
+      invisible(lapply(X = seq_along(ls_biplot), FUN = function(i){
+        invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+          ggsave(filename = paste0(paste(
+            annot, names(ls_cross)[i], "PCA_cross_biplot",
+            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+            plot = ls_cross[[i]], device = frmt, width = 13, height = 11,
+            path = file.path(
+              save.dir, "Sample_PCA_biplot", cohort, "PCA_cross_biplots"))
         }))
+      }))
     }))
   }
   if(include.asso){
     cat("\tAssociation plots\n")
+    #Create cohort directory
+    if(!dir.exists(file.path(save.dir, "Association_plots", cohort))){
+      dir.create(path = file.path(save.dir, "Association_plots", cohort))
+    }
     # Draw association plots
     prep_res <- methview.qc:::prep_annot_asso_fromRnB(RnBSet = RnBSet)
     if(prep_res$n.annot > 1){
       asso_annot_plot <- plot_asso_all_annot(
         RnBSet = RnBSet, cohort.name = cohort)
       invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-        ggsave(
-          filename = paste0(paste(
-            "Annotations_association_plot", cohort,
-            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
-          plot = asso_annot_plot, device = frmt, width = 8, height = 6,
-          path = file.path(save.dir, "Association_plots"))
+        ggsave(filename = paste0(paste(
+          "Annotations_association_plot", get_platform(RnBSet = RnBSet),
+          sep = "_"), ".", frmt), plot = asso_annot_plot, device = frmt,
+          width = 8, height = 6, path = file.path(
+            save.dir, "Association_plots", cohort))
       }))
     } else {
       warning(paste(
@@ -1508,22 +1533,20 @@ plot_all_qc <- function(
           RnBSet = RnBSet, prcomp.res = pca_res$prcomp, cohort.name = cohort,
           PC_type.str = paste(toupper(p_type), "probes"))
         invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-          ggsave(
-            filename = paste0(paste(toupper(p_type), "PCs_association_plot", cohort,
-                                    get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+          ggsave(filename = paste0(paste(
+            toupper(p_type), "PCs_association_plot",
+            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
             plot = asso_pc_plot, device = frmt, width = 8, height = 6,
-            path = file.path(save.dir, "Association_plots"))
+            path = file.path(save.dir, "Association_plots", cohort))
         }))
       }))
     asso_qc_plot <- plot_asso_annot_QC(
       RnBSet = RnBSet, cohort.name = cohort, ncores = ncores)
     invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
-      ggsave(
-        filename = paste0(paste(
-          "QC_association_plot", cohort, get_platform(RnBSet = RnBSet),
-          sep = "_"), ".", frmt),
-        plot = asso_qc_plot, device = frmt, width = 12, height = 8,
-        path = file.path(save.dir, "Association_plots"))
+      ggsave(filename = paste0(paste(
+        "QC_association_plot", get_platform(RnBSet = RnBSet), sep = "_"), ".",
+        frmt), plot = asso_qc_plot, device = frmt, width = 12, height = 8,
+        path = file.path(save.dir, "Association_plots", cohort))
     }))
   }
   if(include.ffpe){
