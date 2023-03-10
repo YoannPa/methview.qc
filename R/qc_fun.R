@@ -501,11 +501,12 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
   if(is.null(rnb.options()$identifiers.column)){
     RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
     data <- data.table::merge.data.table(
-      x = as.data.table(RnBSet@pheno), y = data, by.x = colnames(RnBSet@pheno)[1],
-      by.y = "Samples", all.y = TRUE)
+      x = data.table::as.data.table(RnBSet@pheno), y = data,
+      by.x = colnames(RnBSet@pheno)[1], by.y = "Samples", all.y = TRUE)
     #Reorder the data following the order of the key column in the pheno table
     data <- data[order(match(
-      data[[colnames(RnBSet@pheno)[1]]], as.data.table(RnBSet@pheno)[[1]])), ]
+      data[[colnames(RnBSet@pheno)[1]]],
+      data.table::as.data.table(RnBSet@pheno)[[1]])), ]
   } else {
     if(is.data.table(RnBSet@pheno)){
       RnBSet@pheno[[RnBeads::rnb.options()$identifiers.column]] <- as.factor(
@@ -515,13 +516,13 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
         RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
     }
     data <- data.table::merge.data.table(
-      x = as.data.table(RnBSet@pheno), y = data,
+      x = data.table::as.data.table(RnBSet@pheno), y = data,
       by.x = RnBeads::rnb.options()$identifiers.column, by.y = "Samples",
       all.y = TRUE)
     #Reorder the data following the order of the key column in the pheno table
     data <- data[order(match(
       data[[RnBeads::rnb.options()$identifiers.column]],
-      as.data.table(RnBSet@pheno)[[
+      data.table::as.data.table(RnBSet@pheno)[[
         RnBeads::rnb.options()$identifiers.column]])), ]
   }
   
@@ -689,7 +690,7 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
     if(all.equal(
       target = ls_content[[1]]$RunInfo,
       current = ls_content[[2]]$RunInfo)){
-      dt_scan_info <- as.data.table(ls_content[[1]]$RunInfo)
+      dt_scan_info <- data.table::as.data.table(ls_content[[1]]$RunInfo)
       if(nrow(dt_scan_info) != 0){
         dt_scan_info[, RunTime := as.POSIXct(
           RunTime, format = "%m/%d/%Y %H:%M:%S")]
