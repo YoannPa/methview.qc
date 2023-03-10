@@ -1076,7 +1076,8 @@ rnb_crossbiplot <- function(
   loadings.col = "blue", point.size = 2.5, top.load.by.quad = 2,
   color.data = rnb.options()$identifiers.column, shape.data = NULL){
   # Compute PCA and format RnBSet data
-  ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = probe.type)
+  ls_res <- methview.qc::RnB2PCA(
+    RnBSet = RnBSet, probe.type = probe.type, nPCs = max(PCs))
   pca_res <- ls_res$prcomp
   pca_data <- ls_res$data
   if (is.null(top.load.by.quad)) {

@@ -120,8 +120,12 @@ mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
   if(is.null(rnb.options()$identifiers.column)){
     column.names <- as.character(RnBSet@pheno[, 1])
   } else {
-    column.names <- as.character(
-      RnBSet@pheno[, rnb.options()$identifiers.column])
+    if(is.data.table(RnBSet@pheno)){
+      column.names <- RnBSet@pheno[[rnb.options()$identifiers.column]]
+    } else {
+      column.names <- as.character(
+        RnBSet@pheno[, rnb.options()$identifiers.column])  
+    }
   }
   # Check that all identifiers provided are unique
   if(any(duplicated(column.names))){
@@ -497,17 +501,37 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
   if(is.null(rnb.options()$identifiers.column)){
     RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
     data <- data.table::merge.data.table(
-      x = RnBSet@pheno, y = data, by.x = colnames(RnBSet@pheno)[1],
+      x = as.data.table(RnBSet@pheno), y = data, by.x = colnames(RnBSet@pheno)[1],
       by.y = "Samples", all.y = TRUE)
+    #Reorder the data following the order of the key column in the pheno table
+    data <- data[order(match(
+      data[[colnames(RnBSet@pheno)[1]]], as.data.table(RnBSet@pheno)[[1]])), ]
   } else {
-    RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column] <- as.factor(
-      RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
+    if(is.data.table(RnBSet@pheno)){
+      RnBSet@pheno[[RnBeads::rnb.options()$identifiers.column]] <- as.factor(
+        RnBSet@pheno[[RnBeads::rnb.options()$identifiers.column]])
+    } else {
+      RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column] <- as.factor(
+        RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
+    }
     data <- data.table::merge.data.table(
-      x = RnBSet@pheno, y = data,
+      x = as.data.table(RnBSet@pheno), y = data,
       by.x = RnBeads::rnb.options()$identifiers.column, by.y = "Samples",
       all.y = TRUE)
+    #Reorder the data following the order of the key column in the pheno table
+    data <- data[order(match(
+      data[[RnBeads::rnb.options()$identifiers.column]],
+      as.data.table(RnBSet@pheno)[[
+        RnBeads::rnb.options()$identifiers.column]])), ]
   }
-  #Return the results of the PCA
+  
+  # Check if the merged resulting table contains rows with only NAs
+  if(all(apply(X = data[, 2:ncol(RnBSet@pheno)], MARGIN = 2, FUN = is.na))){
+    stop(paste(
+      "Merging failed. Please try specifying an identifiers.column with",
+      "RnBeads::rnb.options(identifiers.column = 'barcode')"))
+  }
+  # Return the results of the PCA
   ls_res <- list("prcomp" = PCA_res, "data" = data)
   return(ls_res)
 }
