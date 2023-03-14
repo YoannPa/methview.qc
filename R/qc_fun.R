@@ -525,7 +525,6 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
       data.table::as.data.table(RnBSet@pheno)[[
         RnBeads::rnb.options()$identifiers.column]])), ]
   }
-  
   # Check if the merged resulting table contains rows with only NAs
   if(all(apply(X = data[, 2:ncol(RnBSet@pheno)], MARGIN = 2, FUN = is.na))){
     stop(paste(
@@ -929,60 +928,6 @@ rnb_test_asso_annot_PC <- function(
   dt_allres <- BiocompR::test_asso_annot_pc(
     annot.table = rnb_annot_table, prcomp.res = prcomp.res,
     perm.count = perm.count, max.PCs = max.PCs, verbose = verbose)
-  # annots <- prep_res$annotations
-  # n.annot <- prep_res$n.annot
-  # annot.table <- prep_res$annot.table
-  # 
-  # if(perm.count != 0 && (
-  #   (!is.null(prcomp.res)) || sum(!vapply(
-  #     X = annots, FUN = is.factor,
-  #     FUN.VALUE = logical(length = 1L))) >= 2)) {
-  #   # Create the random permutation matrix
-  #   perm.matrix <- mapply(
-  #     FUN = sample, rep(nrow(annot.table), times = perm.count))
-  #   perm.matrix[, 1] <- 1:nrow(perm.matrix)
-  # } else {
-  #   warning("Cannot initialize the permutations matrix.")
-  #   perm.matrix <- NULL
-  # }
-  # 
-  # pc.association.count <- max.PCs
-  # # Get PCs % variance explained
-  # PCA_metrics <- BiocompR::prepare_pca_data(
-  #   prcomp.res = prcomp.res, dt.annot = annot.table, PCs = 1:max.PCs,
-  #   scale = 1)
-  # dpoints <- prcomp.res$x
-  # if (!is.null(dpoints)) {
-  #   if (ncol(dpoints) > pc.association.count) {
-  #     # Reduce principal components coordinates to the maximum number of
-  #     # dimensions wanted
-  #     dpoints <- dpoints[, 1:pc.association.count]
-  #   }
-  #   # Test all annotations against all PCs
-  #   ls_allres <- lapply(X = seq(n.annot), FUN = function(i){
-  #     if(verbose){ cat("Testing association of", names(annots)[i], "&\n") }
-  #     ls_tres <- lapply(X = seq(ncol(dpoints)), FUN = function(j){
-  #       if(verbose){ cat("\t", colnames(dpoints)[j], "\n") }
-  #       t.result <- BiocompR::test.annots(
-  #         x = annots[[i]], y = dpoints[, j],
-  #         perm.matrix = perm.matrix)
-  #       t.result[, c("annotation", "PC", "var.explained") := .(
-  #         names(annots)[i], colnames(dpoints)[j],
-  #         (PCA_metrics$var.explained*100)[j])]
-  #       t.result
-  #     })
-  #     data.table::rbindlist(l = ls_tres)
-  #   })
-  #   # Rbind all results
-  #   dt_allres <- data.table::rbindlist(l = ls_allres)
-  #   dt_allres[, log_trans_pval := -log10(pvalue)]
-  #   rm(ls_allres)
-  #   # Convert PC as factor to keep the right order
-  #   dt_allres[, PC := as.factor(x = PC)]
-  #   dt_allres[, PC := factor(
-  #     x = PC, levels = paste0("PC", seq(pc.association.count)))]
-  # }
-  # rm(dpoints)
   # Return association test results
   return(dt_allres)
 }
@@ -1151,53 +1096,59 @@ rnb_test_asso_annot_QC <- function(
 
 rnb_test_asso_all_annot <- function(
   RnBSet, perm.count = 10000, verbose = FALSE){
-  
   # Prepare the RnBset annotations
-  prep_res <- methview.qc:::prep_annot_asso_fromRnB(
-    RnBSet = RnBSet, verbose = verbose)
-  annots <- prep_res$annotations
-  n.annot <- prep_res$n.annot
-  annot.table <- prep_res$annot.table
+  rnb_annot_table <- pheno(RnBSet)
+  # Test all annotations against each other
+  dt_annotres <- test_asso_all_annot(
+    annot.table = rnb_annot_table, perm.count = perm.count, verbose = verbose)
+  # prep_res <- BiocompR::prepare_annot_asso(
+  #   annot.table = rnb_annot_table, verbose = verbose)
   
-  if(perm.count != 0 && sum(!vapply(
-    X = annots, FUN = is.factor, FUN.VALUE = logical(length = 1L))) >= 2) {
-    # Create the random permutation matrix
-    perm.matrix <- mapply(
-      FUN = sample, rep(nrow(annot.table), times = perm.count))
-    perm.matrix[, 1] <- 1:nrow(perm.matrix)
-  } else {
-    warning("Cannot initialize the permutations matrix.")
-    perm.matrix <- NULL
-  }
+  # prep_res <- methview.qc:::prep_annot_asso_fromRnB(
+  #   RnBSet = RnBSet, verbose = verbose)
   
-  if (n.annot > 1) {
-    # Create matrix of tests combinations
-    test_matrix <- utils::combn(x = names(annots), m = 2)
-    # Test association between all annotations available
-    ls_annotres <- apply(X = test_matrix, MARGIN = 2, FUN = function(i){
-      if(verbose){ cat("Testing association of", i[1], "&", i[2], "\n") }
-      t.result <- BiocompR::test.annots(
-        x = annots[[i[1]]], y = annots[[i[2]]],
-        perm.matrix = perm.matrix)
-      t.result[, c("annotation1", "annotation2") := .(i[1], i[2])]
-    })
-    dt_annotres <- data.table::rbindlist(l = ls_annotres)
-    #Duplicate results for the full table
-    dt_annotres_bis <- data.table::copy(dt_annotres)
-    data.table::setnames(
-      x = dt_annotres_bis, old = "annotation1", new = "annotation2_new")
-    data.table::setnames(
-      x = dt_annotres_bis, old = "annotation2", new = "annotation1")
-    data.table::setnames(
-      x = dt_annotres_bis, old = "annotation2_new", new = "annotation2")
-    # Rbind all results
-    dt_annotres <- rbind(dt_annotres, dt_annotres_bis, use.names = TRUE)
-    rm(dt_annotres_bis, perm.matrix)
-    dt_annotres[, log_trans_pval := -log10(pvalue)]
-  } else {
-    stop(paste(
-      "only 1 annotation usable. Cannot compute association of an annotation",
-      "against itself alone."))
-  }
+  # annots <- prep_res$annotations
+  # n.annot <- prep_res$n.annot
+  # annot.table <- prep_res$annot.table
+  # if(perm.count != 0 && sum(!vapply(
+  #   X = annots, FUN = is.factor, FUN.VALUE = logical(length = 1L))) >= 2) {
+  #   # Create the random permutation matrix
+  #   perm.matrix <- mapply(
+  #     FUN = sample, rep(nrow(annot.table), times = perm.count))
+  #   perm.matrix[, 1] <- 1:nrow(perm.matrix)
+  # } else {
+  #   warning("Cannot initialize the permutations matrix.")
+  #   perm.matrix <- NULL
+  # }
+  # 
+  # if (n.annot > 1) {
+  #   # Create matrix of tests combinations
+  #   test_matrix <- utils::combn(x = names(annots), m = 2)
+  #   # Test association between all annotations available
+  #   ls_annotres <- apply(X = test_matrix, MARGIN = 2, FUN = function(i){
+  #     if(verbose){ cat("Testing association of", i[1], "&", i[2], "\n") }
+  #     t.result <- BiocompR::test.annots(
+  #       x = annots[[i[1]]], y = annots[[i[2]]],
+  #       perm.matrix = perm.matrix)
+  #     t.result[, c("annotation1", "annotation2") := .(i[1], i[2])]
+  #   })
+  #   dt_annotres <- data.table::rbindlist(l = ls_annotres)
+  #   #Duplicate results for the full table
+  #   dt_annotres_bis <- data.table::copy(dt_annotres)
+  #   data.table::setnames(
+  #     x = dt_annotres_bis, old = "annotation1", new = "annotation2_new")
+  #   data.table::setnames(
+  #     x = dt_annotres_bis, old = "annotation2", new = "annotation1")
+  #   data.table::setnames(
+  #     x = dt_annotres_bis, old = "annotation2_new", new = "annotation2")
+  #   # Rbind all results
+  #   dt_annotres <- rbind(dt_annotres, dt_annotres_bis, use.names = TRUE)
+  #   rm(dt_annotres_bis, perm.matrix)
+  #   dt_annotres[, log_trans_pval := -log10(pvalue)]
+  # } else {
+  #   stop(paste(
+  #     "only 1 annotation usable. Cannot compute association of an annotation",
+  #     "against itself alone."))
+  # }
   return(dt_annotres)
 }

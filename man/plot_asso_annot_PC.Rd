@@ -10,6 +10,7 @@ plot_asso_annot_PC(
   prcomp.res,
   perm.count = 10000,
   max.PCs = 8,
+  p.treshold = 0.05,
   PC_type.str = NULL,
   cohort.name = "dataset",
   verbose = FALSE
