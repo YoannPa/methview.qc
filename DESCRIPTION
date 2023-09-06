@@ -1,7 +1,7 @@
 Package: methview.qc
 Title: Visualize quality control data from methylation array dataset with
        methview.qc
-Version: 0.0.53
+Version: 0.0.54
 Authors@R: 
     person(given = "Yoann",
            family = "Pageaud",
@@ -14,10 +14,11 @@ License: GPL-3.0
 Encoding: UTF-8
 LazyData: true
 Depends:
-    ggplot2,
-    data.table,
-    RnBeads,
     BiocompR,
+    data.table,
+    ggplot2,
+    irlba,
+    RnBeads,
     R.devices
 biocViews:
 Imports:

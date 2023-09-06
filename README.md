@@ -12,7 +12,7 @@ _**methview.qc** allows you to generate quality control plots from your methylat
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
 ![GitHub R package version](https://img.shields.io/github/r-package/v/YoannPa/methview.qc?label=Package%20version&logo=RStudio&logoColor=white&style=for-the-badge)  
-<img src="https://img.shields.io/static/v1?label=compatibility&message=4.2.0&color=blue&logo=R&logoColor=white&style=for-the-badge" />  
+<img src="https://img.shields.io/static/v1?label=compatibility&message=4.3.0&color=blue&logo=R&logoColor=white&style=for-the-badge" />  
 ![GitHub last commit](https://img.shields.io/github/last-commit/YoannPa/methview.qc?logo=git&style=for-the-badge)  
 ![GitHub](https://img.shields.io/github/license/YoannPa/methview.qc?color=brightgreen&style=for-the-badge) 
 
