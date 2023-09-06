@@ -1024,7 +1024,7 @@ rnb_biplot <- function(
   return(sample.biplot)
 }
 
-#' Draws a customizable PCA cross biplot on samples methylation array QC data
+#' Draws a customizable PCA cross biplot from an RnBSet on a subset of selected probes.
 #' 
 #' @param RnBSet           A \code{RnBSet} basic object for storing methylation
 #'                         array data and experimental quality information
@@ -1038,6 +1038,18 @@ rnb_biplot <- function(
 #'                          array data in the RnBSet see options available in
 #'                          \link[RnBeads]{rnb.options}.}
 #'                         }
+#' @param probe.type       A \code{character} to specify the type of probes on
+#'                         which the principal component should be computed
+#'                         (Default: probe.type = 'cg';
+#'                         Supported: probe.type = c('cg', 'ch', 'rs', 'qc')).
+#'                         \itemize{
+#'                          \item{cg - CpG methylation probes beta values.}
+#'                          \item{ch - CpH (Cytosine di-/tri-nucleotide)
+#'                                methylation probes beta values.}
+#'                          \item{rs - SNPs genotyping probes allelic version.}
+#'                          \item{qc - Quality control probes fluorescence
+#'                                intensities.}
+#'                         }                         
 #' @param PCs              An \code{integer} vector matching principal
 #'                         components to be used to generate the cross-biplot.
 #' @param point.size       A \code{double} specifying the size of points.
@@ -1463,8 +1475,8 @@ plot_all_qc <- function(
     # Plot sample PCA biplot
     cat("\tPCA biplots\n")
     # Keep only colnames containing non-missing data 
-    non_empty_cols <- colnames(pheno(RnBSet)[, colSums(is.na(pheno(
-      RnBSet))) != nrow(pheno(RnBSet))])
+    non_empty_cols <- colnames(RnBeads::pheno(RnBSet)[, colSums(
+      is.na(RnBeads::pheno(RnBSet))) != nrow(RnBeads::pheno(RnBSet))])
     #Create cohort, biplot, and cross-biplot directories
     if(!dir.exists(file.path(save.dir, "Sample_PCA_biplot", cohort))){
       dir.create(path = file.path(save.dir, "Sample_PCA_biplot", cohort))
@@ -1702,7 +1714,6 @@ devscore.heatmap <- function(
     } else {
       samples <- as.character(RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
     }
-    # samples <- as.character(RnBSet@pheno[, 1])
   }
   if(is.null(target)){
     # Get target list following platform
@@ -1874,7 +1885,7 @@ plot_asso_annot_PC <- function(
       "'methylation probes', 'CpG islands', ..."))
   }
   # Get RnBSet annotation table
-  rnb_annot_table <- pheno(RnBSet)
+  rnb_annot_table <- RnBeads::pheno(RnBSet)
   # Compute & plot association tests results
   asso_plot <- BiocompR::plot_asso_annot_PC(
     annot.table = rnb_annot_table, prcomp.res = prcomp.res,
@@ -2015,37 +2026,10 @@ plot_asso_annot_QC <- function(
 plot_asso_all_annot <- function(
   RnBSet, perm.count = 10000, cohort.name = "dataset", verbose = FALSE){
   # Get RnBSet annotation table
-  rnb_annot_table <- pheno(RnBSet)
+  rnb_annot_table <- RnBeads::pheno(RnBSet)
   # Compute & plot association tests between all annotations
   asso_plot <- BiocompR::plot_asso_all_annot(
     annot.table = rnb_annot_table, perm.count = perm.count,
     cohort.name = cohort.name, verbose = verbose)
-  # # Compute association tests between all annotations
-  # asso_res <- rnb_test_asso_all_annot(
-  #   RnBSet = RnBSet, perm.count = perm.count, verbose = verbose)
-  # # Plot association tests results
-  # max_log_pval <- ceiling(max(asso_res$log_trans_pval, na.rm = TRUE))
-  # asso_plot <- ggplot(
-  #   data = asso_res, mapping = aes(
-  #     x = annotation1, y = annotation2, fill = log_trans_pval,
-  #     color = test, label = round(log_trans_pval, 1))) +
-  #   geom_tile(size = 1, width = 0.8, height = 0.8) +
-  #   geom_text(color = "black") +
-  #   scale_fill_gradient2(
-  #     low = "darkblue", mid = "white", high = "darkred",
-  #     midpoint = -log10(0.05), limits = c(
-  #       0, max_log_pval), breaks = seq(0, max_log_pval, by = 1)) +
-  #   theme(axis.text = element_text(size = 12, colour = "black"),
-  #         axis.text.x = element_text(angle = -45, hjust = 0, vjust = 0.1),
-  #         axis.title = element_blank(),
-  #         axis.ticks = element_blank(),
-  #         panel.background = element_rect(fill = NA, colour = NA),
-  #         panel.grid = element_line(colour = "black", linewidth = 0.5),
-  #         legend.text = element_text(size = 11), legend.box.just = "left",
-  #         plot.title = element_text(hjust = 0.5)) +
-  #   guides(fill = guide_colorbar(
-  #     ticks.colour = "black", frame.colour = "black")) +
-  #   labs(fill = "-Log10(P.value)", color = "Stat. test used") +
-  #   ggtitle(paste("Associations between all annotations from", cohort.name))
   return(asso_plot)
 }

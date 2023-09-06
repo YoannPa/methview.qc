@@ -2,7 +2,7 @@
 % Please edit documentation in R/qc_plot.R
 \name{rnb_crossbiplot}
 \alias{rnb_crossbiplot}
-\title{Draws a customizable PCA cross biplot on samples methylation array QC data}
+\title{Draws a customizable PCA cross biplot from an RnBSet on a subset of selected probes.}
 \usage{
 rnb_crossbiplot(
   RnBSet,
@@ -28,6 +28,19 @@ array data and experimental quality information
  \item{For additionnal options to import methylation
  array data in the RnBSet see options available in
  \link[RnBeads]{rnb.options}.}
+}}
+
+\item{probe.type}{A \code{character} to specify the type of probes on
+which the principal component should be computed
+(Default: probe.type = 'cg';
+Supported: probe.type = c('cg', 'ch', 'rs', 'qc')).
+\itemize{
+ \item{cg - CpG methylation probes beta values.}
+ \item{ch - CpH (Cytosine di-/tri-nucleotide)
+       methylation probes beta values.}
+ \item{rs - SNPs genotyping probes allelic version.}
+ \item{qc - Quality control probes fluorescence
+       intensities.}
 }}
 
 \item{PCs}{An \code{integer} vector matching principal
@@ -67,7 +80,7 @@ about how to use it see
 A customizable \code{gg} object of samples PCA cross biplot.
 }
 \description{
-Draws a customizable PCA cross biplot on samples methylation array QC data
+Draws a customizable PCA cross biplot from an RnBSet on a subset of selected probes.
 }
 \examples{
 # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
@@ -79,10 +92,12 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 RnBeads::rnb.options(identifiers.column = "barcode")
-#Draw samples biplot on quality control data
+# Draw samples biplot on quality control data
 rnb_crossbiplot(
     RnBSet = rnb.set, probe.type = "qc", color.data = "Sample_Name",
     top.load.by.quad = 1)
+# Replace 'qc'for probe.type by "cg" for PCA on CG probes methylation, "ch"
+# for PCA on CH probes methylation, or "rs" for PCA on genotyping probes.  
 }
 \references{
 Pageaud Y. et al., BiocompR - Advanced visualizations for data
