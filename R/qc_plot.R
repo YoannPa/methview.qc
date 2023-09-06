@@ -913,7 +913,7 @@ target.biplot <- function(
 }
 
 
-#' Draws a customizable PCA biplot on samples methylation array QC data
+#' Draws a customizable PCA biplot from an RnBSet on a subset of selected probes.
 #' 
 #' @param RnBSet           A \code{RnBSet} basic object for storing methylation
 #'                         array data and experimental quality information
@@ -927,6 +927,18 @@ target.biplot <- function(
 #'                          array data in the RnBSet see options available in
 #'                          \link[RnBeads]{rnb.options}.}
 #'                         }
+#' @param probe.type       A \code{character} to specify the type of probes on
+#'                         which the principal component should be computed
+#'                         (Default: probe.type = 'cg';
+#'                         Supported: probe.type = c('cg', 'ch', 'rs', 'qc')).
+#'                         \itemize{
+#'                          \item{cg - CpG methylation probes beta values.}
+#'                          \item{ch - CpH (Cytosine di-/tri-nucleotide)
+#'                                methylation probes beta values.}
+#'                          \item{rs - SNPs genotyping probes allelic version.}
+#'                          \item{qc - Quality control probes fluorescence
+#'                                intensities.}
+#'                         }                         
 #' @param PCx              An \code{integer} matching the principal component
 #'                         values to display on X-axis.
 #' @param PCy              An \code{integer} matching the principal component
@@ -968,15 +980,15 @@ target.biplot <- function(
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' RnBeads::rnb.options(identifiers.column = "barcode")
-#' #Draw samples biplot on quality control data
-#' sampleQC.biplot(RnBSet = rnb.set, color.data = "Sample_Name")
+#' #Draw samples biplot on CG methylation data
+#' rnb_biplot(RnBSet = rnb.set, probe.type = "cg", color.data = "Sample_Name")
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
 rnb_biplot <- function(
   RnBSet, probe.type = "cg", PCx = 1, PCy = 2, loadings = TRUE,
   loadings.col = "blue", point.size = 2.5, top.load.by.quad = 5,
-  color.data = rnb.options()$identifiers.column, shape.data = NULL){
+  color.data = RnBeads::rnb.options()$identifiers.column, shape.data = NULL){
   # Compute PCA and format RnBSet data
   ls_res <- methview.qc::RnB2PCA(RnBSet = RnBSet, probe.type = probe.type)
   pca_res <- ls_res$prcomp
@@ -1065,16 +1077,19 @@ rnb_biplot <- function(
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' RnBeads::rnb.options(identifiers.column = "barcode")
-#' #Draw samples biplot on quality control data
-#' sampleQC_crossbi(
-#'     RnBSet = rnb.set, color.data = "Sample_Name", top.load.by.quad = 1)
+#' # Draw samples biplot on quality control data
+#' rnb_crossbiplot(
+#'     RnBSet = rnb.set, probe.type = "qc", color.data = "Sample_Name",
+#'     top.load.by.quad = 1)
+#' # Replace 'qc'for probe.type by "cg" for PCA on CG probes methylation, "ch"
+#' # for PCA on CH probes methylation, or "rs" for PCA on genotyping probes.  
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
 
 rnb_crossbiplot <- function(
   RnBSet, probe.type = "cg", PCs = c(1:5), loadings = TRUE,
   loadings.col = "blue", point.size = 2.5, top.load.by.quad = 2,
-  color.data = rnb.options()$identifiers.column, shape.data = NULL){
+  color.data = RnBeads::rnb.options()$identifiers.column, shape.data = NULL){
   # Compute PCA and format RnBSet data
   ls_res <- methview.qc::RnB2PCA(
     RnBSet = RnBSet, probe.type = probe.type, nPCs = max(PCs))

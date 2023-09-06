@@ -2,7 +2,7 @@
 % Please edit documentation in R/qc_plot.R
 \name{rnb_biplot}
 \alias{rnb_biplot}
-\title{Draws a customizable PCA biplot on samples methylation array QC data}
+\title{Draws a customizable PCA biplot from an RnBSet on a subset of selected probes.}
 \usage{
 rnb_biplot(
   RnBSet,
@@ -13,7 +13,7 @@ rnb_biplot(
   loadings.col = "blue",
   point.size = 2.5,
   top.load.by.quad = 5,
-  color.data = rnb.options()$identifiers.column,
+  color.data = RnBeads::rnb.options()$identifiers.column,
   shape.data = NULL
 )
 }
@@ -29,6 +29,19 @@ array data and experimental quality information
  \item{For additionnal options to import methylation
  array data in the RnBSet see options available in
  \link[RnBeads]{rnb.options}.}
+}}
+
+\item{probe.type}{A \code{character} to specify the type of probes on
+which the principal component should be computed
+(Default: probe.type = 'cg';
+Supported: probe.type = c('cg', 'ch', 'rs', 'qc')).
+\itemize{
+ \item{cg - CpG methylation probes beta values.}
+ \item{ch - CpH (Cytosine di-/tri-nucleotide)
+       methylation probes beta values.}
+ \item{rs - SNPs genotyping probes allelic version.}
+ \item{qc - Quality control probes fluorescence
+       intensities.}
 }}
 
 \item{PCx}{An \code{integer} matching the principal component
@@ -71,7 +84,7 @@ about how to use it see
 A customizable \code{gg} object of samples PCA biplot.
 }
 \description{
-Draws a customizable PCA biplot on samples methylation array QC data
+Draws a customizable PCA biplot from an RnBSet on a subset of selected probes.
 }
 \examples{
 # Create an RnBSet for MethylationEPIC data (May take up to 1 minute)
@@ -83,8 +96,8 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 RnBeads::rnb.options(identifiers.column = "barcode")
-#Draw samples biplot on quality control data
-sampleQC.biplot(RnBSet = rnb.set, color.data = "Sample_Name")
+#Draw samples biplot on CG methylation data
+rnb_biplot(RnBSet = rnb.set, probe.type = "cg", color.data = "Sample_Name")
 }
 \references{
 Pageaud Y. et al., BiocompR - Advanced visualizations for data

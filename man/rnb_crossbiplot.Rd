@@ -12,7 +12,7 @@ rnb_crossbiplot(
   loadings.col = "blue",
   point.size = 2.5,
   top.load.by.quad = 2,
-  color.data = rnb.options()$identifiers.column,
+  color.data = RnBeads::rnb.options()$identifiers.column,
   shape.data = NULL
 )
 }
@@ -80,8 +80,9 @@ rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 RnBeads::rnb.options(identifiers.column = "barcode")
 #Draw samples biplot on quality control data
-sampleQC_crossbi(
-    RnBSet = rnb.set, color.data = "Sample_Name", top.load.by.quad = 1)
+rnb_crossbiplot(
+    RnBSet = rnb.set, probe.type = "qc", color.data = "Sample_Name",
+    top.load.by.quad = 1)
 }
 \references{
 Pageaud Y. et al., BiocompR - Advanced visualizations for data

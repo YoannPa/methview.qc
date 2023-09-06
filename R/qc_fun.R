@@ -117,14 +117,14 @@ load_metharray_QC_meta <- function(array.meta){
 
 mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
   # Get sample IDs
-  if(is.null(rnb.options()$identifiers.column)){
+  if(is.null(RnBeads::rnb.options()$identifiers.column)){
     column.names <- as.character(RnBSet@pheno[, 1])
   } else {
-    if(is.data.table(RnBSet@pheno)){
-      column.names <- RnBSet@pheno[[rnb.options()$identifiers.column]]
+    if(data.table::is.data.table(RnBSet@pheno)){
+      column.names <- RnBSet@pheno[[RnBeads::rnb.options()$identifiers.column]]
     } else {
       column.names <- as.character(
-        RnBSet@pheno[, rnb.options()$identifiers.column])  
+        RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])  
     }
   }
   # Check that all identifiers provided are unique
@@ -433,6 +433,7 @@ update_target_meta <- function(QC.data, DT.QC.meta, target, ncores = 1){
 #' @return A \code{list} containing a prcomp object with all results from the
 #'         PCA, and a data.table with all the RnBSet data.
 #' @author Yoann Pageaud.
+#' @importFrom data.table `%like%`
 #' @export
 #' @examples
 #' # Create an RnBSet for MethylationEPIC data
@@ -498,7 +499,7 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
     }
   } else { stop("Unsupported probe type.") }
   
-  if(is.null(rnb.options()$identifiers.column)){
+  if(is.null(RnBeads::rnb.options()$identifiers.column)){
     RnBSet@pheno[, 1] <- as.factor(RnBSet@pheno[, 1])
     data <- data.table::merge.data.table(
       x = data.table::as.data.table(RnBSet@pheno), y = data,
@@ -508,7 +509,7 @@ RnB2PCA <- function(RnBSet, probe.type = "cg", nPCs = NULL, scaling = FALSE){
       data[[colnames(RnBSet@pheno)[1]]],
       data.table::as.data.table(RnBSet@pheno)[[1]])), ]
   } else {
-    if(is.data.table(RnBSet@pheno)){
+    if(data.table::is.data.table(RnBSet@pheno)){
       RnBSet@pheno[[RnBeads::rnb.options()$identifiers.column]] <- as.factor(
         RnBSet@pheno[[RnBeads::rnb.options()$identifiers.column]])
     } else {
@@ -668,6 +669,7 @@ devscore.fluo <- function(RnBSet, samples, target, ncores = 1){
 #' @return A \code{data.table} or a \code{list} of data.tables with the sample's
 #'         runinfo data.
 #' @author Yoann Pageaud.
+#' @importFrom data.table `:=` `%like%`
 #' @export
 #' @examples
 #' # Set IDAT directory
@@ -714,7 +716,7 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
           if(length(unique(scan_tool)) != 1){
             stop("Scan has been done with different tools or versions.")
           } else { scan_tool <- unique(scan_tool) }
-          dt_scan_simple <- data.table(
+          dt_scan_simple <- data.table::data.table(
             "Scan_year" = scan_year, "Decoding" = decoding,
             "Scan" = scan_tool)
         }
@@ -725,10 +727,10 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
           "The sample's IDAT files do not contain any runinfo data.")
         class(dt_scan_info$RunTime) <- class(as.POSIXct(NA))
         dt_scan_info <- rbind(
-          dt_scan_info, data.table(as.POSIXct(NA), NA, NA, NA, NA),
+          dt_scan_info, data.table::data.table(as.POSIXct(NA), NA, NA, NA, NA),
           use.names = FALSE)
         if(data_format == 'short' | data_format == 'both'){
-          dt_scan_simple <- data.table(
+          dt_scan_simple <- data.table::data.table(
             "Scan_year" = NA, "Decoding" = NA, "Scan" = NA)
         }
       }
@@ -776,7 +778,7 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' # Specify the column containing samples identifiers (sentrix barcodes).
-#' rnb.options(identifiers.column = 'barcode')
+#' RnBeads::rnb.options(identifiers.column = 'barcode')
 #' # Print RnBSet annotation table
 #' pheno(rnb.set)
 #' # Add runinfo data from the IDAT files to the RnBSet annotation table
@@ -789,7 +791,7 @@ get_IDATs_runinfo <- function(sentrix_barcode, IDATs_dir, data_format = "both"){
 
 rnb_add_runinfo <- function(IDATs_dir, RnBSet){
   # Get sentrix barcode from RnBSet annotation
-  if(is.null(rnb.options()$identifiers.column)){
+  if(is.null(RnBeads::rnb.options()$identifiers.column)){
     stop(paste(
       "identifiers column missing. Please explicitly set the name of the",
       "column containing your samples' sentrix barcodes in your annotation",
@@ -797,9 +799,9 @@ rnb_add_runinfo <- function(IDATs_dir, RnBSet){
       "RnBeads::rnb.options(identifiers.column =",
       "'your_sentrix_barcode_colname')"))
   } else {
-    sentrix_col <- rnb.options()$identifiers.column
+    sentrix_col <- RnBeads::rnb.options()$identifiers.column
     sentrix_barcodes <- as.character(
-      RnBSet@pheno[, rnb.options()$identifiers.column])
+      RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
   }
   # Check that the identifiers column specified match sentrix barcode string
   # pattern
@@ -1000,15 +1002,15 @@ rnb_test_asso_annot_QC <- function(
   DTQC <- data.table::as.data.table(
     x = t(as.matrix(DTQC[, -c(1:11), ], rownames = "Probe_name")),
     keep.rownames = "ID")
-  if (is.null(rnb.options()$identifiers.column)) {
+  if (is.null(RnBeads::rnb.options()$identifiers.column)) {
     data.table::setnames(x = DTQC, old = "ID", new = colnames(annot.table)[1])
     alleq_res <- all.equal(target = annot.table[[1]], current = DTQC[[1]])
   } else {
     data.table::setnames(
-      x = DTQC, old = "ID", new = rnb.options()$identifiers.column)
+      x = DTQC, old = "ID", new = RnBeads::rnb.options()$identifiers.column)
     alleq_res <- all.equal(
-      target = annot.table[[rnb.options()$identifiers.column]],
-      current = DTQC[[rnb.options()$identifiers.column]])
+      target = annot.table[[RnBeads::rnb.options()$identifiers.column]],
+      current = DTQC[[RnBeads::rnb.options()$identifiers.column]])
   }
   
   if(perm.count != 0 && sum(!vapply(

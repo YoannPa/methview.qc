@@ -41,7 +41,7 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 # Specify the column containing samples identifiers (sentrix barcodes).
-rnb.options(identifiers.column = 'barcode')
+RnBeads::rnb.options(identifiers.column = 'barcode')
 # Print RnBSet annotation table
 pheno(rnb.set)
 # Add runinfo data from the IDAT files to the RnBSet annotation table
