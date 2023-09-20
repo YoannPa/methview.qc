@@ -1506,7 +1506,7 @@ plot_all_qc <- function(
           ggsave(filename = paste0(paste(
             annot, names(ls_biplot)[i], "PCA_biplot",
             get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
-            plot = ls_biplot[[i]], device = frmt, width = 11, height = 11,
+            plot = ls_biplot[[i]], device = frmt, width = 15, height = 11,
             path = file.path(
               save.dir, "Sample_PCA_biplot", cohort, "PCA_biplots"))
         }))
@@ -1519,13 +1519,31 @@ plot_all_qc <- function(
             top.load.by.quad = 2)
         })
       names(ls_cross) <- c("cg", "ch", "rs", "qc")
-      invisible(lapply(X = seq_along(ls_biplot), FUN = function(i){
+      invisible(lapply(X = seq_along(ls_cross), FUN = function(i){
         invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
           ggsave(filename = paste0(paste(
             annot, names(ls_cross)[i], "PCA_cross_biplot",
             get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
             plot = ls_cross[[i]], device = frmt, width = 13, height = 11,
             path = file.path(
+              save.dir, "Sample_PCA_biplot", cohort, "PCA_cross_biplots"))
+        }))
+      }))
+      ls_cross_no_load <- parallel::mclapply(
+        X = c("cg", "ch", "rs", "qc"), mc.cores = ncores,
+        FUN = function(p_type){
+          pca_cross <- rnb_crossbiplot(
+            RnBSet = RnBSet, probe.type = p_type, color.data = annot,
+            loadings = FALSE)
+        })
+      names(ls_cross_no_load) <- c("cg", "ch", "rs", "qc")
+      invisible(lapply(X = seq_along(ls_cross_no_load), FUN = function(i){
+        invisible(lapply(X = c("pdf", "png"), FUN = function(frmt){
+          ggsave(filename = paste0(paste(
+            annot, names(ls_cross_no_load)[i], "PCA_cross_biplot_noload",
+            get_platform(RnBSet = RnBSet), sep = "_"), ".", frmt),
+            plot = ls_cross_no_load[[i]], device = frmt, width = 13,
+            height = 11, path = file.path(
               save.dir, "Sample_PCA_biplot", cohort, "PCA_cross_biplots"))
         }))
       }))

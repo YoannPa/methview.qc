@@ -1002,6 +1002,8 @@ rnb_test_asso_annot_QC <- function(
   DTQC <- data.table::as.data.table(
     x = t(as.matrix(DTQC[, -c(1:11), ], rownames = "Probe_name")),
     keep.rownames = "ID")
+  # Check if the ID column contains integer converted as characters
+  if(!anyNA(as.integer(DTQC$ID))){ DTQC[, ID := as.integer(ID)] }
   if (is.null(RnBeads::rnb.options()$identifiers.column)) {
     data.table::setnames(x = DTQC, old = "ID", new = colnames(annot.table)[1])
     alleq_res <- all.equal(target = annot.table[[1]], current = DTQC[[1]])
