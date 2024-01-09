@@ -114,6 +114,7 @@ load_metharray_QC_meta <- function(array.meta){
 #' # Merge red and green channels intensities with QC metadata
 #' dt.mrg <- mergeQC_intensities_and_meta(
 #'    RnBSet = rnb.set, DT.QC.meta = dt.meta)
+#' dt.mrg
 
 mergeQC_intensities_and_meta <- function(RnBSet, DT.QC.meta){
   # Get sample IDs
@@ -1105,54 +1106,5 @@ rnb_test_asso_all_annot <- function(
   # Test all annotations against each other
   dt_annotres <- test_asso_all_annot(
     annot.table = rnb_annot_table, perm.count = perm.count, verbose = verbose)
-  # prep_res <- BiocompR::prepare_annot_asso(
-  #   annot.table = rnb_annot_table, verbose = verbose)
-  
-  # prep_res <- methview.qc:::prep_annot_asso_fromRnB(
-  #   RnBSet = RnBSet, verbose = verbose)
-  
-  # annots <- prep_res$annotations
-  # n.annot <- prep_res$n.annot
-  # annot.table <- prep_res$annot.table
-  # if(perm.count != 0 && sum(!vapply(
-  #   X = annots, FUN = is.factor, FUN.VALUE = logical(length = 1L))) >= 2) {
-  #   # Create the random permutation matrix
-  #   perm.matrix <- mapply(
-  #     FUN = sample, rep(nrow(annot.table), times = perm.count))
-  #   perm.matrix[, 1] <- 1:nrow(perm.matrix)
-  # } else {
-  #   warning("Cannot initialize the permutations matrix.")
-  #   perm.matrix <- NULL
-  # }
-  # 
-  # if (n.annot > 1) {
-  #   # Create matrix of tests combinations
-  #   test_matrix <- utils::combn(x = names(annots), m = 2)
-  #   # Test association between all annotations available
-  #   ls_annotres <- apply(X = test_matrix, MARGIN = 2, FUN = function(i){
-  #     if(verbose){ cat("Testing association of", i[1], "&", i[2], "\n") }
-  #     t.result <- BiocompR::test.annots(
-  #       x = annots[[i[1]]], y = annots[[i[2]]],
-  #       perm.matrix = perm.matrix)
-  #     t.result[, c("annotation1", "annotation2") := .(i[1], i[2])]
-  #   })
-  #   dt_annotres <- data.table::rbindlist(l = ls_annotres)
-  #   #Duplicate results for the full table
-  #   dt_annotres_bis <- data.table::copy(dt_annotres)
-  #   data.table::setnames(
-  #     x = dt_annotres_bis, old = "annotation1", new = "annotation2_new")
-  #   data.table::setnames(
-  #     x = dt_annotres_bis, old = "annotation2", new = "annotation1")
-  #   data.table::setnames(
-  #     x = dt_annotres_bis, old = "annotation2_new", new = "annotation2")
-  #   # Rbind all results
-  #   dt_annotres <- rbind(dt_annotres, dt_annotres_bis, use.names = TRUE)
-  #   rm(dt_annotres_bis, perm.matrix)
-  #   dt_annotres[, log_trans_pval := -log10(pvalue)]
-  # } else {
-  #   stop(paste(
-  #     "only 1 annotation usable. Cannot compute association of an annotation",
-  #     "against itself alone."))
-  # }
   return(dt_annotres)
 }

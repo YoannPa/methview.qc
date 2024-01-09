@@ -83,16 +83,17 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 RnBeads::rnb.options(identifiers.column = "barcode")
-#Create the data.table with quality control metadata
+# Create the data.table with quality control metadata
 dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
 dt.mrg <- mergeQC_intensities_and_meta(
     RnBSet = rnb.set, DT.QC.meta = dt.meta)
-#Draw target specific QC plot for "Staining" QC probes
+# Draw target specific QC plot for "Staining" QC probes
 target.plot <- plot_array_QCtarget(
   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
   DT.QC.meta = dt.meta, ncores = 2)
-#Save plot in a PDF file
+target.plot
+# Save plot in a PDF file
 ggsave(filename = "QC_staining.pdf", plot = target.plot, device = "pdf",
        path = "~/")
 }

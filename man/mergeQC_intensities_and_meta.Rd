@@ -46,6 +46,7 @@ dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 # Merge red and green channels intensities with QC metadata
 dt.mrg <- mergeQC_intensities_and_meta(
    RnBSet = rnb.set, DT.QC.meta = dt.meta)
+dt.mrg
 }
 \author{
 Yoann Pageaud.

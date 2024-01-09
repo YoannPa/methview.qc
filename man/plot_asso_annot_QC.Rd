@@ -67,7 +67,9 @@ data.source <- c(idat.dir, sample.annotation)
 rnb.set <- RnBeads::rnb.execute.import(
     data.source = data.source, data.type = "idat.dir")
 # Plot association test between annotations and QC probes intensities results
-plot_asso_annot_QC(RnBSet = rnb.set, cohort.name = "minfiData")
+# (Warning : takes a lot of time)
+plot_asso_annot_QC(
+    RnBSet = rnb.set, max.QCprobes = 10, cohort.name = "minfiData")
 }
 \author{
 Yoann Pageaud.

@@ -110,7 +110,7 @@
 #'   annot.pal = ggsci::pal_npg(palette = "nrc", alpha = 1)(3))
 #' # Save heatmap in a PDF file.
 #' ggsave(
-#'   filename = "heatmap.pdf", plot = snp.htmp$result.grob, device = "pdf",
+#'   filename = "heatmap.pdf", plot = snp.htmp$`main plot`, device = "pdf",
 #'   path = "~/")
 #' @references Pageaud Y. et al., BiocompR - Advanced visualizations for data
 #'             comparison.
@@ -151,7 +151,7 @@ snp_heatmap <- function(
     annot.pal <- grDevices::rainbow(n = ncol(rs.meth.mat))
   }
   #Plot SNP CpG heatmap using genotyping probes from methylation array data
-  snp.htmp <- BiocompR::gg2heatmap(
+  snp.htmp <- BiocompR::ggheatmap(
     m = rs.meth.mat, dist.method = dist.method, dendrograms = TRUE,
     dend.size = dend.size, plot.labs = ggplot2::labs(
       title = plot.title, x = x.lab, y = paste(array.type,"genotyping probes")),
@@ -561,16 +561,17 @@ plot_array_QCprobe <- function(
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' RnBeads::rnb.options(identifiers.column = "barcode")
-#' #Create the data.table with quality control metadata
+#' # Create the data.table with quality control metadata
 #' dt.meta <- load_metharray_QC_meta(array.meta = "controlsEPIC")
 #' # Merge red and green channels intensities with QC metadata
 #' dt.mrg <- mergeQC_intensities_and_meta(
 #'     RnBSet = rnb.set, DT.QC.meta = dt.meta)
-#' #Draw target specific QC plot for "Staining" QC probes
+#' # Draw target specific QC plot for "Staining" QC probes
 #' target.plot <- plot_array_QCtarget(
 #'   array.type = "EPIC", target = "Staining", QC.data = dt.mrg,
 #'   DT.QC.meta = dt.meta, ncores = 2)
-#' #Save plot in a PDF file
+#' target.plot
+#' # Save plot in a PDF file
 #' ggsave(filename = "QC_staining.pdf", plot = target.plot, device = "pdf",
 #'        path = "~/")
 
@@ -1109,12 +1110,12 @@ rnb_crossbiplot <- function(
   pca_data <- ls_res$data
   if (is.null(top.load.by.quad)) {
     if (is.null(shape.data)) {
-      sample_crossbi <- BiocompR::cross.biplot(
+      sample_crossbi <- BiocompR::ggcross.biplot(
         prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data)
     } else {
-      sample_crossbi <- BiocompR::cross.biplot(
+      sample_crossbi <- BiocompR::ggcross.biplot(
         prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         point.size = point.size, color.data = color.data,
@@ -1122,13 +1123,13 @@ rnb_crossbiplot <- function(
     }
   } else {
     if (is.null(shape.data)) {
-      sample_crossbi <- BiocompR::cross.biplot(
+      sample_crossbi <- BiocompR::ggcross.biplot(
         prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
         color.data = color.data)
     } else {
-      sample_crossbi <- BiocompR::cross.biplot(
+      sample_crossbi <- BiocompR::ggcross.biplot(
         prcomp.res = pca_res, data = pca_data[, 1:ncol(RnBSet@pheno)],
         PCs = PCs, loadings = loadings, loadings.col = loadings.col,
         top.load.by.quad = top.load.by.quad, point.size = point.size,
@@ -1443,7 +1444,7 @@ plot_all_qc <- function(
         filename = paste0(paste(
           "Heatmap_genotyping_probes", cohort, get_platform(RnBSet = RnBSet),
           sep = "_"), ".", frmt),
-        plot = snp.htmp$result.grob, device = frmt, width = 11, height = 11,
+        plot = snp.htmp$`main plot`, device = frmt, width = 11, height = 11,
         path = file.path(save.dir, "Genotyping_probes_heatmaps"))
     }))
     #Plot genotyping probes values density
@@ -1730,7 +1731,8 @@ devscore.heatmap <- function(
     if(is.null(RnBeads::rnb.options()$identifiers.column)){
       samples <- as.character(RnBSet@pheno[, 1])
     } else {
-      samples <- as.character(RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
+      samples <- as.character(
+        RnBSet@pheno[, RnBeads::rnb.options()$identifiers.column])
     }
   }
   if(is.null(target)){
@@ -1811,7 +1813,7 @@ devscore.heatmap <- function(
     row.string <- paste(target, "QC probes measures")
   }
   #Draw heatmap
-  res.htmp <- BiocompR::gg2heatmap(
+  res.htmp <- BiocompR::ggheatmap(
     m = molten_dt, na.handle = "keep", dist.method = c("none", dist.col),
     dendrograms = c(FALSE, TRUE), dend.size = c(0, dend.size), ncores = ncores,
     plot.labs = ggplot2::labs(
@@ -1833,7 +1835,7 @@ devscore.heatmap <- function(
     show.annot = show.annot, theme_legend = theme_legend,
     lgd.space.width = lgd.width, draw = draw, verbose = verbose)
   #Return Grob of the final heatmap
-  return(res.htmp$result.grob)
+  return(res.htmp$`main plot`)
 }
 
 #' Draws association test results between annotations from an RnBSet and PCs
@@ -1905,7 +1907,7 @@ plot_asso_annot_PC <- function(
   # Get RnBSet annotation table
   rnb_annot_table <- RnBeads::pheno(RnBSet)
   # Compute & plot association tests results
-  asso_plot <- BiocompR::plot_asso_annot_PC(
+  asso_plot <- BiocompR::ggasso.annot_pc(
     annot.table = rnb_annot_table, prcomp.res = prcomp.res,
     perm.count = perm.count, max.PCs = max.PCs, p.treshold = p.treshold,
     dataset.name = cohort.name, PC.origin = PC_type.str, verbose = verbose)
@@ -1957,7 +1959,9 @@ plot_asso_annot_PC <- function(
 #' rnb.set <- RnBeads::rnb.execute.import(
 #'     data.source = data.source, data.type = "idat.dir")
 #' # Plot association test between annotations and QC probes intensities results
-#' plot_asso_annot_QC(RnBSet = rnb.set, cohort.name = "minfiData")
+#' # (Warning : takes a lot of time)
+#' plot_asso_annot_QC(
+#'     RnBSet = rnb.set, max.QCprobes = 10, cohort.name = "minfiData")
 
 plot_asso_annot_QC <- function(
   RnBSet, perm.count = 10000, max.QCprobes = 50, cohort.name = "dataset",
@@ -2046,7 +2050,7 @@ plot_asso_all_annot <- function(
   # Get RnBSet annotation table
   rnb_annot_table <- RnBeads::pheno(RnBSet)
   # Compute & plot association tests between all annotations
-  asso_plot <- BiocompR::plot_asso_all_annot(
+  asso_plot <- BiocompR::ggasso.all_annot(
     annot.table = rnb_annot_table, perm.count = perm.count,
     cohort.name = cohort.name, verbose = verbose)
   return(asso_plot)

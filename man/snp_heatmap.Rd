@@ -159,7 +159,7 @@ snp.htmp <- snp_heatmap(
   annot.pal = ggsci::pal_npg(palette = "nrc", alpha = 1)(3))
 # Save heatmap in a PDF file.
 ggsave(
-  filename = "heatmap.pdf", plot = snp.htmp$result.grob, device = "pdf",
+  filename = "heatmap.pdf", plot = snp.htmp$`main plot`, device = "pdf",
   path = "~/")
 }
 \references{

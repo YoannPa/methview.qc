@@ -1,7 +1,7 @@
 Package: methview.qc
 Title: Visualize quality control data from methylation array dataset with
        methview.qc
-Version: 0.0.57
+Version: 0.0.58
 Authors@R: 
     person(given = "Yoann",
            family = "Pageaud",
@@ -19,6 +19,7 @@ Depends:
     ggplot2,
     irlba,
     RnBeads,
+    RnBeads.hg19,
     R.devices
 biocViews:
 Imports:
@@ -28,7 +29,7 @@ Imports:
     minfiData,
     minfiDataEPIC,
     IlluminaDataTestFiles
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 Suggests: 
     knitr,
     rmarkdown
