@@ -13,6 +13,9 @@ _**Methview.qc** utilizes RnBSet to store methylation datasets from both HumanMe
 **1-** [**DKFZ - Division of Applied Bioinformatics, Germany.**](https://www.dkfz.de/en/applied-bioinformatics/index.php)  
 **How to cite:** _Pageaud Y. et al., Visualize quality control data from methylation array dataset with methview.qc_  
 
+**Funding:** Development and maintenance funded by [de.NBI](https://www.denbi.de/).  
+Feel free to take the [de.NBI survey about Methview.qc](https://www.surveymonkey.de/r/denbi-service?sc=hd-hub&tool=methview.qc).  
+
 ![GitHub R package version](https://img.shields.io/github/r-package/v/YoannPa/methview.qc?label=Package%20version&logo=RStudio&logoColor=white&style=for-the-badge)  
 <img src="https://img.shields.io/static/v1?label=compatibility&message=4.3.0&color=blue&logo=R&logoColor=white&style=for-the-badge" />  
 ![GitHub last commit](https://img.shields.io/github/last-commit/YoannPa/methview.qc?logo=git&style=for-the-badge)  
