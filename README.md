@@ -4,7 +4,9 @@
 ![GitHub issues](https://img.shields.io/github/issues-raw/YoannPa/methview.qc)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/YoannPa/methview.qc)  
 
-_**methview.qc** allows you to generate quality control plots from your methylation array dataset._  
+_Methylation arrays have become a standard in clinics for epigenetic tumor profiling. While there is now a broad choice of tools to process and analyze methylation array data (RnBeads, Minfi, Sesame), none of them propose neat and complete quality control plots._  
+_Here we introduce the R package **Methview.qc** which allows you to generate quality control plots from methylation array dataset._  
+_**Methview.qc** utilizes RnBSet to store methylation datasets from both HumanMethylation450 and MethylationEPIC arrays. Its internal use of data.table boosts the memory-efficient processing of data, and the ggplot2 grammar provides R users with neat, yet customizable, publication-ready graphics to visualize quality control data._  
 
 **Author: PAGEAUD Y.<sup>1</sup>**  
 **Contributors: RATHGEBER A.<sup>1</sup>**  
